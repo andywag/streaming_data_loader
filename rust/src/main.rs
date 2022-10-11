@@ -1,50 +1,38 @@
 
 
-use loader::masking::masking_config::{MaskingConfig};
-use loader::masking::{self, masked_data::MaskedData};
-use tokio::task;
+
+use loader::masking::{self};
+
+use clap::Parser;
+use serde_yaml::Value;
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+   /// Name of the person to greet
+   #[arg(short, long, default_value="tests/masking_tests.yaml")]
+   path: String,
+
+   /// Number of times to greet
+   #[arg(short, long, default_value="zmq")]
+   case: String,
+}
+
 
 
 #[tokio::main] 
 async fn main()  {
-    let config = MaskingConfig{batch_size:8, sequence_length:128, mask_length:18, tokenizer_name:"bert-base-uncased".to_string()};
-    let result = masking::masking_top::run_main(config).await;
-    std::process::exit(0);
-    /* 
-    let (tx, rx) = tokio::sync::mpsc::channel::<String>(2);
-    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<MaskedData>(100);
 
-    //utils::get_tokenizer("bert-base-uncased".to_string());
+    let args = Args::parse();
+    //println!("Args {:?}", args);
+    let f = std::fs::File::open(args.path).unwrap();
+    let config_file:Value = serde_yaml::from_reader(f).unwrap();
+    
+    let _result = masking::masking_top::run_main(&config_file[args.case]).await;
+    std::process::exit(0);
+    
     //let base = "https://dumps.wikimedia.org/other/cirrussearch/current/";
     //let location = "/home/andy/Downloads/enwiki-20220926-cirrussearch-content.json.gz".to_string();
-    let config = MaskingConfig{batch_size:8, sequence_length:128, mask_length:18, tokenizer_name:"bert-base-uncased".to_string()};
-    let config2 = config.clone();
-    let location = "../data/test.json.gz".to_string();
-
-    let join_rx = task::spawn(async move {
-        let result = masking::masking_top::receiver(&config, rx_trans);
-        result.await;
-    });
-
-    let join_tokenizer = task::spawn(async move {
-        let tok = masking::masking_top::create_tokenizer(&config2, rx, tx_trans);
-        tok.await;
-    });
-
-    let join_provider = task::spawn(async move {
-        let base = masking::masking_top::provider(location, false, tx);
-        base.await;
-    });
-
-    //let total = tokio::join!(join_rx, join_tokenizer, join_provider);
-
-    tokio::select! {        
-        _ = join_provider => {}
-        _ = join_tokenizer => {}
-        _ = join_rx => {
-            println!("Inside Rx Loop");
-            std::process::exit(0);
-        }
-    };
-    */
+    
 }

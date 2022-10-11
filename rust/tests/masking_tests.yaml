@@ -1,0 +1,32 @@
+basic:
+  source:
+    type: "wiki_file"
+    location: "../data/test.json.gz"
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 8
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "mask_receiver"
+    config:
+      comparison: "../data/test.bin"
+
+zmq:
+  source:
+    type: "wiki_file"
+    location: "../data/test.json.gz"
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 8
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "zmq"
+    config:
+      host: "localhost"
+      port: 4000

@@ -1,7 +1,5 @@
 use tokenizers::{Tokenizer};
 use tokio::sync::mpsc::Receiver;
-use std::thread::{self};
-use std::time::Duration;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use crate::utils;
