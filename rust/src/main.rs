@@ -15,8 +15,8 @@ struct Args {
    path: String,
 
    /// Number of times to greet
-   #[arg(short, long, default_value="zmq")]
-   case: String,
+   #[arg(short, long, default_value="basic")]
+   config: String,
 }
 
 
@@ -29,8 +29,9 @@ async fn main()  {
     let f = std::fs::File::open(args.path).unwrap();
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
     
-    let _result = masking::masking_top::run_main(&config_file[args.case]).await;
-    std::process::exit(0);
+    let _result = masking::masking_top::run_main(&config_file[args.config]).await;
+    println!("Final Result {}", _result);
+    //std::process::exit(0);
     
     //let base = "https://dumps.wikimedia.org/other/cirrussearch/current/";
     //let location = "/home/andy/Downloads/enwiki-20220926-cirrussearch-content.json.gz".to_string();

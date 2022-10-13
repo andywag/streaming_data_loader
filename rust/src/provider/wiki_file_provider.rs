@@ -1,10 +1,12 @@
 
 use async_compression::tokio::bufread::GzipDecoder;
 use futures::stream::TryStreamExt;
-use tokio::{io::{AsyncBufReadExt, BufReader}, fs::File};
+use tokio::{io::{AsyncBufReadExt, BufReader, Lines}, fs::File};
 use tokio_util::compat::FuturesAsyncReadCompatExt;
 
 use tokio::sync::mpsc::Sender;
+
+use super::ProviderChannel;
  
 
 fn create_text(line:String, finder:&str) -> String{
@@ -49,7 +51,8 @@ fn create_text(line:String, finder:&str) -> String{
 
 }
 
-pub async fn load_url(url:&String, tx:Sender<String>) {
+// TODO : Add Support for Limiting Iterations
+pub async fn load_url(url:&String, tx:Sender<ProviderChannel<String>>) {
     let response = reqwest::get(url).await.unwrap();
 
     let stream = response
@@ -69,9 +72,7 @@ pub async fn load_url(url:&String, tx:Sender<String>) {
         if index % 2 == 1 {
 
             let text = create_text(line, "\"text\":\"");
-            let _res = tx.send(text);
-            println!("Sending Text");
-            //let _ = res.await;
+            let _res = tx.send(ProviderChannel::Data(text));
         }
         
         index += 1;
@@ -80,28 +81,40 @@ pub async fn load_url(url:&String, tx:Sender<String>) {
 
 }
 
-pub async fn load_data(file_path:&String, tx:Sender<String>) {
+pub async fn create_lines(file_path:&String) -> Lines<BufReader<GzipDecoder<BufReader<File>>>> {
     let file = File::open(file_path).await.unwrap();
     let reader = BufReader::new(file);
-
-    //let response = reqwest::get(url).await.unwrap();
     let gzip_decoder = GzipDecoder::new(reader);
     let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
+    let lines = buf_reader.lines();
+    return lines;
+}
 
-    let mut lines = buf_reader.lines();
-    let mut index = 0;
-    while let Some(line) = lines.next_line().await.unwrap() {
-        if index % 2 == 1 {
+pub async fn load_data(file_path:&String, iterations:u64, tx:Sender<ProviderChannel<String>>) {
 
-            let text = create_text(line, "\"text\":\"");
-            let res = tx.send(text);
-            //println!("Sending Text");
-            let _ = res.await;
-        }
+    let mut lines = create_lines(file_path).await;
+
+    let mut data_count = 0;
+    loop {
         
-        index += 1;
-       
+        let mut index = 0;
+        while let Some(line) = lines.next_line().await.unwrap() {
+            if index % 2 == 1 {
+                let text = create_text(line, "\"text\":\"");
+                let res = tx.send(ProviderChannel::Data(text));
+                let _result = res.await;
+                //result.err().map(|e| println!("Error {:?}", e));
+                if data_count == iterations {
+                    let _result = tx.send(ProviderChannel::Complete).await;
+                    println!("Finished with Data");
+                    return;
+                }
+                data_count += 1;
+            }
+            index += 1;   
+        }
+        lines = create_lines(file_path).await;
+        
     }
-
 
 }

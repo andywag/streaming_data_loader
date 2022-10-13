@@ -2,6 +2,7 @@ basic:
   source:
     type: "wiki_file"
     location: "../data/test.json.gz"
+    iterations: 20 
   tokenizer: 
     type: "masking"
     config: 
@@ -13,20 +14,70 @@ basic:
     type: "mask_receiver"
     config:
       comparison: "../data/test.bin"
+  node:
+    type: "none"
 
-zmq:
+zmq_tcp_rust:
   source:
     type: "wiki_file"
     location: "../data/test.json.gz"
+    iterations: 1000
   tokenizer: 
     type: "masking"
     config: 
-      batch_size: 8
-      sequence_length: 128
+      batch_size: 16
+      sequence_length: 512
       mask_length: 18
       tokenizer_name: "bert-base-uncased"
   sink:
     type: "zmq"
     config:
-      host: "localhost"
-      port: 4000
+      address: "tcp://localhost:4000"
+  node:
+    type: "rust"
+    config:
+      iterations:500
+
+zmq_ipc:
+  source:
+    type: "wiki_file"
+    location: "../data/test.json.gz"
+    iterations: 4000
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 16
+      sequence_length: 512
+      mask_length: 18
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "zmq"
+    config:
+      address: "ipc:///tmp/zmqtest"
+  node:
+    type: "python"
+    config:
+      cwd: "../python"
+      cmd: "python3"
+      args: ["test_train_transport.py","--config", "zmq_ipc"]
+
+zmq_tcp_none:
+  source:
+    type: "wiki_file"
+    location: "../data/test.json.gz"
+    iterations: 1000000
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 16
+      sequence_length: 512
+      mask_length: 18
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "zmq"
+    config:
+      address: "tcp://localhost:4000"
+  node:
+    type: "none"
+    config:
+      iterations:500

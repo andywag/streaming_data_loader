@@ -2,6 +2,8 @@ use tokenizers::{Tokenizer};
 use tokio::sync::mpsc::Receiver;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use crate::provider::ProviderChannel;
+use crate::transport::ZmqChannel;
 use crate::utils;
 use super::masked_data::MaskedData;
 use super::masking_config::MaskingConfig;
@@ -42,7 +44,10 @@ impl BaseTokenizer {
         }
     }
 
-    pub async fn create_batch(&self, mut rx:Receiver<String>, tx_transport:tokio::sync::mpsc::Sender<MaskedData>) {
+
+
+    pub async fn create_batch(&self, mut rx:Receiver<ProviderChannel<String>>, 
+        tx_transport:tokio::sync::mpsc::Sender<ZmqChannel<MaskedData>>) {
 
         let mut batch = self.create_data();
         let mut index = 0;
@@ -51,17 +56,27 @@ impl BaseTokenizer {
         
         let mask = self.tokenizer.token_to_id("[MASK]").unwrap();
 
-
         loop {
 
             let data_option = rx.recv().await;
+            // Channel is shutdown if the receive data is None           
             if data_option.is_none() {
-                break;
+               break
             }
-            let data = data_option.unwrap();
-
-            //let mut rng = thread_rng();
-
+            
+            // Match the input to check if the stream is complete and send the complete command forward
+            let data:String;
+            match data_option.unwrap() {
+                ProviderChannel::Complete => {
+                    let _ = tx_transport.send(ZmqChannel::Complete).await;
+                    println!("Finished Tokenizer");
+                    return;
+                },
+                ProviderChannel::Data(x) => {
+                    data = x;
+                },
+            }
+            // Encode the Data
             let result = self.tokenizer.encode(data, true).unwrap();
             let ids = result.get_ids();
             
@@ -85,7 +100,7 @@ impl BaseTokenizer {
                 index += 1;
                 if index == self.batch_size as usize {
 
-                    let _ = tx_transport.send(batch).await;
+                    let _ = tx_transport.send(ZmqChannel::Data(batch)).await;
                     batch = self.create_data();
                     index = 0;
                     //println!("Created Batch");
@@ -93,12 +108,19 @@ impl BaseTokenizer {
             }
             
         
-            println!("Result {:?}", ids.len());
+            //println!("Result {:?}", ids.len());
             //thread::sleep(Duration::from_millis(1000));
         }
+        
     }
     
 
 }
 
-
+pub async fn create_tokenizer(config:&MaskingConfig, rx:tokio::sync::mpsc::Receiver<ProviderChannel<String>>, 
+    tx_transport:tokio::sync::mpsc::Sender<ZmqChannel<MaskedData>>) {
+    let base_tokenizer = BaseTokenizer::new(config);
+    
+    let result = base_tokenizer.create_batch(rx, tx_transport);
+    result.await;
+}
