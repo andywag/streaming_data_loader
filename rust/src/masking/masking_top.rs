@@ -1,6 +1,8 @@
 
 
 
+use std::sync::Arc;
+
 use serde_yaml::Value;
 use tokio::task::{self};
 
@@ -16,16 +18,16 @@ use crate::transport::{self, ZmqChannel};
 
 
 
-pub async fn run_main(value:&Value) -> bool {
+pub async fn run_main(value:Arc<Value>) -> bool {
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<String>>(2);
     let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ZmqChannel<MaskedData>>(1);
 
     let tokenizer = &value["tokenizer"]["config"];
     let config:MaskingConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
 
-    let loc = &value["source"]["location"];
-    let location:String = serde_yaml::from_value(loc.to_owned()).unwrap();
-    let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
+    //let loc = &value["source"]["location"];
+    //let location:String = serde_yaml::from_value(loc.to_owned()).unwrap();
+    //let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
 
     //let compare_loc = &value["sink"]["config"]["comparison"]; 
     //let compare_location:Option<String> = serde_yaml::from_value(compare_loc.to_owned()).ok();
@@ -44,10 +46,11 @@ pub async fn run_main(value:&Value) -> bool {
 
     //}
 
-
+    let provider_value = value.clone();
     // Create the Data Provider
     let join_provider = task::spawn(async move {
-        let base = provider::provider(location, false, iterations, tx);
+        //let base = provider::provider(location, false, iterations, tx);
+        let base = provider::create_provider(provider_value, tx);
         base.await;
     });
 
@@ -56,6 +59,8 @@ pub async fn run_main(value:&Value) -> bool {
         let tok = masking::create_tokenizer(&config_clone, rx, tx_trans);
         tok.await;
     });
+
+
 
     // Create the Receiver : Either a test endpoint or a zmq transport
     let rx_select = value["sink"]["type"].as_str().map(|e| e.to_string());

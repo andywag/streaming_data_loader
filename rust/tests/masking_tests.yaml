@@ -21,7 +21,28 @@ zmq_tcp_rust:
   source:
     type: "wiki_file"
     location: "../data/test.json.gz"
-    iterations: 1000
+    iterations: 4000
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 16
+      sequence_length: 512
+      mask_length: 18
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "zmq"
+    config:
+      address: "tcp://localhost:4001"
+  node:
+    type: "rust"
+    config:
+      iterations:500
+
+zmq_rust_url:
+  source:
+    type: "wiki_url"
+    location: "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221003-cirrussearch-content.json.gz "
+    iterations: 500
   tokenizer: 
     type: "masking"
     config: 
@@ -37,6 +58,7 @@ zmq_tcp_rust:
     type: "rust"
     config:
       iterations:500
+
 
 zmq_ipc:
   source:

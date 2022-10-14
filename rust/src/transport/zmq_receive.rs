@@ -32,7 +32,6 @@ pub async fn rust_node_transport(address:String, batch_size:u64)  {
     let time = now.elapsed().as_micros() as f32/1000000.0;
     let batches = count*batch_size;
     let qps = (batches as f32)/(time as f32);
-    println!("B {} {}", count, batch_size);
     println!("Batches {}, RunTime {}s, QPS {}",batches, time, qps);
 }
 

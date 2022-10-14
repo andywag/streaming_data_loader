@@ -1,6 +1,8 @@
 
 
 
+use std::sync::Arc;
+
 use loader::masking::{self};
 
 use clap::Parser;
@@ -28,8 +30,10 @@ async fn main()  {
     //println!("Args {:?}", args);
     let f = std::fs::File::open(args.path).unwrap();
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
-    
-    let _result = masking::masking_top::run_main(&config_file[args.config]).await;
+    let config_ptr = Arc::new(config_file.get(args.config).unwrap().to_owned());
+    //let config_ptr = Arc::new(config_base.unwrap().to_owned());
+
+    let _result = masking::masking_top::run_main(config_ptr).await;
     println!("Final Result {}", _result);
     //std::process::exit(0);
     

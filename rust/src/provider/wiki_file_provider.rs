@@ -51,8 +51,18 @@ fn create_text(line:String, finder:&str) -> String{
 
 }
 
+
+pub async fn create_url_lines(file_path:&String) -> Lines<BufReader<GzipDecoder<BufReader<File>>>> {
+    let file = File::open(file_path).await.unwrap();
+    let reader = BufReader::new(file);
+    let gzip_decoder = GzipDecoder::new(reader);
+    let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
+    let lines = buf_reader.lines();
+    return lines;
+}
+
 // TODO : Add Support for Limiting Iterations
-pub async fn load_url(url:&String, tx:Sender<ProviderChannel<String>>) {
+pub async fn load_url(url:&String, iterations:u64, tx:Sender<ProviderChannel<String>>) {
     let response = reqwest::get(url).await.unwrap();
 
     let stream = response
@@ -64,19 +74,30 @@ pub async fn load_url(url:&String, tx:Sender<ProviderChannel<String>>) {
 
     // Print decompressed txt content
     //let buf_reader = tokio::io::BufReader::new(gzip_decoder);
-    let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
+    let mut buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
 
     let mut lines = buf_reader.lines();
-    let mut index = 0;
-    while let Some(line) = lines.next_line().await.unwrap() {
-        if index % 2 == 1 {
-
-            let text = create_text(line, "\"text\":\"");
-            let _res = tx.send(ProviderChannel::Data(text));
+    let mut data_count = 0;
+    loop {
+        
+        let mut index = 0;
+        while let Some(line) = lines.next_line().await.unwrap() {
+            if index % 2 == 1 {
+                let text = create_text(line, "\"text\":\"");
+                let res = tx.send(ProviderChannel::Data(text));
+                let _result = res.await;
+                //result.err().map(|e| println!("Error {:?}", e));
+                if data_count == iterations {
+                    let _result = tx.send(ProviderChannel::Complete).await;
+                    println!("Finished with Data");
+                    return;
+                }
+                data_count += 1;
+            }
+            index += 1;   
         }
         
-        index += 1;
-       
+        
     }
 
 }
