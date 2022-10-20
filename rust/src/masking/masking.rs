@@ -18,7 +18,7 @@ pub struct BaseTokenizer {
 impl BaseTokenizer {
     pub fn new(config:&MaskingConfig) -> Self {
         let mask_length = config.mask_length;
-        let tokenizer = utils::get_tokenizer("bert-base-uncased".to_string());
+        let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
         Self {
             batch_size: config.batch_size,
             sequence_length: config.sequence_length,

@@ -1,15 +1,20 @@
 use std::sync::Arc;
 
-use loader::masking;
+use loader::{masking, squad};
 use serde_yaml::Value;
 
 #[tokio::main]
-async fn basic_test(config:String) {
-    let f = std::fs::File::open("tests/masking_tests.yaml").unwrap();
+async fn basic_test(file:String, config:String, masking:bool) {
+    let f = std::fs::File::open(file).unwrap();
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
     let config_ptr = Arc::new(config_file.get(config).unwrap().to_owned());
 
-    masking::masking_top::run_main(config_ptr).await;
+    if masking {
+        masking::masking_top::run_main(config_ptr).await;
+    }
+    else {
+        squad::squad_top::run_main(config_ptr).await;
+    }
 }
 
 #[tokio::test]
@@ -26,19 +31,23 @@ async fn test_top() {
 
 #[test]
 fn test_zmq_tcp_rust() {
-    basic_test("zmq_tcp_rust".to_string());
+    basic_test("tests/masking_tests.yaml".to_string(),"zmq_tcp_rust".to_string(), true);
 }
 
 #[test]
 fn test_zmq_ipc() {
-    basic_test("zmq_ipc".to_string());
+    basic_test("tests/masking_tests.yaml".to_string(),"zmq_ipc".to_string(), true);
 }
 
 #[test]
 fn test_zmq_url() {
-    basic_test("zmq_rust_url".to_string());
+    basic_test("tests/masking_tests.yaml".to_string(),"zmq_rust_url".to_string(), true);
 }
 
+#[test]
+fn test_basic_squad() {
+    basic_test("tests/squad_tests.yaml".to_string(),"basic".to_string(), false);
+}
 
 /* 
 #[tokio::test]

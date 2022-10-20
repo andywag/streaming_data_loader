@@ -6,60 +6,37 @@ use std::sync::Arc;
 use serde_yaml::Value;
 use tokio::task::{self};
 
-use super::{masking, masking_endpoint};
-use super::masking_config::MaskingConfig;
-use super::{masked_data::MaskedData};
-use crate::provider::{ProviderChannel, wiki_file_provider};
+
+use super::squad_data::{SquadGeneral, SquadData};
+use super::{SquadConfig, squad_tokenizer, squad_endpoint, squad_arrow};
+use crate::provider::ProviderChannel;
 use crate::transport::{self, ZmqChannel};
 
-
-
-pub async fn create_provider<'a>(value:Arc<Value>, tx:tokio::sync::mpsc::Sender<ProviderChannel<String>>)  {
+pub async fn create_provider<'a>(value:Arc<Value>, tx:tokio::sync::mpsc::Sender<ProviderChannel<SquadGeneral>>)  {
     
+
     let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
     let location = value["source"]["location"].as_str().unwrap().to_string();
-    let source_type = value["source"]["type"].as_str().unwrap().to_string();
+    //let source_type = value["source"]["type"].as_str().unwrap().to_string();
 
-    let network = source_type == "wiki_url";
+    let loader = squad_arrow::SquadArrowLoader::new(location);
+    loader.load_data(iterations, tx).await;
 
-    if network { // URL to web version of file
-        wiki_file_provider::load_url(&location, iterations, tx).await;
-    }
-    else {// Downloaded File
-        wiki_file_provider::load_data(&location, iterations, tx).await;
-    }
 }
 
+// TODO : The squad implementation has quite a few flaws and is not fully functional
 
 pub async fn run_main(value:Arc<Value>) -> bool {
-    let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<String>>(2);
-    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ZmqChannel<MaskedData>>(1);
+    let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<SquadGeneral>>(2);
+    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ZmqChannel<SquadData>>(1);
 
     let tokenizer = &value["tokenizer"]["config"];
-    let config:MaskingConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
+    let config:SquadConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
 
-    //let loc = &value["source"]["location"];
-    //let location:String = serde_yaml::from_value(loc.to_owned()).unwrap();
-    //let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
 
-    //let compare_loc = &value["sink"]["config"]["comparison"]; 
-    //let compare_location:Option<String> = serde_yaml::from_value(compare_loc.to_owned()).ok();
-
-    //println!("Compare {:?}", compare_location);
-
-    //utils::get_tokenizer("bert-base-uncased".to_string());
-    //let base = "https://dumps.wikimedia.org/other/cirrussearch/current/";
-    //let location = "/home/andy/Downloads/enwiki-20220926-cirrussearch-content.json.gz".to_string();
-    //let config = MaskingConfig{batch_size:8, sequence_length:128, mask_length:18, tokenizer_name:"bert-base-uncased".to_string()};
-    
-    // Clone the config to pass to 2 different processes
     let config_clone = config.clone();
-
-    //let location = "../data/test.json.gz".to_string();
-
-    //}
-
     let provider_value = value.clone();
+
     // Create the Data Provider
     let join_provider = task::spawn(async move {
         //let base = provider::provider(location, false, iterations, tx);
@@ -69,7 +46,7 @@ pub async fn run_main(value:Arc<Value>) -> bool {
 
     // Create the tokenizer
     let join_tokenizer = task::spawn(async move {
-        let tok = masking::create_tokenizer(&config_clone, rx, tx_trans);
+        let tok = squad_tokenizer::create_tokenizer(&config_clone, rx, tx_trans);
         tok.await;
     });
 
@@ -77,10 +54,9 @@ pub async fn run_main(value:Arc<Value>) -> bool {
 
     // Create the Receiver : Either a test endpoint or a zmq transport
     let rx_select = value["sink"]["type"].as_str().map(|e| e.to_string());
-    let join_rx = if rx_select.unwrap() == "mask_receiver" {
-        let compare_location = value["sink"]["config"]["comparison"].as_str().map(|e| e.to_string());
+    let join_rx = if rx_select.unwrap() == "test" {
         task::spawn(async move {
-            let result = masking_endpoint::receiver(&config, rx_trans, compare_location);
+            let result = squad_endpoint::receiver(&config, rx_trans);
             result.await
         })   
     }
@@ -99,7 +75,8 @@ pub async fn run_main(value:Arc<Value>) -> bool {
         println!("Creating without Sink Node");
         let result = tokio::join!(join_rx, join_tokenizer, join_provider);
         println!("Finished {:?}", result.0);
-        return result.0.unwrap();
+        //return result.0.unwrap();
+        return true;
     }
     else {
         let join_node = {

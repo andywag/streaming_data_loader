@@ -27,3 +27,4 @@ zmq = "0.9.2"
 clap={version="4.0.12", features=["derive"]}
 serde_yaml="0.9.13"
 serde-pickle = "1.1.1"
+arrow = "24.0.0"

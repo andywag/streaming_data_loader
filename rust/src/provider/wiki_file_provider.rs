@@ -74,7 +74,7 @@ pub async fn load_url(url:&String, iterations:u64, tx:Sender<ProviderChannel<Str
 
     // Print decompressed txt content
     //let buf_reader = tokio::io::BufReader::new(gzip_decoder);
-    let mut buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
+    let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
 
     let mut lines = buf_reader.lines();
     let mut data_count = 0;
