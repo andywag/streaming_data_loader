@@ -3,7 +3,8 @@
 
 use std::sync::Arc;
 
-use loader::{masking::{self}, squad};
+use loader::datasets::masking;
+use loader::datasets::squad;
 
 use clap::Parser;
 use serde_yaml::Value;
@@ -17,7 +18,7 @@ struct Args {
    path: String,
 
    /// Number of times to greet
-   #[arg(short, long, default_value="basic")]
+   #[arg(short, long, default_value="basic_hugging")]
    config: String,
 }
 
@@ -26,10 +27,12 @@ struct Args {
 #[tokio::main] 
 async fn main()  {
 
-     
+    //provider::arrow_provider::download_huggingface_dataset("xed_en_fi",Some("en_annotated"), "train");
+    //provider::arrow_provider::download_huggingface_dataset("squad", None, "train");
+
     //let location = "/home/andy/.cache/huggingface/datasets/squad/plain_text/1.0.0/d6ec3ceb99ca480ce37cdd35555d6cb2511d223b9150cce08a837ef62ffea453/squad-train.arrow";
 
-
+    
     let args = Args::parse();
     //println!("Args {:?}", args);
     let f = std::fs::File::open(args.path).unwrap();

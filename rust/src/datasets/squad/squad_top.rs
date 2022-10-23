@@ -9,18 +9,47 @@ use tokio::task::{self};
 
 use super::squad_data::{SquadGeneral, SquadData};
 use super::{SquadConfig, squad_tokenizer, squad_endpoint, squad_arrow};
-use crate::provider::ProviderChannel;
+use crate::provider::{ProviderChannel, arrow_provider};
 use crate::transport::{self, ZmqChannel};
 
 pub async fn create_provider<'a>(value:Arc<Value>, tx:tokio::sync::mpsc::Sender<ProviderChannel<SquadGeneral>>)  {
     
 
     let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
-    let location = value["source"]["location"].as_str().unwrap().to_string();
-    //let source_type = value["source"]["type"].as_str().unwrap().to_string();
-
+    let location = if value["source"]["type"] == "arrow" {
+        let location = value["source"]["location"].as_str().unwrap().to_string();
+        //let loader = squad_arrow::SquadArrowLoader::new(location);
+        //loader.load_data(iterations, tx).await;
+        location
+    }
+    else if value["source"]["type"] == "hugging" {
+        let dataset = value["source"]["dataset"].as_str().unwrap().to_string();
+        let arg = value["source"]["arg"].as_str();//.map(|e| e.to_string());
+        let key = value["source"]["key"].as_str().unwrap().to_string();
+        let arrow_file = arrow_provider::download_huggingface_dataset(dataset.as_str(), arg, key.as_str());
+        let location = arrow_file.unwrap()[0].to_string();
+        location
+    }
+    else {
+        println!("Source Type Not Defined");
+        "".to_string()
+    };
     let loader = squad_arrow::SquadArrowLoader::new(location);
     loader.load_data(iterations, tx).await;
+    /* 
+    if value["source"]["type"] == "arrow" {
+        let location = value["source"]["location"].as_str().unwrap().to_string();
+        let loader = squad_arrow::SquadArrowLoader::new(location);
+        loader.load_data(iterations, tx).await;
+    }
+    else if value["source"]["type"] == "hugging" {
+        let dataset = value["source"]["dataset"].as_str().unwrap().to_string();
+        let arg = value["source"]["arg"].as_str();//.map(|e| e.to_string());
+        let key = value["source"]["key"].as_str().unwrap().to_string();
+        let arrow_file = arrow_provider::download_huggingface_dataset(dataset.as_str(), arg, key.as_str());  
+    }
+    */
+    
 
 }
 

@@ -652,6 +652,7 @@ dependencies = [
  "serde",
  "serde-pickle",
  "serde_yaml",
+ "tempfile",
  "tokenizers",
  "tokio 1.21.2",
  "tokio-util",

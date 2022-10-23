@@ -1,4 +1,4 @@
-use crate::{masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, transport::ZmqChannel};
+use crate::{datasets::masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, transport::ZmqChannel};
 
 
 

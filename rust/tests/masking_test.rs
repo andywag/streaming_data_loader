@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use loader::{masking, squad};
+use loader::datasets::{masking, squad};
 use serde_yaml::Value;
 
 #[tokio::main]
@@ -39,14 +39,22 @@ fn test_zmq_ipc() {
     basic_test("tests/masking_tests.yaml".to_string(),"zmq_ipc".to_string(), true);
 }
 
+// Disable to issue with the url not being found
+/* 
 #[test]
 fn test_zmq_url() {
     basic_test("tests/masking_tests.yaml".to_string(),"zmq_rust_url".to_string(), true);
 }
+*/
 
 #[test]
 fn test_basic_squad() {
     basic_test("tests/squad_tests.yaml".to_string(),"basic".to_string(), false);
+}
+
+#[test]
+fn test_hugging_squad() {
+    basic_test("tests/squad_tests.yaml".to_string(),"basic_hugging".to_string(), false);
 }
 
 /* 

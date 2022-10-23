@@ -1,7 +1,7 @@
 
 
 
-use crate::masking::masked_data::MaskedData;
+use crate::datasets::masking::masked_data::MaskedData;
 use std::time::{Instant};
 use std::process::{Command};
 
@@ -37,7 +37,11 @@ pub async fn rust_node_transport(address:String, batch_size:u64)  {
 
 pub async fn python_node_transport(command:String, cwd:String, args:Vec<String>)  {
     println!("Running {} {} {:?}", command, cwd, args);
-    let output = Command::new(command).current_dir(cwd).args(args).output();
-    let result = std::str::from_utf8(output.unwrap().stdout.as_slice()).unwrap().to_string();
-    println!("{:?}", result);
+    //let command2 = "python3";
+    let result = Command::new(command).current_dir(cwd).args(args).output();
+    
+    //let result = Command::new(command2).current_dir(cwd).args(args).output();
+
+    //let result = std::str::from_utf8(output.unwrap().stdout.as_slice()).unwrap().to_string();
+    println!("Python Result : {:?}", result);
 }

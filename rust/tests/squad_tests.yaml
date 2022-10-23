@@ -6,7 +6,26 @@ basic:
   tokenizer: 
     type: "squad"
     config: 
-      batch_size: 8
+      batch_size: 1024
+      sequence_length: 384
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "test"
+    config:
+      comparison: "../data/test.bin"
+  node:
+    type: "none"
+
+basic_hugging:
+  source:
+    type: "hugging"
+    dataset: "squad"
+    key: "train"
+    iterations: 2000 
+  tokenizer: 
+    type: "squad"
+    config: 
+      batch_size: 1024
       sequence_length: 384
       tokenizer_name: "bert-base-uncased"
   sink:

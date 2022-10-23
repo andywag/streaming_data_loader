@@ -51,7 +51,6 @@ impl SquadArrowLoader {
                 let ep = sp + answer.len() as i32 + 1;
 
                 
-                //println!("AnswerDD {sp} {ep} {} {answer}", &context[sp as usize..ep as usize-1]);
 
 
                 let squad_data = SquadGeneral{ question: question, context: context, sp: sp as u32, ep: ep as u32, answer:Some(answer) };

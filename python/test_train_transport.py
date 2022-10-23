@@ -5,6 +5,7 @@ import time
 import yaml
 import argparse
 
+
 def test_transport(args, sim_length, report):
     ctx = zmq.Context()
     socket = ctx.socket(zmq.REQ)
@@ -49,6 +50,7 @@ def main():
     test_transport(test[args.config],args.iterations, args.report)
 
 if __name__ == '__main__':
+    print("Running Test...")
     main()
 
 

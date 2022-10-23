@@ -56,14 +56,14 @@ pub async fn receiver(config_in:&SquadConfig,
 
     let data_full = rx.recv().await.unwrap();
 
-    let data:SquadData;
+    let _data:SquadData;
     match data_full {
         ZmqChannel::Complete => {
             println!("First Batch Required");
-            data = SquadData::new(1, 1);
+            _data = SquadData::new(1, 1);
         },
         ZmqChannel::Data(x) => {
-            data = x;
+            _data = x;
         },
     }
     
