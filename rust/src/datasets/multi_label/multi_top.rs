@@ -1,77 +1,34 @@
-
-
-
-use std::sync::Arc;
-
+use futures::channel::oneshot::Sender;
 use serde_yaml::Value;
-use tokio::task::{self};
+use tokio::task;
 
+use crate::{provider::ProviderChannel, transport::ZmqChannel};
 
-use super::squad_arrow_sync::SquadArrowGenerator;
-use super::squad_data::{SquadGeneral, SquadData};
-use super::{SquadConfig, squad_tokenizer, squad_endpoint, squad_arrow};
-use crate::provider::arrow_transfer::{ArrowTransfer, ArrowGenerator};
-use crate::provider::{ProviderChannel, arrow_provider};
-use crate::transport::{self, ZmqChannel};
+trait DataTransfer {
+    type S;
+    type T;
 
-pub async fn create_arrow_provider<'a>(value:Arc<Value>, tx:tokio::sync::mpsc::Sender<ProviderChannel<SquadGeneral>>)  {
-    
-
-    let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
-    let location = if value["source"]["type"] == "arrow" {
-        let location = value["source"]["location"].as_str().unwrap().to_string();
-        location
-    }
-    else if value["source"]["type"] == "hugging" {
-        let dataset = value["source"]["dataset"].as_str().unwrap().to_string();
-        let arg = value["source"]["arg"].as_str().map(|e| e.to_string());
-        let key = value["source"]["key"].as_str().unwrap().to_string();
-        let arrow_file = arrow_provider::download_huggingface_dataset(dataset, arg, key);
-        let location = arrow_file.unwrap()[0].to_string();
-        location
-    }
-    else {
-        println!("Source Type Not Defined");
-        "".to_string()
-    };
-    let loader = squad_arrow::SquadArrowLoader::new(location);
-    loader.load_data(iterations, tx).await;
-
-    
+    fn create_provider(config:Value, channel:Sender<ProviderChannel<Self::S>>);
+    fn create_tokenizer(config:Value, channel:Sender<ProviderChannel<Self::S>>);
 
 }
 
-// TODO : The squad implementation has quite a few flaws and is not fully functional
 
-
-pub async fn run_main(value:Arc<Value>) -> bool {
-    let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<SquadGeneral>>(2);
-    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ZmqChannel<SquadData>>(1);
+pub async fn run_top<S,T>(config:Value, transfer:dyn DataTransfer<S,T>) {
+    let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<S>>(2);
+    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ZmqChannel<T>>(1);
 
     let tokenizer = &value["tokenizer"]["config"];
     let config:SquadConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
 
 
     let config_clone = config.clone();
+    let provider_value = value.clone();
 
-    let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
-
- 
     // Create the Data Provider
     let join_provider = task::spawn(async move {
-        
-
-        // TODO : Find a better way to deal with iterations
-        // Load the Arrow Dataset and start the loading process
-        let locations = arrow_provider::download_huggingface_dataset("squad".to_string(), None, "training".to_string());
-        let mut loader = ArrowTransfer::new(locations.unwrap()[0].to_owned());
-        let generator = Box::new(SquadArrowGenerator::new(&loader.schema)) as Box<dyn ArrowGenerator<T=SquadGeneral> + Send>;
-        loader.generator = Some(generator);
-
-        let load_result = loader.load_data(iterations, tx);
-        load_result.await;
-            
-        
+        let base = create_arrow_provider(provider_value, tx);
+        base.await;
     });
 
     // Create the tokenizer
@@ -145,7 +102,5 @@ pub async fn run_main(value:Arc<Value>) -> bool {
         return result.0.unwrap();
     }
 
-    
-    //let total = tokio::join!(join_rx, join_tokenizer, join_provider);
-    
+
 }

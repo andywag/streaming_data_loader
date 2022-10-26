@@ -1,6 +1,7 @@
-
+//pub mod multi_top;
 
 use serde::{Serialize, Deserialize};
+
 
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -9,3 +10,4 @@ pub struct SquadConfig{
     pub sequence_length:u32,
     pub tokenizer_name:String
 }
+

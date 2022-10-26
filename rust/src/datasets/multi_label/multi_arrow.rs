@@ -7,25 +7,25 @@ use tokio::sync::mpsc::Sender;
 
 use super::squad_data::SquadGeneral;
 
-pub struct SquadArrowLoader {
-    pub q:usize,
-    pub c:usize,
-    pub a:usize,
+// Structure which maps to location of arrow columns
+pub struct MultiArrowLoader {
+    pub s:usize,
+    pub l:usize,
     pub stream:StreamReader<File>
 }
 
-impl SquadArrowLoader {
+impl MultiArrowLoader {
 
-    pub fn new(location:String) -> Self {
+    // Load the file at the arrow location
+    pub fn new(location:String, text_name:String, label_name_:String) -> Self {
         println!("Location {}", location);
         let f = File::open(location);
         let stream_reader = StreamReader::try_new(f.unwrap(), None).unwrap();
         let schema = stream_reader.schema(); 
 
         Self {
-            q: schema.column_with_name("question").unwrap().0,
-            c: schema.column_with_name("context").unwrap().0,
-            a: schema.column_with_name("answers").unwrap().0,
+            s: schema.column_with_name(text_name).unwrap().0,
+            l: schema.column_with_name(label_name).unwrap().0,
             stream:stream_reader
         }
     }

@@ -1,0 +1,11 @@
+basic:
+  data_type:
+    input_type: "squad"
+    transfer_type: "squad"
+  source:
+    iterations: 2000
+    hugging:
+      dataset: "squad"
+      key: "train"
+    
+     
