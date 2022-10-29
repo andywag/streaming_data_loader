@@ -2,7 +2,7 @@
 
 
 
-use std::{process::Command, fs::File, rc::Rc};
+use std::{process::Command, fs::File};
 use serde::Deserialize;
 use tempfile::NamedTempFile;
 use std::io::Read;
@@ -68,11 +68,12 @@ pub fn download_huggingface_dataset(dataset:String, typ:Option<String>, key:Stri
 
     let f = File::open(file);
     let mut buffer = Vec::new();
+
     // read the whole file
     let _file_size = f.unwrap().read_to_end(&mut buffer);
     let result = serde_pickle::value_from_slice(buffer.as_slice(), Default::default()).unwrap();
     let arrow_file:ArrowFiles = serde_pickle::from_value(result).unwrap();
-    //println!("B {:?}", arrow_file.get_locations(key.to_string()));
+    println!("B {:?}", arrow_file);
     let locations =  arrow_file.get_locations(key.to_string());
     return locations;
 

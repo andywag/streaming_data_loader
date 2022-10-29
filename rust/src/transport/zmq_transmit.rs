@@ -7,9 +7,8 @@ use tokio::sync::mpsc::Receiver;
 
 use super::ZmqChannel;
 
-//use tokio::sync::mpsc::Sender;
 
-// Creat the serverer function
+// Generic ZMQ Transfer to Send Data to Device
 pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<ZmqChannel<T>>) -> bool {
     let ctx = zmq::Context::new();
     

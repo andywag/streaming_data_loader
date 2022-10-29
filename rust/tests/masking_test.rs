@@ -13,7 +13,8 @@ async fn basic_test(file:String, config:String, masking:bool) {
         masking::masking_top::run_main(config_ptr).await;
     }
     else {
-        squad::squad_top::run_main(config_ptr).await;
+        squad::squad_holder::run(config_ptr).await;
+        //squad::squad_top::run_main(config_ptr).await;
     }
 }
 

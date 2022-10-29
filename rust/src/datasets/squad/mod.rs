@@ -1,10 +1,12 @@
 pub mod squad_data;
-pub mod squad_arrow;
+//pub mod squad_arrow;
 pub mod squad_arrow_sync;
 pub mod squad_tokenizer;
-pub mod squad_top;
-//pub mod squad_top_new;
+//pub mod squad_top;
+
 pub mod squad_endpoint;
+
+pub mod squad_holder;
 
 use serde::{Serialize, Deserialize};
 

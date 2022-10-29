@@ -1,0 +1,143 @@
+    Checking data_loader v0.1.0 (/home/andy/projects/data_loader/rust)
+warning: unreachable statement
+  --> src/transport/zmq_receive.rs:27:5
+   |
+21 | /     loop {
+22 | |         let _ = socket.send("Hello", 0);
+23 | |         let bytes = socket.recv_bytes(0).unwrap();
+24 | |         
+25 | |        
+26 | |     }
+   | |_____- any code following this expression is unreachable
+27 |       let time = now.elapsed().as_micros() as f32/1000000.0;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unreachable statement
+   |
+   = note: `#[warn(unreachable_code)]` on by default
+
+warning: variable does not need to be mutable
+  --> src/transport/zmq_receive.rs:20:9
+   |
+20 |     let mut count = 0;
+   |         ----^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+error: future cannot be sent between threads safely
+   --> src/datasets/squad/generic_top.rs:65:26
+    |
+65  |     let join_tokenizer = task::spawn(async move {
+    |                          ^^^^^^^^^^^ future created by async block is not `Send`
+    |
+note: captured value is not `Send`
+   --> src/datasets/squad/generic_top.rs:68:48
+    |
+68  |         let result = batcher::create_batch(rx, tx_trans, generator);
+    |                                                ^^^^^^^^ has type `tokio::sync::mpsc::Sender<ZmqChannel<D>>` which is not `Send`
+note: required by a bound in `tokio::spawn`
+   --> /home/andy/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-1.21.2/src/task/spawn.rs:127:21
+    |
+127 |         T: Future + Send + 'static,
+    |                     ^^^^ required by this bound in `tokio::spawn`
+help: consider further restricting this bound
+    |
+37  | pub async fn run_main<P:Send, D:Serialize + std::marker::Send>(runner:Box<dyn ModelRunner<P,D> + Send>, value:Arc<Value>) -> bool {
+    |                                           +++++++++++++++++++
+
+error[E0277]: `D` cannot be sent between threads safely
+   --> src/datasets/squad/generic_top.rs:79:9
+    |
+79  |         task::spawn(async move {
+    |         ^^^^^^^^^^^ `D` cannot be sent between threads safely
+    |
+   ::: /home/andy/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/future/mod.rs:72:43
+    |
+72  | pub const fn from_generator<T>(gen: T) -> impl Future<Output = T::Return>
+    |                                           ------------------------------- within this `impl futures::Future<Output = bool>`
+    |
+    = note: required because it captures the following types: `ResumeTy`, `tokio::sync::mpsc::Receiver<ZmqChannel<D>>`, `Box<dyn EndPoint<D> + std::marker::Send>`, `&mut tokio::sync::mpsc::Receiver<ZmqChannel<D>>`, `impl for<'r> futures::Future<Output = std::option::Option<ZmqChannel<D>>>`, `()`, `ZmqChannel<D>`, `D`
+note: required because it's used within this `async fn` body
+   --> src/endpoint.rs:13:11
+    |
+13  |   ) -> bool {
+    |  ___________^
+14  | |     
+15  | |     let data_full = rx.recv().await.unwrap();
+16  | |
+...   |
+46  | |
+47  | | }
+    | |_^
+    = note: required because it captures the following types: `ResumeTy`, `impl futures::Future<Output = bool>`, `()`
+note: required because it's used within this `async` block
+   --> src/datasets/squad/generic_top.rs:79:32
+    |
+79  |           task::spawn(async move {
+    |  ________________________________^
+80  | |             let result = endpoint::receive(rx_trans, endpoint);
+81  | |             result.await
+82  | |             
+83  | |         })   
+    | |_________^
+note: required by a bound in `tokio::spawn`
+   --> /home/andy/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-1.21.2/src/task/spawn.rs:127:21
+    |
+127 |         T: Future + Send + 'static,
+    |                     ^^^^ required by this bound in `tokio::spawn`
+help: consider further restricting this bound
+    |
+37  | pub async fn run_main<P:Send, D:Serialize + std::marker::Send>(runner:Box<dyn ModelRunner<P,D> + Send>, value:Arc<Value>) -> bool {
+    |                                           +++++++++++++++++++
+
+error[E0277]: `D` cannot be sent between threads safely
+   --> src/datasets/squad/generic_top.rs:87:9
+    |
+87  |         task::spawn(async move {
+    |         ^^^^^^^^^^^ `D` cannot be sent between threads safely
+    |
+note: required because it appears within the type `ZmqChannel<D>`
+   --> src/transport/mod.rs:5:10
+    |
+5   | pub enum ZmqChannel<T> {
+    |          ^^^^^^^^^^
+    = note: required because of the requirements on the impl of `Sync` for `tokio::sync::mpsc::chan::Chan<ZmqChannel<D>, (tokio::sync::batch_semaphore::Semaphore, usize)>`
+    = note: required because of the requirements on the impl of `std::marker::Send` for `Arc<tokio::sync::mpsc::chan::Chan<ZmqChannel<D>, (tokio::sync::batch_semaphore::Semaphore, usize)>>`
+    = note: required because it appears within the type `tokio::sync::mpsc::chan::Rx<ZmqChannel<D>, (tokio::sync::batch_semaphore::Semaphore, usize)>`
+    = note: required because it appears within the type `tokio::sync::mpsc::Receiver<ZmqChannel<D>>`
+    = note: required because it captures the following types: `ResumeTy`, `std::string::String`, `tokio::sync::mpsc::Receiver<ZmqChannel<D>>`, `zmq::Context`, `Vec<&str>`, `Socket`, `zmq::Message`, `&mut tokio::sync::mpsc::Receiver<ZmqChannel<D>>`, `impl for<'r> futures::Future<Output = std::option::Option<ZmqChannel<D>>>`, `()`
+note: required because it's used within this `async fn` body
+   --> src/transport/zmq_transmit.rs:12:101
+    |
+12  |   pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<ZmqChannel<T>>) -> bool {
+    |  _____________________________________________________________________________________________________^
+13  | |     let ctx = zmq::Context::new();
+14  | |     
+15  | |     let result:Vec<&str> = address.split(":").collect();
+...   |
+45  | |     //true
+46  | | }
+    | |_^
+    = note: required because it captures the following types: `ResumeTy`, `impl futures::Future<Output = bool>`, `()`
+note: required because it's used within this `async` block
+   --> src/datasets/squad/generic_top.rs:87:32
+    |
+87  |           task::spawn(async move {
+    |  ________________________________^
+88  | |             let result = transport::zmq_transmit::receive_transport(address, rx_trans);
+89  | |             result.await
+90  | |         })
+    | |_________^
+note: required by a bound in `tokio::spawn`
+   --> /home/andy/.cargo/registry/src/github.com-1ecc6299db9ec823/tokio-1.21.2/src/task/spawn.rs:127:21
+    |
+127 |         T: Future + Send + 'static,
+    |                     ^^^^ required by this bound in `tokio::spawn`
+help: consider further restricting this bound
+    |
+37  | pub async fn run_main<P:Send, D:Serialize + std::marker::Send>(runner:Box<dyn ModelRunner<P,D> + Send>, value:Arc<Value>) -> bool {
+    |                                           +++++++++++++++++++
+
+For more information about this error, try `rustc --explain E0277`.
+warning: `data_loader` (lib) generated 2 warnings
+error: could not compile `data_loader` due to 3 previous errors; 2 warnings emitted

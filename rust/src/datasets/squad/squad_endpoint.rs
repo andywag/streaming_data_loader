@@ -1,21 +1,18 @@
 use tokenizers::Tokenizer;
 
-use crate::{transport::ZmqChannel, utils};
+use crate::{ utils, endpoint::EndPoint};
 
-use super::{SquadConfig, squad_data::SquadData};
+use super::{SquadConfig, squad_data::{SquadData}};
 
 fn check_batch(data:SquadData, tokenizer:&Tokenizer) -> bool{
 
     for x in 0..data.input_ids.len() {
-        //println!("AAA {} {}", data.start_positions[x], data.end_positions[x]);
         let base_answer = tokenizer.decode(data.input_ids[x][data.start_positions[x] as usize..data.end_positions[x] as usize].to_owned(), false).unwrap();   
         let other_answer = data.answers[x].to_owned().unwrap().to_string().to_lowercase();
         
-        //println!("AA {} {:?}", base_answer, data.answers[x].to_owned().unwrap().to_string().to_lowercase());
 
         let base_chars:Vec<char> = base_answer.chars().collect();
         let other_chars:Vec<char> = other_answer.chars().collect();
-        //println!("Base {} {}", base_chars.len(), other_chars.len());
 
         let mut b = 0;
         let mut o = 0;
@@ -43,47 +40,26 @@ fn check_batch(data:SquadData, tokenizer:&Tokenizer) -> bool{
             }
         }
 
-        //assert!(&base_answer == &data.answers[x].to_owned().unwrap())
     }
     return true;
 }
 
-pub async fn receiver(config_in:&SquadConfig, 
-    mut rx:tokio::sync::mpsc::Receiver<ZmqChannel<SquadData>>
-) -> bool {
-    let config = config_in.clone();
-    let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
+pub struct SquadEnpoint {
+    tokenizer:Tokenizer
+}
 
-    let data_full = rx.recv().await.unwrap();
-
-    let _data:SquadData;
-    match data_full {
-        ZmqChannel::Complete => {
-            println!("First Batch Required");
-            _data = SquadData::new(1, 1);
-        },
-        ZmqChannel::Data(x) => {
-            _data = x;
-        },
-    }
-    
-    // Wait for the rest of the inputs to flush out to exit
-    loop {
-        let result = rx.recv().await; //.unwrap();
-        match result {
-            Some(ZmqChannel::Complete) => {
-                println!("Done Receiver");
-                return true;
-            },
-            Some(ZmqChannel::Data(data)) => {
-                return check_batch(data, &tokenizer);
-                //println!("RX");    
-            },
-            None => {
-                println!("RX ERROR");
-                return true;
-            }
+impl SquadEnpoint {
+    pub fn new(config:SquadConfig) -> Self {
+        let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
+        Self {
+            tokenizer:tokenizer
         }
     }
-
 }
+
+impl EndPoint<SquadData> for SquadEnpoint {
+    fn receive(&mut self, data:SquadData) -> bool {
+        return check_batch(data, &self.tokenizer);
+    }
+}
+

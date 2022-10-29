@@ -108,7 +108,7 @@ pub async fn run_main(value:Arc<Value>) -> bool {
                 let batch_size = value["tokenizer"]["config"]["batch_size"].as_u64().unwrap();
 
                 task::spawn(async move {
-                    let result = transport::zmq_receive::rust_node_transport(address, batch_size);
+                    let result = transport::zmq_receive::rust_node_transport::<MaskedData>(address, batch_size);
                     result.await
                 })
             }
@@ -127,7 +127,7 @@ pub async fn run_main(value:Arc<Value>) -> bool {
                 let batch_size = value["tokenizer"]["config"]["batch_size"].as_u64().unwrap();
 
                 task::spawn(async move {
-                    let result = transport::zmq_receive::rust_node_transport(address, batch_size);
+                    let result = transport::zmq_receive::rust_node_transport::<MaskedData>(address, batch_size);
                     result.await
                 })
             }
