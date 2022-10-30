@@ -6,7 +6,7 @@ pub mod squad_tokenizer;
 
 pub mod squad_endpoint;
 
-pub mod squad_holder;
+pub mod squad_runner;
 
 use serde::{Serialize, Deserialize};
 

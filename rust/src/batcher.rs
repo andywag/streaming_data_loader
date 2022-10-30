@@ -1,4 +1,7 @@
-use tokio::sync::mpsc::Receiver;
+use std::sync::Arc;
+
+use serde::Serialize;
+use tokio::{sync::mpsc::Receiver, task::{JoinHandle, self}};
 
 use crate::{provider::ProviderChannel, transport::ZmqChannel};
 
@@ -31,17 +34,27 @@ pub async fn create_batch<S,T>(mut rx:Receiver<ProviderChannel<S>>,
             ProviderChannel::Data(x) => {
                 let batch = batcher.create_sync_batch(x);
                 if batch.is_some() {
-                    println!("Sending Batch");
+                    // Batch");
                     let real_batch = batch.unwrap();
                     let _result = tx_transport.send(ZmqChannel::Data(real_batch)).await;
                 }
             },
         }
-
     }
-    
 }
 
+pub async fn create_batcher<P:Send + 'static, D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
+    generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+    rx:tokio::sync::mpsc::Receiver<ProviderChannel<P>>, 
+    tx:tokio::sync::mpsc::Sender<ZmqChannel<D>>) -> JoinHandle<()> {
+    // Create the Data Provider
+    let generator = generator(&value);
 
+    let join_tokenizer = task::spawn(async move {
+        let result = create_batch(rx, tx, generator);
+        result.await;
+    });
+    join_tokenizer
+}
 
 

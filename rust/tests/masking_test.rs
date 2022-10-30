@@ -10,10 +10,10 @@ async fn basic_test(file:String, config:String, masking:bool) {
     let config_ptr = Arc::new(config_file.get(config).unwrap().to_owned());
 
     if masking {
-        masking::masking_top::run_main(config_ptr).await;
+        masking::masking_runner::run(config_ptr).await;
     }
     else {
-        squad::squad_holder::run(config_ptr).await;
+        squad::squad_runner::run(config_ptr).await;
         //squad::squad_top::run_main(config_ptr).await;
     }
 }
@@ -24,7 +24,7 @@ async fn test_top() {
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
     let config_ptr = Arc::new(config_file.get("basic").unwrap().to_owned());
 
-    let result = masking::masking_top::run_main(config_ptr).await;
+    let result = masking::masking_runner::run(config_ptr).await;
     assert!(result);
     //assert!(false)
     //std::process::exit(0);

@@ -7,8 +7,10 @@ use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider}, datasets:
 use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow_sync::SquadArrowGenerator, squad_tokenizer, SquadConfig, squad_endpoint::SquadEnpoint};
 
 
+
+
 // Create the Dataset Provider for Squad
-fn create_provider() -> ArrowTransfer<SquadGeneral>{
+fn create_provider(_value:&Arc<serde_yaml::Value>) -> ArrowTransfer<SquadGeneral>{
     let locations = arrow_provider::download_huggingface_dataset("squad".to_string(), None, "train".to_string());
     println!("Locations {:?}", locations);
     let mut loader = ArrowTransfer::new(locations.unwrap()[0].to_owned());
@@ -32,13 +34,14 @@ fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::endpoint::En
     return endpoint;
 }
 
+// TODO : The squad implementation has quite a few flaws and is not fully functional
+
 pub async fn run(value:Arc<Value>) -> bool{
-    //let provider = SquadDataProvider{} as dyn ModelDataProvider<SquadGeneral> + Send;
 
     let result = generic_runner::run_main(value, 
-        Box::new(create_provider), 
+        generic_runner::Either::Right(Box::new(create_provider)), 
         Box::new(create_generator) , 
         Box::new(create_endpoint));
     result.await 
-    //true
 }
+

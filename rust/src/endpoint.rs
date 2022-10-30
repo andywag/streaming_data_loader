@@ -1,4 +1,9 @@
 
+use std::sync::Arc;
+
+use serde::Serialize;
+use tokio::task::{JoinHandle, self};
+
 use crate::{transport::ZmqChannel};
 
 pub trait EndPoint<T> {
@@ -43,5 +48,18 @@ pub async fn receive<T>(
             }
         }
     }
+}
 
+pub async fn create_endpoint<D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
+    endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>,
+    rx:tokio::sync::mpsc::Receiver<ZmqChannel<D>>) -> JoinHandle<bool> {
+    // Create the Data Provider
+    let endpoint = endpoint(&value.clone());
+
+    let handle = task::spawn(async move {
+        let result = receive(rx, endpoint);
+        result.await
+            
+    });  
+    handle
 }

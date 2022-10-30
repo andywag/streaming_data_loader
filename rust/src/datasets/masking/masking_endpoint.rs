@@ -1,6 +1,45 @@
-use crate::{datasets::masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, transport::ZmqChannel};
 
+use tokenizers::Tokenizer;
 
+use crate::{datasets::masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, transport::ZmqChannel, endpoint::EndPoint};
+
+pub struct MaskingEndpoint {
+    pub tokenizer:Tokenizer
+}
+
+impl MaskingEndpoint {
+    pub fn new(config:MaskingConfig) -> Self {
+        let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
+        Self {
+            tokenizer:tokenizer
+        }
+    }
+
+    // TODO : Put in a valid check for the data. Disabled due to use of file match which was inconvenient
+    // TODO : Make data input mutable to allow checks
+    pub fn check_batch(&self, data:MaskedData) -> bool {
+        // Compare only the first batch of data based on a known dataset
+        for _x in 0..data.input_ids.len() as usize {
+            for _y in 0..data.masked_lm_labels.len() as usize {
+                //data.input_ids[x][data.masked_lm_positions[x][y] as usize] = data.masked_lm_labels[x][y];
+            }
+        }
+        true
+        /*let check = match compare_location {
+            Some(path) => {
+                utils::compare_data(path, data.input_ids, 256)    
+            },
+            None => false,
+        };*/
+        //println!("Matched {}", check);
+    }
+}
+
+impl EndPoint<MaskedData> for MaskingEndpoint {
+    fn receive(&mut self, data:MaskedData) -> bool {
+        return self.check_batch(data);
+    }
+}
 
 
 pub async fn receiver(config_in:&MaskingConfig, 

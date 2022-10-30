@@ -11,7 +11,7 @@ basic:
       mask_length: 18
       tokenizer_name: "bert-base-uncased"
   sink:
-    type: "mask_receiver"
+    type: "test"
     config:
       comparison: "../data/test.bin"
   node:
