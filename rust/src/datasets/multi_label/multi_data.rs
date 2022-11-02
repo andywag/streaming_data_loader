@@ -8,7 +8,7 @@ pub struct MultiData {
     pub attention_mask:Vec<Vec<u32>>,
     pub token_type_ids:Vec<Vec<u32>>,
     
-    pub labels:Vec<Vec<u32>>
+    pub labels:Vec<Vec<f32>>
 }
 
 impl MultiData {
@@ -17,13 +17,13 @@ impl MultiData {
             input_ids: vec![vec![0;sequence_length as usize];batch_size as usize],
             attention_mask: vec![vec![1;sequence_length as usize];batch_size as usize],
             token_type_ids: vec![vec![1;sequence_length as usize];batch_size as usize],
-            labels: vec![vec![0;num_labels as usize];batch_size as usize],
+            labels: vec![vec![0.0;num_labels as usize];batch_size as usize],
         }
     }
 }
 
 #[derive(Debug)]
-pub struct MultiData {
+pub struct MultiTransport {
     pub text:String,
     pub labels:Vec<u32>,
 }

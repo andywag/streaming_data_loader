@@ -3,13 +3,14 @@
 use serde::{Serialize};
 use tokio::sync::mpsc::Receiver;
 
+use crate::provider::ProviderChannel;
 
 
-use super::ZmqChannel;
+
 
 
 // Generic ZMQ Transfer to Send Data to Device
-pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<ZmqChannel<T>>) -> bool {
+pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<ProviderChannel<T>>) -> bool {
     let ctx = zmq::Context::new();
     
     let result:Vec<&str> = address.split(":").collect();
@@ -25,22 +26,50 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<ZmqC
     let socket = ctx.socket(zmq::REP).unwrap();
     socket.bind(host_name.as_str()).unwrap();
 
+    let data = rx.recv().await;
+    let dataset_info = if let ProviderChannel::Info(x) = data.unwrap() {
+        println!("Info {:?}", x);
+        Some(x)
+    }
+    else {
+        println!("DataSet Info Required");
+        None
+    };
+
+    let mut packet_count = 0;
     loop {
         let mut msg = zmq::Message::new();
         let _ = socket.recv(&mut msg, 0);
-        let data = rx.recv().await;
-        match data.unwrap() {
-            ZmqChannel::Complete => {
-                println!("Finished Transport");
-                let _ = socket.send("Finished", 0);
-                return true;
-            },
-            ZmqChannel::Data(x) => {
-                let result = serde_pickle::to_vec(&x, Default::default());
+        
+        match msg.as_str() {
+            Some("Info") => {
+                let result = serde_pickle::to_vec(&dataset_info, Default::default());
                 let _ = socket.send(result.unwrap(), 0);
             },
+            Some("Data") => {
+                let data = rx.recv().await;
+                match data.unwrap() {
+                    ProviderChannel::Info(x) => {
+                        println!("Getting Dataset Information {:?}", x);
+                    }
+                    ProviderChannel::Complete => {
+                        println!("Finished Transport");
+                        let _ = socket.send("Finished", 0);
+                        return true;
+                    },
+                    ProviderChannel::Data(x) => {
+                        let result = serde_pickle::to_vec(&x, Default::default());
+                        let _ = socket.send(result.unwrap(), 0);
+                        packet_count += 1;
+                        println!("Sent Packet {:?}", packet_count);
+                    },
+                }
+            }
+            _ => {
+                println!("Message Error");
+            }
         }
-        
+
     }
     //true
 }

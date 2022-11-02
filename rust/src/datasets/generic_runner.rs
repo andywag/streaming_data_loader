@@ -12,22 +12,37 @@ use tokio::task::{self, JoinHandle};
 
 use crate::batcher::{self, Batcher};
 use crate::endpoint::{self, EndPoint};
+use crate::provider::ProviderConfigEpochs;
+use crate::provider::ProviderConfigIterations;
 use crate::provider::arrow_transfer::{ArrowTransfer};
 use crate::provider::{ProviderChannel};
-use crate::transport::{self, ZmqChannel};
-
+use crate::transport::{self};
+use crate::provider;
 
 pub async fn create_data_provider<P:Send + 'static>(value:Arc<Value>, 
     provider:Box<dyn Fn(&Arc<serde_yaml::Value>) -> ArrowTransfer<P>>,
     tx:tokio::sync::mpsc::Sender<ProviderChannel<P>>
     ) -> JoinHandle<()> {
     // Create the Data Provider
-    let iterations = value["source"]["iterations"].as_u64().unwrap().to_owned();
+    let iterations = value["source"]["iterations"].as_u64();//.unwrap().to_owned();
+    let epochs = value["source"]["epochs"].as_u64();
+
+    let provider_config = if iterations.is_some() {
+        provider::ProviderConfig::Iterations(ProviderConfigIterations{iterations:iterations.unwrap()})
+    }
+    else if epochs.is_some() {
+        provider::ProviderConfig::Epochs(ProviderConfigEpochs{epochs:epochs.unwrap()})
+    }
+    else {
+        provider::ProviderConfig::Epochs(ProviderConfigEpochs{epochs:1})
+    };
+
+    //let provider_config = provider::ProviderConfig::Iterations(ProviderConfigIterations{iterations:iterations});
 
     let mut loader = provider(&value.clone());
     let join_provider = task::spawn(async move {
     
-        let load_result = loader.load_data(iterations, tx);
+        let load_result = loader.load_data(provider_config, tx);
         load_result.await;
     });
     join_provider
@@ -36,7 +51,7 @@ pub async fn create_data_provider<P:Send + 'static>(value:Arc<Value>,
 pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
     generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     rx:tokio::sync::mpsc::Receiver<ProviderChannel<P>>, 
-    tx:tokio::sync::mpsc::Sender<ZmqChannel<D>>) -> JoinHandle<()> {
+    tx:tokio::sync::mpsc::Sender<ProviderChannel<D>>) -> JoinHandle<()> {
     // Create the Data Provider
     let generator = generator(&value);
 
@@ -49,7 +64,7 @@ pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(value:
 
 pub async fn create_endpoint<D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
     endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>,
-    rx:tokio::sync::mpsc::Receiver<ZmqChannel<D>>) -> JoinHandle<bool> {
+    rx:tokio::sync::mpsc::Receiver<ProviderChannel<D>>) -> JoinHandle<bool> {
     // Create the Data Provider
     let endpoint = endpoint(&value.clone());
 
@@ -69,6 +84,7 @@ pub enum Either<L,R> {
 type DataProviderAsync<P> = Box<dyn Fn(&Arc<Value>, Sender<ProviderChannel<P>>) -> JoinHandle<()>>;
 type DataProviderSync<P> = Box<dyn Fn(&Arc<serde_yaml::Value>) -> ArrowTransfer<P>>;
 
+// TODO : Clean up the direct reading of the Serde Value and use a serde load to a struct
 pub async fn run_main<'de, P:Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(value:Arc<Value>,
     base_provider:Either<DataProviderAsync<P>,DataProviderSync<P>>,
     generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
@@ -78,9 +94,8 @@ pub async fn run_main<'de, P:Send + 'static, D:Deserialize<'de>+Serialize+Send+'
     // Create the Channel from Input to Tokenizer
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);
     // Create the Channel from Tokenizer to Output
-    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ZmqChannel<D>>(1);
+    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ProviderChannel<D>>(1);
 
-    //let join_provider = create_data_provider(value.clone(), provider, tx);
     let join_provider = match base_provider {
         Either::Left(x) => x(&value.clone(), tx),
         Either::Right(y) => create_data_provider(value.clone(), y, tx).await,
@@ -90,7 +105,7 @@ pub async fn run_main<'de, P:Send + 'static, D:Deserialize<'de>+Serialize+Send+'
 
 
 
-    // Create the Receiver : Either a test endpoint for local testing or a ZMQ transport for external Operation
+    // Create the Receiver : Either a test endpoint for local testing or a ZMQ transport for an external operation
     let rx_select = value["sink"]["type"].as_str().map(|e| e.to_string());
     let join_rx = if rx_select.unwrap() == "test" { // Local Test Point
         let endpoint = endpoint(&value.clone());
@@ -145,7 +160,7 @@ pub async fn run_main<'de, P:Send + 'static, D:Deserialize<'de>+Serialize+Send+'
                 let batch_size = value["tokenizer"]["config"]["batch_size"].as_u64().unwrap();
 
                 task::spawn(async move {
-                    let result = transport::zmq_receive::rust_node_transport_no_type(address, batch_size);
+                    let result = transport::zmq_receive::rust_node_transport::<D>(address, batch_size);
                     result.await
                 })
             }
@@ -155,9 +170,7 @@ pub async fn run_main<'de, P:Send + 'static, D:Deserialize<'de>+Serialize+Send+'
         println!("Finished {:?} {:?}", result.0, result.3);
         return result.0.unwrap();
     }
-
     
-    //let total = tokio::join!(join_rx, join_tokenizer, join_provider);
     
 }
 

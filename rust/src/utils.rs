@@ -32,9 +32,7 @@ pub fn compare_data<T:abomonation::Abomonation>(path:String, current:T, start:us
         let mut current_data = Vec::<u8>::with_capacity(data.len());
         let _ = abomonation::encode(&current, &mut current_data);
 
-        //println!("Data {:?} ", current_data);
         for x in start..data.len() {
-            //println!("A {} {} {}",x, current_data[x], data[x]);
             if current_data[x] != data[x] {
                 return false;
             }

@@ -1,22 +1,6 @@
-basic:
-  source:
-    type: "arrow"
-    location: "/home/andy/.cache/huggingface/datasets/squad/plain_text/1.0.0/d6ec3ceb99ca480ce37cdd35555d6cb2511d223b9150cce08a837ef62ffea453/squad-train.arrow"
-    iterations: 2000 
-  tokenizer: 
-    type: "squad"
-    config: 
-      batch_size: 1024
-      sequence_length: 384
-      tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "test"
-    config:
-      comparison: "../data/test.bin"
-  node:
-    type: "none"
 
-basic_hugging:
+
+basic:
   source:
     type: "hugging"
     dataset: "squad"

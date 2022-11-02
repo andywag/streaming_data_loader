@@ -12,27 +12,30 @@ use std::io::Read;
 
 struct ArrowDescriptor {
     pub name:String,
-    pub paths:Vec<String>
+    pub paths:Vec<String>,
+    pub num_rows:u32
 }
 
 #[derive(Deserialize, Debug)]
-struct ArrowFiles {
-    pub children:Vec<ArrowDescriptor>
+pub struct ArrowFiles {
+    children:Vec<ArrowDescriptor>
 }
 
 impl ArrowFiles {
-    pub fn get_locations(self, key:String) -> Option<Vec<String>> {
+    pub fn get_locations(self, key:String) -> Option<(Vec<String>,u32)> {
         for child in self.children {
             if child.name == key {
-                return Some(child.paths);
+                return Some((child.paths, child.num_rows));
             }
         }
         return None;
     }
 }
 
-
-pub fn download_huggingface_dataset(dataset:String, typ:Option<String>, key:String) -> Option<Vec<String>> {
+// Download a Huggingface dataset
+// Uses python to download the dataset and create a pickle file with information
+// Loads the pickle file to get arrow file location and number of rows in arrow file
+pub fn download_huggingface_dataset(dataset:String, typ:Option<String>) -> Option<ArrowFiles> {
     let cwd =  "../python";
     let command = "python3";
     
@@ -73,9 +76,10 @@ pub fn download_huggingface_dataset(dataset:String, typ:Option<String>, key:Stri
     let _file_size = f.unwrap().read_to_end(&mut buffer);
     let result = serde_pickle::value_from_slice(buffer.as_slice(), Default::default()).unwrap();
     let arrow_file:ArrowFiles = serde_pickle::from_value(result).unwrap();
-    println!("B {:?}", arrow_file);
-    let locations =  arrow_file.get_locations(key.to_string());
-    return locations;
+    //println!("B {:?}", arrow_file);
+    //let locations =  arrow_file.get_locations(key.to_string());
+    //return locations;
+    return Some(arrow_file);
 
 }
 

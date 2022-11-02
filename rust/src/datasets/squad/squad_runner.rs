@@ -4,16 +4,20 @@ use serde_yaml::Value;
 
 use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider}, datasets::generic_runner};
 
-use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow_sync::SquadArrowGenerator, squad_tokenizer, SquadConfig, squad_endpoint::SquadEnpoint};
+use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow::SquadArrowGenerator, squad_tokenizer, SquadConfig, squad_endpoint::SquadEnpoint};
 
 
 
 
 // Create the Dataset Provider for Squad
 fn create_provider(_value:&Arc<serde_yaml::Value>) -> ArrowTransfer<SquadGeneral>{
-    let locations = arrow_provider::download_huggingface_dataset("squad".to_string(), None, "train".to_string());
-    println!("Locations {:?}", locations);
-    let mut loader = ArrowTransfer::new(locations.unwrap()[0].to_owned());
+    let arrow_files = arrow_provider::download_huggingface_dataset("squad".to_string(), None).unwrap();
+    let arrow_train = arrow_files.get_locations("train".to_string()).unwrap();
+    let arrow_location = arrow_train.0[0].to_owned();
+    let arrow_length = arrow_train.1;
+
+    //println!("Locations {:?}", locations);
+    let mut loader = ArrowTransfer::new(arrow_location, arrow_length);
     let generator = Box::new(SquadArrowGenerator::new(&loader.schema)) ;
     loader.generator = Some(generator);
     return loader;

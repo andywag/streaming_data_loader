@@ -1,7 +1,7 @@
 
 use tokenizers::Tokenizer;
 
-use crate::{datasets::masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, transport::ZmqChannel, endpoint::EndPoint};
+use crate::{datasets::masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, endpoint::EndPoint, provider::ProviderChannel};
 
 pub struct MaskingEndpoint {
     pub tokenizer:Tokenizer
@@ -41,9 +41,9 @@ impl EndPoint<MaskedData> for MaskingEndpoint {
     }
 }
 
-
+// TODO : Need proper way to deal with dataset info and first dataset to channel
 pub async fn receiver(config_in:&MaskingConfig, 
-    mut rx:tokio::sync::mpsc::Receiver<ZmqChannel<MaskedData>>,
+    mut rx:tokio::sync::mpsc::Receiver<ProviderChannel<MaskedData>>,
     compare_location:Option<String>
 ) -> bool {
     let config = config_in.clone();
@@ -51,11 +51,14 @@ pub async fn receiver(config_in:&MaskingConfig,
 
     let mut data:MaskedData;
     match data_full {
-        ZmqChannel::Complete => {
+        ProviderChannel::Info(_) => {
+            data = MaskedData::new(1, 1, 1);
+        },
+        ProviderChannel::Complete => {
             println!("First Batch Required");
             data = MaskedData::new(1, 1, 1);
         },
-        ZmqChannel::Data(x) => {
+        ProviderChannel::Data(x) => {
             data = x;
         },
     }
@@ -78,11 +81,12 @@ pub async fn receiver(config_in:&MaskingConfig,
     loop {
         let result = rx.recv().await.unwrap();
         match result {
-            ZmqChannel::Complete => {
+            ProviderChannel::Info(_) => {},
+            ProviderChannel::Complete => {
                 println!("Done Receiver");
                 return check;
             },
-            ZmqChannel::Data(_) => {},
+            ProviderChannel::Data(_) => {},
         }
     }
     //println!("Test Receiver Finished");

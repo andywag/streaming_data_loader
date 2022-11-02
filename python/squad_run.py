@@ -46,6 +46,8 @@ def tokenize_function(examples):
         pass
     data['start_positions'] = start
     data['end_positions'] = end
+    print(data[0])
+
     return data
 
 def run_bert():

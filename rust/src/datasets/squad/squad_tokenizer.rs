@@ -121,5 +121,17 @@ impl SquadTokenizer {
             return None;
     }
 
-}
+        fn get_working_batch(&mut self) -> Option<Self::T> {
+            if self.index == 0 {
+                return None;
+            }
+            let mut old_batch = self.create_data(); 
+            std::mem::swap(&mut self.batch, &mut old_batch);
+            self.index = 0;
+            return Some(old_batch);
+        }
+        
+    }
+
+
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 parser = argparse.ArgumentParser(description='Download Dataset')
-parser.add_argument('--dataset', type = str)
+parser.add_argument('--dataset', type=str, default="squad")
 parser.add_argument('--ar', type=str, default=None)
 parser.add_argument('--store', type=str, default="cache.pkl")
 
@@ -14,6 +14,7 @@ parser.add_argument('--store', type=str, default="cache.pkl")
 class Descriptor:
     name:str
     paths:List[str]
+    num_rows:int
 
 @dataclass
 class Transfer:
@@ -23,9 +24,7 @@ class Transfer:
 def main():
     print("BASE")
     args = parser.parse_args()
-    base = load_dataset("squad")
-    #with open("test.tmp", 'w') as fp:
-    #    pickle.dump(base.cache_files, fp)
+
     if args.ar is None:
         d = load_dataset(args.dataset)
     else:
@@ -36,7 +35,7 @@ def main():
         paths = []
         for x in v:
             paths.append(x['filename'])
-        descriptor = Descriptor(k, paths)
+        descriptor = Descriptor(k, paths, d.num_rows[k])
         descriptors.append(descriptor)
     transfer = Transfer(descriptors)
 

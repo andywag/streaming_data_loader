@@ -39,8 +39,6 @@ impl ArrowGenerator for SquadArrowGenerator {
 impl SquadArrowGenerator {
 
     pub fn new(schema:&Arc<Schema>) -> Self {
-        
-
         Self {
             q: schema.column_with_name("question").unwrap().0,
             c: schema.column_with_name("context").unwrap().0,
