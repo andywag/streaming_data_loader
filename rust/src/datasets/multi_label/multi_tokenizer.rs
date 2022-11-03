@@ -41,7 +41,7 @@ impl MultiTokenizer {
         type T = MultiData;
 
         fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
-            //println!("Data {:?}", data);
+            //log::info!("Data {:?}", data);
             let result = self.tokenizer.encode(data.text, true).unwrap();
     
             let length = min(result.len(), self.sequence_length as usize);
@@ -58,6 +58,7 @@ impl MultiTokenizer {
                 let mut old_batch = self.create_data(); 
                 std::mem::swap(&mut self.batch, &mut old_batch);
                 self.index = 0;
+
                 return Some(old_batch);
             }
             return None;

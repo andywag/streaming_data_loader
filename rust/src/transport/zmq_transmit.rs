@@ -1,5 +1,6 @@
 
 
+
 use serde::{Serialize};
 use tokio::sync::mpsc::Receiver;
 
@@ -53,15 +54,17 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<Prov
                         println!("Getting Dataset Information {:?}", x);
                     }
                     ProviderChannel::Complete => {
-                        println!("Finished Transport");
+                        log::info!("Finished Transport");
                         let _ = socket.send("Finished", 0);
+                        //thread::sleep(time::Duration::from_millis(5000));
+
                         return true;
                     },
                     ProviderChannel::Data(x) => {
                         let result = serde_pickle::to_vec(&x, Default::default());
                         let _ = socket.send(result.unwrap(), 0);
                         packet_count += 1;
-                        println!("Sent Packet {:?}", packet_count);
+                        log::info!("Sent Packet {:?}", packet_count);
                     },
                 }
             }

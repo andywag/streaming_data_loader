@@ -1,10 +1,13 @@
 basic:
   model: "multi-label"
   source:
-    iterations: 10 
+    
+    length: !iterations
+      iterations: 32
+        #iterations: 32 
   tokenizer: 
     config: 
-      batch_size: 1024
+      batch_size: 32
       sequence_length: 384
       number_labels: 9
       tokenizer_name: "bert-base-uncased"
@@ -15,14 +18,39 @@ basic:
   node:
     type: "none"
 
-zmq_ipc:
+python_match:
   model: "multi-label"
   source:
-    epochs: 1 
+    shuffle: false
+    length: !epochs
+      epochs: 1 
   tokenizer: 
     config: 
       batch_size: 1024
-      sequence_length: 128
+      sequence_length: 96
+      number_labels: 9
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "zmq"
+    config:
+      address: "ipc:///tmp/emot_python_compare"
+  node:
+    type: "python"
+    config:
+      cwd: "../python"
+      cmd: "python3"
+      args: ["emot_dataset_compare.py"]
+
+zmq_ipc:
+  model: "multi-label"
+  source:
+    flatten: true
+    length: !epochs
+      epochs: 6 
+  tokenizer: 
+    config: 
+      batch_size: 1024
+      sequence_length: 96
       number_labels: 9
       tokenizer_name: "bert-base-uncased"
   sink:

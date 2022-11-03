@@ -26,7 +26,7 @@ impl SquadData {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SquadGeneral {
     pub question:String,
     pub context:String,

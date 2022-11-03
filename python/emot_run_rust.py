@@ -13,23 +13,23 @@ from external_dataset import ExternalDataset
 
 
 def run_bert():
-    #data = load_dataset("xed_en_fi", "en_annotated")
-    
-    #tokenized_dataset = data.map(tokenize_function, batched=True)
-
     dataset = ExternalDataset("ipc:///tmp/multi-label")
 
     config = AutoConfig.from_pretrained("bert-base-uncased")
     config.problem_type = "multi_label_classification"
     config.num_labels = 9
     
-    training_args = TrainingArguments(output_dir = "local",
-                                      learning_rate=1e-5,
+    training_args = TrainingArguments(output_dir="local",
+                                      lr_scheduler_type="constant",
+                                      learning_rate=5e-6,
+                                      warmup_steps=0.0,
                                       per_device_train_batch_size=32,
-                                      logging_steps=100,
-                                      num_train_epochs=1)
+                                      logging_steps=8,
+                                      num_train_epochs=6,
+                                      save_steps=1000000,
+                                      gradient_accumulation_steps=8
+                                      )
     model = AutoModelForSequenceClassification.from_config(config).train()
-
 
     trainer = Trainer(
         model=model,
@@ -48,6 +48,7 @@ parser.add_argument('--report', type=int, default=100)
 
 def main():
     run_bert()
+
 
 if __name__ == '__main__':
     main()

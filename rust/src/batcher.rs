@@ -41,8 +41,8 @@ pub async fn create_batch<S,T>(mut rx:Receiver<ProviderChannel<S>>,
                     None => {}
                 }
                 let _ = tx_transport.send(ProviderChannel::Complete).await;
-                println!("Finished Tokenizer");
-                return;
+                
+                break;
             },
             ProviderChannel::Data(x) => {
                 let batch = batcher.create_sync_batch(x);
@@ -54,6 +54,7 @@ pub async fn create_batch<S,T>(mut rx:Receiver<ProviderChannel<S>>,
             },
         }
     }
+    log::info!("Finished Batcher");
 }
 
 pub async fn create_batcher<P:Send + 'static, D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,

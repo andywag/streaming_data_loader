@@ -10,6 +10,8 @@ use loader::datasets::squad;
 use clap::Parser;
 use serde_yaml::Value;
 
+
+
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -19,7 +21,7 @@ struct Args {
    path: String,
 
    /// Number of times to greet
-   #[arg(short, long, default_value="zmq_ipc")]
+   #[arg(short, long, default_value="basic")]
    config: String,
 }
 
@@ -28,6 +30,7 @@ struct Args {
 #[tokio::main] 
 async fn main()  {
 
+    loader::create_logger();
 
     let args = Args::parse();
     let f = std::fs::File::open(args.path).unwrap();

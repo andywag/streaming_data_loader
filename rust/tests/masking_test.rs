@@ -1,14 +1,37 @@
 use std::sync::Arc;
 
-use loader::datasets::{masking, squad};
+use loader::datasets::{masking, squad, multi_label};
 use serde_yaml::Value;
 
+enum TestType {
+    _MASK,
+    SQUAD,
+    MULTI
+}
+
 #[tokio::main]
-async fn basic_test(file:String, config:String, masking:bool) {
-    let f = std::fs::File::open(file).unwrap();
+
+async fn basic_test(test_type:TestType, config:String) {
+    loader::create_logger();
+
+    let path = match test_type {
+        TestType::_MASK =>  "tests/masking_tests.yaml",
+        TestType::SQUAD => "tests/squad_tests.yaml",
+        TestType::MULTI => "tests/multi_label.yaml",
+    };
+    
+    let f = std::fs::File::open(path).unwrap();
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
     let config_ptr = Arc::new(config_file.get(config).unwrap().to_owned());
 
+    let result = match test_type {
+        TestType::_MASK =>  masking::masking_runner::run(config_ptr).await,
+        TestType::SQUAD => squad::squad_runner::run(config_ptr).await,
+        TestType::MULTI => multi_label::multi_runner::run(config_ptr).await,
+    };
+    log::info!("Result {}", result);
+    assert!(result);
+    /* 
     if masking {
         masking::masking_runner::run(config_ptr).await;
     }
@@ -16,6 +39,7 @@ async fn basic_test(file:String, config:String, masking:bool) {
         squad::squad_runner::run(config_ptr).await;
         //squad::squad_top::run_main(config_ptr).await;
     }
+    */
 }
 
 #[tokio::test]
@@ -42,11 +66,15 @@ fn test_mask_python() {
 
 #[test]
 fn test_squad() {
-    basic_test("tests/squad_tests.yaml".to_string(),"basic".to_string(), false);
-}
+    basic_test(TestType::SQUAD,"basic".to_string());
+} 
 
 #[test]
 fn test_multi_label() {
-    basic_test("tests/multi_label.yaml".to_string(),"basic".to_string(), false);
+    basic_test(TestType::MULTI,"basic".to_string());
 }
 
+#[test]
+fn test_multi_match() {
+    basic_test(TestType::MULTI, "python_match".to_string());
+}

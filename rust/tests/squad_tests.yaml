@@ -2,10 +2,9 @@
 
 basic:
   source:
-    type: "hugging"
-    dataset: "squad"
-    key: "train"
-    iterations: 2000 
+    shuffle: false
+    length: !iterations
+      iterations: 100
   tokenizer: 
     type: "squad"
     config: 

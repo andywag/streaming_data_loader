@@ -29,6 +29,9 @@ class ExternalDataset(torch.utils.data.IterableDataset):
         while True:
             self.socket.send_string("Data")
             data = self.socket.recv()
+            if len(data) == 8:
+                print("Done with Download")
+                break
             result = pickle.loads(data)
             self.data_queue.put(result)
 

@@ -9,7 +9,7 @@ use std::process::{Command};
 
 
 // Endpoint to Accomdate Testing where data is received and counted
-pub async fn rust_node_transport<'de,T:Deserialize<'de>>(address:String, batch_size:u64)  {
+pub async fn rust_node_transport<'de,T:Deserialize<'de>>(address:String, batch_size:u64) -> bool {
     let ctx = zmq::Context::new();
      
     let host_name = address;
@@ -35,12 +35,23 @@ pub async fn rust_node_transport<'de,T:Deserialize<'de>>(address:String, batch_s
     let time = now.elapsed().as_micros() as f32/1000000.0;
     let batches = count*batch_size;
     let qps = (batches as f32)/(time as f32);
-    println!("Batches {}, RunTime {}s, QPS {}",batches, time, qps);
+    log::info!("Batches {}, RunTime {}s, QPS {}",batches, time, qps);
+    true
 }
 
 // Wrapper around running a python version of the model
-pub async fn python_node_transport(command:String, cwd:String, args:Vec<String>)  {
+pub async fn python_node_transport(command:String, cwd:String, args:Vec<String>) -> bool  {
     println!("Running {} {} {:?}", command, cwd, args);
     let result = Command::new(command).current_dir(cwd).args(args).output();
-    println!("Python Result : {:?}", result);
+    let stderr = &result.unwrap().stdout[..]; 
+    let std_string = std::str::from_utf8(stderr).unwrap();
+    let fail = std_string.find("FAILED");
+
+    log::info!("Stdout {}", std_string);
+    match fail {
+        Some(_) => false,
+        None => true
+    }
+    //log::info!("Stderr {}", &result.unwrap().stderr);
+
 }

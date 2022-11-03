@@ -12,21 +12,25 @@ use tokio::task::{self, JoinHandle};
 
 use crate::batcher::{self, Batcher};
 use crate::endpoint::{self, EndPoint};
-use crate::provider::ProviderConfigEpochs;
-use crate::provider::ProviderConfigIterations;
+use crate::provider::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};
 use crate::provider::{ProviderChannel};
 use crate::transport::{self};
-use crate::provider;
 
-pub async fn create_data_provider<P:Send + 'static>(value:Arc<Value>, 
+pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>, 
     provider:Box<dyn Fn(&Arc<serde_yaml::Value>) -> ArrowTransfer<P>>,
     tx:tokio::sync::mpsc::Sender<ProviderChannel<P>>
     ) -> JoinHandle<()> {
     // Create the Data Provider
-    let iterations = value["source"]["iterations"].as_u64();//.unwrap().to_owned();
-    let epochs = value["source"]["epochs"].as_u64();
+    //let iterations = value["source"]["iterations"].as_u64();//.unwrap().to_owned();
+    //let epochs = value["source"]["epochs"].as_u64();
+    //let p_config = ProviderConfig{length:ProviderLength::Iterations { iterations:20 }};
+    //let d = serde_yaml::to_string(&p_config);
+    //println!("HER {}", d.unwrap());
 
+    println!("Source {:?}", value["source"]);
+    let provider_config = serde_yaml::from_value::<ProviderConfig>(value["source"].clone()).unwrap();
+    /* 
     let provider_config = if iterations.is_some() {
         provider::ProviderConfig::Iterations(ProviderConfigIterations{iterations:iterations.unwrap()})
     }
@@ -36,7 +40,7 @@ pub async fn create_data_provider<P:Send + 'static>(value:Arc<Value>,
     else {
         provider::ProviderConfig::Epochs(ProviderConfigEpochs{epochs:1})
     };
-
+    */
     //let provider_config = provider::ProviderConfig::Iterations(ProviderConfigIterations{iterations:iterations});
 
     let mut loader = provider(&value.clone());
@@ -85,7 +89,7 @@ type DataProviderAsync<P> = Box<dyn Fn(&Arc<Value>, Sender<ProviderChannel<P>>) 
 type DataProviderSync<P> = Box<dyn Fn(&Arc<serde_yaml::Value>) -> ArrowTransfer<P>>;
 
 // TODO : Clean up the direct reading of the Serde Value and use a serde load to a struct
-pub async fn run_main<'de, P:Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(value:Arc<Value>,
+pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(value:Arc<Value>,
     base_provider:Either<DataProviderAsync<P>,DataProviderSync<P>>,
     generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>) -> bool {
@@ -167,8 +171,8 @@ pub async fn run_main<'de, P:Send + 'static, D:Deserialize<'de>+Serialize+Send+'
 
         };
         let result = tokio::join!(join_rx, join_tokenizer, join_provider, join_node);
-        println!("Finished {:?} {:?}", result.0, result.3);
-        return result.0.unwrap();
+        log::info!("Finished {:?} {:?}", result.0, result.3);
+        return result.0.unwrap() && result.3.unwrap();
     }
     
     

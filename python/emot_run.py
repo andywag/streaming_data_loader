@@ -19,7 +19,7 @@ def tokenize_function(examples):
         return data
 
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-    data = tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=128)
+    data = tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=96)
 
     labels = convert_labels(examples['labels'])
     data['labels'] = labels.tolist()
@@ -32,14 +32,18 @@ def run_bert():
     config = AutoConfig.from_pretrained("bert-base-uncased")
     config.problem_type = "multi_label_classification"
     config.num_labels = 9
-    
-    training_args = TrainingArguments(output_dir = "local",
-                                      learning_rate=1e-5,
-                                      per_device_train_batch_size=32,
-                                      logging_steps=100,
-                                      num_train_epochs=6)
-    model = AutoModelForSequenceClassification.from_config(config).train()
 
+    training_args = TrainingArguments(output_dir="local",
+                                      lr_scheduler_type="constant",
+                                      learning_rate=5e-6,
+                                      warmup_steps=0.0,
+                                      per_device_train_batch_size=32,
+                                      logging_steps=8,
+                                      num_train_epochs=6,
+                                      save_steps=1000000,
+                                      gradient_accumulation_steps=8
+                                      )
+    model = AutoModelForSequenceClassification.from_config(config).train()
 
     trainer = Trainer(
         model=model,
