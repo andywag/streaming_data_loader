@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde_yaml::Value;
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, wiki_file_provider}, datasets::generic_runner};
+use crate::{provider::{ProviderChannel, wiki_file_provider}, tasks::generic_runner};
 use tokio::sync::mpsc::Sender;
 
 use super::{masking_tokenizer, masking_config::MaskingConfig, masked_data::MaskedData, masking_endpoint::MaskingEndpoint};

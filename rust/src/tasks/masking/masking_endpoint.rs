@@ -1,7 +1,7 @@
 
 use tokenizers::Tokenizer;
 
-use crate::{datasets::masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, endpoint::EndPoint, provider::ProviderChannel};
+use crate::{tasks::masking::{masking_config::MaskingConfig, masked_data::MaskedData}, utils, endpoint::EndPoint, provider::ProviderChannel};
 
 pub struct MaskingEndpoint {
     pub tokenizer:Tokenizer

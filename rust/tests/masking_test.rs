@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
-use loader::datasets::{masking, squad, multi_label};
+use loader::tasks::{masking, squad, multi_label, single_class};
 use serde_yaml::Value;
 
 enum TestType {
     _MASK,
     SQUAD,
-    MULTI
+    MULTI,
+    SINGLE
 }
 
 #[tokio::main]
@@ -18,6 +19,8 @@ async fn basic_test(test_type:TestType, config:String) {
         TestType::_MASK =>  "tests/masking_tests.yaml",
         TestType::SQUAD => "tests/squad_tests.yaml",
         TestType::MULTI => "tests/multi_label.yaml",
+        TestType::SINGLE => "tests/single_class.yaml",
+
     };
     
     let f = std::fs::File::open(path).unwrap();
@@ -26,20 +29,14 @@ async fn basic_test(test_type:TestType, config:String) {
 
     let result = match test_type {
         TestType::_MASK =>  masking::masking_runner::run(config_ptr).await,
-        TestType::SQUAD => squad::squad_runner::run(config_ptr).await,
-        TestType::MULTI => multi_label::multi_runner::run(config_ptr).await,
+        TestType::SQUAD => squad::runner::run(config_ptr).await,
+        TestType::MULTI => multi_label::runner::run(config_ptr).await,
+        TestType::SINGLE => single_class::runner::run(config_ptr).await,
+
     };
     log::info!("Result {}", result);
     assert!(result);
-    /* 
-    if masking {
-        masking::masking_runner::run(config_ptr).await;
-    }
-    else {
-        squad::squad_runner::run(config_ptr).await;
-        //squad::squad_top::run_main(config_ptr).await;
-    }
-    */
+   
 }
 
 #[tokio::test]
@@ -77,4 +74,9 @@ fn test_multi_label() {
 #[test]
 fn test_multi_match() {
     basic_test(TestType::MULTI, "python_match".to_string());
+}
+
+#[test]
+fn test_single_class() {
+    basic_test(TestType::SINGLE,"basic".to_string());
 }

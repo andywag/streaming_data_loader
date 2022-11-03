@@ -3,7 +3,7 @@ use rand::{seq::SliceRandom, thread_rng};
 use tokio::sync::mpsc::Sender;
 use std::{fs::File, sync::Arc};
 
-use crate::datasets::DatasetInfo;
+use crate::tasks::DatasetInfo;
 
 use super::{ProviderChannel, ProviderConfig};
 

@@ -3,9 +3,10 @@
 
 use std::sync::Arc;
 
-use loader::datasets::masking;
-use loader::datasets::multi_label;
-use loader::datasets::squad;
+use loader::tasks::masking;
+use loader::tasks::multi_label;
+use loader::tasks::single_class;
+use loader::tasks::squad;
 
 use clap::Parser;
 use serde_yaml::Value;
@@ -17,7 +18,7 @@ use serde_yaml::Value;
 #[command(author, version, about, long_about = None)]
 struct Args {
    /// Name of the person to greet
-   #[arg(short, long, default_value="tests/multi_label.yaml")]
+   #[arg(short, long, default_value="tests/single_class.yaml")]
    path: String,
 
    /// Number of times to greet
@@ -28,6 +29,7 @@ struct Args {
 
 
 #[tokio::main] 
+
 async fn main()  {
 
     loader::create_logger();
@@ -37,19 +39,17 @@ async fn main()  {
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
     let config_ptr = Arc::new(config_file.get(args.config).unwrap().to_owned());
 
-    if true {
-        let _result = multi_label::multi_runner::run(config_ptr).await;
-        println!("Final Result {}", _result);
-    }
-    else if false {
-        let _result = masking::masking_runner::run(config_ptr).await;
-        println!("Final Result {}", _result);
-    }
-    else {
-        //let result = squad::squad_top::run_main(config_ptr).await;
-        let result = squad::squad_runner::run(config_ptr).await;
-        println!("Squad Result {}", result);
-    }
-    
+    let result = match config_ptr["model"].as_str() {
+        Some("squad") => squad::runner::run(config_ptr).await,
+        Some("multi-label") => multi_label::runner::run(config_ptr).await,
+        Some("single-class") => single_class::runner::run(config_ptr).await,
+        Some("masking") => masking::masking_runner::run(config_ptr).await,
+        Some(x) => {log::error!("Model {x} Not Found"); false}
+        None => {log::error!("Model Must be specified in configuration file"); false}
+    };
+    log::info!("Final Result {}", result);
+
+
+  
     
 }

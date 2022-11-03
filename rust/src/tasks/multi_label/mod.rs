@@ -1,8 +1,7 @@
 pub mod multi_data;
 pub mod multi_tokenizer;
-pub mod multi_test_endpoint;
 pub mod multi_arrow;
-pub mod multi_runner;
+pub mod runner;
 
 use serde::{Serialize, Deserialize};
 

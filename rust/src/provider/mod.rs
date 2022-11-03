@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::datasets::DatasetInfo;
+use crate::tasks::DatasetInfo;
 
 
 
@@ -31,16 +31,3 @@ pub struct ProviderConfig {
 }
 
 
-/* 
-pub struct ProviderConfigIterations {
-    pub iterations:u64
-}
-pub struct ProviderConfigEpochs {
-    pub epochs:u64,
-}
-
-pub enum ProviderConfig {
-    Iterations(ProviderConfigIterations),
-    Epochs(ProviderConfigEpochs)
-}
-*/

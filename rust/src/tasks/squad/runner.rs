@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_yaml::Value;
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider}, datasets::generic_runner};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider}, tasks::generic_runner};
 
 use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow::SquadArrowGenerator, squad_tokenizer, SquadConfig, squad_endpoint::SquadEnpoint};
 

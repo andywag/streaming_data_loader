@@ -8,9 +8,21 @@ use crate::provider::ProviderChannel;
 
 
 pub trait EndPoint<T> {
-    fn receive(&mut self, data:T) -> bool;
+    fn receive(&mut self, _data:T) -> bool {
+        return true;
+    }
 }
 
+pub struct DefaultTestEndPoint {}
+impl <T>EndPoint<T> for DefaultTestEndPoint {
+    fn receive(&mut self, _data:T) -> bool {
+        return true;
+    }
+}
+// Create the Endpoint for Squad
+pub fn default_endpoint<T>(_value:&Arc<serde_yaml::Value>) -> Box<dyn crate::endpoint::EndPoint<T> + Send> {
+    return Box::new(DefaultTestEndPoint{});
+}
 
 
 pub async fn receive<T>( 

@@ -1,0 +1,17 @@
+basic:
+  model: "single-class"
+  source:
+    length: !iterations
+      iterations: 32
+        #iterations: 32 
+  tokenizer: 
+    config: 
+      batch_size: 32
+      sequence_length: 384
+      number_labels: 9
+      tokenizer_name: "bert-base-uncased"
+  sink:
+    type: "test"
+  node:
+    type: "none"
+

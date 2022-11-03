@@ -83,3 +83,10 @@ pub fn download_huggingface_dataset(dataset:String, typ:Option<String>) -> Optio
 
 }
 
+pub fn create_hugging_description(dataset:String, extra:Option<String>, operation:String) -> (String, u32) {
+    let arrow_files = download_huggingface_dataset(dataset, extra).unwrap();
+    let arrow_train = arrow_files.get_locations(operation).unwrap();
+    let arrow_location = arrow_train.0[0].to_owned();
+    let arrow_length = arrow_train.1;
+    (arrow_location, arrow_length)
+}
