@@ -80,3 +80,8 @@ fn test_multi_match() {
 fn test_single_class() {
     basic_test(TestType::SINGLE,"basic".to_string());
 }
+
+#[test]
+fn test_single_match() {
+    basic_test(TestType::SINGLE, "python_match".to_string());
+}

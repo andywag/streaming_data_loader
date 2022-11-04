@@ -14,7 +14,6 @@ trait ConfigTypes {
 pub struct SingleClassConfig{
     pub batch_size:u32,
     pub sequence_length:u32,
-    pub number_labels:u32,
     pub tokenizer_name:String
 }
 

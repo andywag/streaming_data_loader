@@ -1,7 +1,7 @@
 
 
 use std::{sync::Arc};
-use arrow::{array::{StringArray, Int32Array}, datatypes::Schema};
+use arrow::{array::{StringArray,Int64Array}, datatypes::{Schema}};
 
 use crate::provider::arrow_transfer::ArrowGenerator;
 
@@ -18,10 +18,11 @@ impl ArrowGenerator for SingleClassArrowGenerator {
     type T = SingleClassTransport;
     fn get_data(&self, data:&arrow::record_batch::RecordBatch) -> Self::T {
         let text = StringArray::from(data.slice(0,1).column(self.t).data().to_owned()).value(0).to_string();
-        let label = Int32Array::from(data.slice(0,1).column(self.l).data().to_owned()).value(0);
-
-        //log::info!("Here {} {}", text, label);
-        let data = Self::T{text:text, label:label as u32};
+        let label3 = data.slice(0,1).column(self.l).data().to_owned();
+        let label2 = Int64Array::from(label3).value(0);
+        
+        //log::info!("HereBASE {:?}",  label2);
+        let data = Self::T{text:text, label:label2 as u32};
         return data;
     }
 }

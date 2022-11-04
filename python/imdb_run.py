@@ -12,16 +12,27 @@ from datasets import load_dataset
 from external_dataset import ExternalDataset
 
 
-def run_bert():
-    dataset = ExternalDataset("ipc:///tmp/multi-label")
+def tokenize_function(examples):
+
+    tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+    data = tokenizer(examples['text'], padding="max_length", truncation=True, max_length=96)
+    return data
+
+def run_bert(external=True):
+    if not external:
+        data = load_dataset("imdb")
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+        tokenized_dataset = data.map(tokenize_function, batched=True)['train']
+    else:
+        tokenized_dataset = ExternalDataset("ipc:///tmp/single-class")
 
     config = AutoConfig.from_pretrained("bert-base-uncased")
-    config.problem_type = "multi_label_classification"
-    config.num_labels = 9
-    
+    config.problem_type = "single_label_classification"
+    config.num_labels = 2
+
     training_args = TrainingArguments(output_dir="local",
                                       lr_scheduler_type="constant",
-                                      learning_rate=5e-6,
+                                      learning_rate=1e-5,
                                       warmup_steps=0.0,
                                       per_device_train_batch_size=32,
                                       logging_steps=8,
@@ -29,26 +40,23 @@ def run_bert():
                                       save_steps=1000000,
                                       gradient_accumulation_steps=8
                                       )
-    model = AutoModelForSequenceClassification.from_config(config).train()
+    model = AutoModelForSequenceClassification.from_pretrained('bert-base-uncased',config=config).train()
 
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset,
-        eval_dataset=dataset,
+        train_dataset=tokenized_dataset,
+        eval_dataset=tokenized_dataset,
     )
     trainer.train()
 
 
 parser = argparse.ArgumentParser(description='Test Data Loading')
-parser.add_argument('--file', type=str, default='../rust/tests/masking_tests.yaml')
-parser.add_argument('--config', type=str, default='zmq_ipc')
-parser.add_argument('--iterations', type=int, default=5000)
-parser.add_argument('--report', type=int, default=100)
+parser.add_argument('--rust', action='store_true')
 
 def main():
-    run_bert()
-
+    args = parser.parse_args()
+    run_bert(args.rust)
 
 if __name__ == '__main__':
     main()

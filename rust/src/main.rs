@@ -22,7 +22,7 @@ struct Args {
    path: String,
 
    /// Number of times to greet
-   #[arg(short, long, default_value="basic")]
+   #[arg(short, long, default_value="python_match")]
    config: String,
 }
 

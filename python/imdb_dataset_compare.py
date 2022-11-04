@@ -13,37 +13,36 @@ from external_dataset import ExternalDataset
 
 
 def tokenize_function(examples):
-    def convert_labels(labels):
-        result = np.zeros((len(labels), 9), dtype=np.float32)
-        for x in range(len(labels)):
-            for label in labels[x]:
-                result[x][label] = 1.0
-        return result
 
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-    data = tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=96)
-    data['labels'] = convert_labels(examples['labels']).tolist()
+    data = tokenizer(examples['text'], padding="max_length", truncation=True, max_length=384)
     return data
 
 
 def compare_dataset():
     def check(a, b):
+        if type(a) != list:
+            return a == b
         an = np.asarray(a)
         bn = np.asarray(b)
-        return np.array_equal(an,bn)
+        if len(an) > 64:
+            return np.array_equal(an[:-1], bn[:-1])
+        else:
+            return np.array_equal(an, bn)
 
-    data = load_dataset("xed_en_fi", "en_annotated")
+    data = load_dataset("imdb")
     tokenized_dataset = data.map(tokenize_function, batched=True)
-    external_dataset = ExternalDataset("ipc:///tmp/emot_python_compare")
+    external_dataset = ExternalDataset("ipc:///tmp/imdb_python_compare")
 
-    compare_items = ['input_ids', 'attention_mask', 'labels']
+    compare_items = ['input_ids', 'attention_mask', 'label']
     for i, data in enumerate(tokenized_dataset['train']):
         external_data = next(external_dataset)
+        
         pass
         for ci in compare_items:
             m = check(data[ci], external_data[ci])
             if not m:
-                print("FAILED : Mismatch on line ", i)
+                print("FAILED : Mismatch on line ", i, data[ci], external_data[ci])
 
 def main():
     compare_dataset()

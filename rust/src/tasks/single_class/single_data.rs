@@ -8,7 +8,7 @@ pub struct SingleClassData {
     pub attention_mask:Vec<Vec<u32>>,
     pub token_type_ids:Vec<Vec<u32>>,
     
-    pub labels:Vec<f32>
+    pub label:Vec<u32>
 }
 
 impl SingleClassData {
@@ -17,7 +17,7 @@ impl SingleClassData {
             input_ids: vec![vec![0;sequence_length as usize];batch_size as usize],
             attention_mask: vec![vec![0;sequence_length as usize];batch_size as usize],
             token_type_ids: vec![vec![0;sequence_length as usize];batch_size as usize],
-            labels: vec![0.0;batch_size as usize],
+            label: vec![0;batch_size as usize],
         }
     }
 }
