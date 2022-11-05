@@ -56,7 +56,6 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<Prov
                     ProviderChannel::Complete => {
                         log::info!("Finished Transport");
                         let _ = socket.send("Finished", 0);
-                        //thread::sleep(time::Duration::from_millis(5000));
 
                         return true;
                     },

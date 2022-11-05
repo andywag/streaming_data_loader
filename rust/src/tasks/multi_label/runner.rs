@@ -18,15 +18,12 @@ fn create_provider(config:&ProviderConfig) -> ArrowTransfer<MultiTransport>{
             return loader;
         },
         crate::provider::SourceDescription::Arrow(_) => todo!(),
+        _ => { 
+            log::error!("Configuration Not Supported");
+            std::process::exit(1);
+        }
     };
 
-    /*let arrow_description = create_hugging_description("xed_en_fi".to_string(), Some("en_annotated".to_string()), "train".to_string());
-    let mut loader = ArrowTransfer::new(arrow_description.0, arrow_description.1);
-    let generator = Box::new(MultiArrowGenerator::new(&loader.schema)) ;
-    
-    loader.generator = Some(generator);
-    return loader;
-    */
 }
 
 // Create the Tokenizer for Squad

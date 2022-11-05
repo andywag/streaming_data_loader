@@ -1,20 +1,39 @@
 basic:
   model: "masking"
   source:
-    type: "wiki_file"
-    location: "../data/test.json.gz"
-    iterations: 20 
+    length: !iterations
+      iterations: 32
+    source: !wiki
+      location: "../data/test.json.gz"
+      network: false
   tokenizer: 
     type: "masking"
     config: 
       batch_size: 8
       sequence_length: 128
       mask_length: 18
-      tokenizer_name: "bert-base-uncased"
+      tokenizer_name: "roberta-base"
   sink:
     type: "test"
-    config:
-      comparison: "../data/test.bin"
+  node: !none
+
+basic_stream:
+  model: "masking"
+  source:
+    length: !iterations
+      iterations: 32
+    source: !wiki
+      location: "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz"
+      network: true
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 8
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "bert-base-cased"
+  sink:
+    type: "test"
   node: !none
 
 zmq_ipc:

@@ -45,23 +45,25 @@ pub async fn receive<T>(
     }
     
     // Wait for the rest of the inputs to flush out to exit
+    let mut passed = true;
     loop {
         let result = rx.recv().await; //.unwrap();
+        
         match result {
             Some(ProviderChannel::Info(_)) => {
                 continue;
             }   
             Some(ProviderChannel::Complete) => {
                 println!("Done Receiver");
-                return true;
+                return passed;
             },
             Some(ProviderChannel::Data(data)) => {
-                return endpoint.receive(data);
+                passed &= endpoint.receive(data);
                 //println!("RX");    
             },
             None => {
                 println!("RX ERROR");
-                return true;
+                return passed & false;
             }
         }
     }

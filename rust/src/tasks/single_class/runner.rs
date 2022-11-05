@@ -20,6 +20,10 @@ fn create_provider(config:&ProviderConfig) -> ArrowTransfer<SingleClassTransport
             return loader;
         },
         crate::provider::SourceDescription::Arrow(_) => todo!(),
+        _ => { 
+            log::error!("Configuration Not Supported");
+            std::process::exit(1);
+        }
     };    
 }
 

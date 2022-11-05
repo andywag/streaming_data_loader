@@ -37,7 +37,7 @@ def compare_dataset():
     compare_items = ['input_ids', 'attention_mask', 'label']
     for i, data in enumerate(tokenized_dataset['train']):
         external_data = next(external_dataset)
-        
+
         pass
         for ci in compare_items:
             m = check(data[ci], external_data[ci])

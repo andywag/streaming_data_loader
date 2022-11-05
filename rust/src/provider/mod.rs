@@ -34,12 +34,21 @@ pub struct HuggingDescription {
     pub connections:Option<HashMap<String,String>>
 }
 
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct WikiDescription {
+    pub location:String,
+    pub network:bool
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub enum SourceDescription {
     #[serde(rename = "huggingface")]
     HuggingFace(HuggingDescription),
     #[serde(rename = "arrow")]
     Arrow(String),
+    #[serde(rename="wiki")]
+    Wiki(WikiDescription)
 }
 
 #[derive(Deserialize, Serialize, Debug)]

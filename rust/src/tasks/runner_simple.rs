@@ -111,28 +111,27 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
             result.await
         })
     };
+
     // Create one of 2 options 
     // 1. "none"   : No Operation with either the test mode 
     // 2. "python" : External Python Command
     //let node_select = value["node"]["type"].as_str().unwrap();
 
-    //let command =PythonCommand{ command: "a".to_string(), cwd: "b".to_string(), args: vec!["c".to_string()] }; 
-
     let node_config = serde_yaml::from_value::<NodeConfig>(value["node"].clone());
     let join_node = match node_config {
-        Result::Ok(NodeConfig::Python(config)) => {
+        Result::Ok(NodeConfig::Python(config)) => { // Python Option
             task::spawn(async move {
                 let result = transport::zmq_receive::python_node_transport(config);
                 result.await
             })
         },
-        Result::Ok(NodeConfig::None) => {
+        Result::Ok(NodeConfig::None) => { // Bypass Option
             task::spawn(async move {
                 let result = transport::zmq_receive::dummy_node_tranport();
                 result.await
             })
         },
-        Result::Err(e) => {
+        Result::Err(e) => { // Error
             // TODO : Crash Run rather than continue operations
             log::error!("Error Decoding configuration {:?}", e);
             
@@ -143,23 +142,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
         }
     };
     
-    /* 
-    let join_node = if node_select == "python" {
-        let command = value["node"]["config"]["cmd"].as_str().unwrap().to_string();
-        let cwd = value["node"]["config"]["cwd"].as_str().unwrap().to_string();
-        let args:Vec<String> = value["node"]["config"]["args"].as_sequence().unwrap().into_iter().map(|e|e.as_str().unwrap().to_string()).collect();
 
-        task::spawn(async move {
-            let result = transport::zmq_receive::python_node_transport(command,cwd,args);
-            result.await
-        })
-    } 
-    else {
-        task::spawn(async move {
-            let result = transport::zmq_receive::dummy_node_tranport();
-            result.await
-        })
-    };*/
 
     let result = tokio::join!(join_rx, join_tokenizer, join_provider, join_node);
     log::info!("Finished {:?} {:?}", result.0, result.3);

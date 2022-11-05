@@ -4,85 +4,92 @@ use rand::thread_rng;
 use crate::batcher::Batcher;
 use crate::utils;
 use super::masked_data::MaskedData;
-use super::masking_config::MaskingConfig;
+use super::MaskingConfig;
 
 pub struct BaseTokenizer {
     pub batch_size:u32,
     pub sequence_length:u32,
     pub mask_length:u32,
     tokenizer:Tokenizer,
+    store_original:bool,
     batch:MaskedData,
     index:usize,
-    attention_mask:Vec<u32>,
-    positions:Vec<u32>, 
+    //attention_mask:Vec<u32>,
+    //positions:Vec<u32>, 
     mask:u32,
-    _sep:u32,
-    _cls:u32
+    cls:u32,
+    sep:u32,
+    pad:u32
 }
  
 impl BaseTokenizer {
-    pub fn new(config:&MaskingConfig) -> Self {
+    pub fn new(config:&MaskingConfig, store_original:bool) -> Self {
         let mask_length = config.mask_length;
         let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
-        let mask = tokenizer.token_to_id("[MASK]").unwrap().to_owned();
-        let cls = tokenizer.token_to_id("[CLS]").unwrap().to_owned();
-        let sep = tokenizer.token_to_id("[SEP]").unwrap().to_owned();
+        
+        
+        let location =  config.tokenizer_name.find("roberta");
+        let tokens = match location {
+            Some(_) => {
+                (tokenizer.token_to_id("<s>").unwrap().to_owned(),
+                tokenizer.token_to_id("</s>").unwrap().to_owned(),
+                tokenizer.token_to_id("<mask>").unwrap().to_owned(),
+                tokenizer.token_to_id("<pad>").unwrap().to_owned())
+            },
+            None => {
+                (tokenizer.token_to_id("[CLS]").unwrap().to_owned(),
+                 tokenizer.token_to_id("[SEP]").unwrap().to_owned(),
+                 tokenizer.token_to_id("[MASK]").unwrap().to_owned(),
+                 tokenizer.token_to_id("[PAD]").unwrap().to_owned())
+               
+            }
+        };
+
+        
 
         Self {
             batch_size: config.batch_size,
             sequence_length: config.sequence_length,
             mask_length: mask_length,
             tokenizer: tokenizer,
-            batch:MaskedData::new(config.batch_size, config.sequence_length, mask_length),
+            store_original: store_original,
+            batch:MaskedData::new(config.batch_size, config.sequence_length, mask_length, tokens.3),
             index:0, 
-            attention_mask:vec![0;config.sequence_length as usize],
-            positions:(0..config.sequence_length).collect(),
-            mask:mask,
-            _cls:cls,
-            _sep:sep,
+            //attention_mask:vec![0;config.sequence_length as usize],
+            //positions:(0..config.sequence_length).collect(),
+            cls:tokens.0,
+            sep:tokens.1,
+            mask:tokens.2,
+            pad:tokens.3
         }
     }
 
     fn create_data(&self) -> MaskedData {
-        return MaskedData::new(self.batch_size, self.sequence_length, self.mask_length)
+        return MaskedData::new(self.batch_size, self.sequence_length, self.mask_length, self.pad)
     }
      
-    pub fn mask_sequence(&self, index:usize, positions:&Vec<u32>, batch:&mut MaskedData, l:usize, mask:u32) {
-        for x in 0..self.mask_length as usize {
-            if positions[x] <= l as u32 {
-                batch.masked_lm_positions[index][x] = positions[x];
-                let masked_value = batch.input_ids[index][positions[x] as usize];
-                batch.input_ids[index][positions[x] as usize] = mask;
-                batch.masked_lm_positions[index][x] = positions[x];
-                batch.masked_lm_labels[index][x] = masked_value;
-            }
-            
-        }
-    }
+   
 
     // TODO : l input is incorrect 
-    pub fn mask_batch(&self, batch:&mut MaskedData, l:usize, mask:u32) {
+    pub fn mask_batch(&self, batch:&mut MaskedData, mask:u32) {
         let mut positions:Vec<u32> = (0..self.sequence_length).collect();
 
         for index in 0..self.batch_size as usize {
             positions.shuffle(&mut thread_rng());
 
             for x in 0..self.mask_length as usize {
-                if positions[x] <= l as u32 {
-                    batch.masked_lm_positions[index][x] = positions[x];
-                    let masked_value = batch.input_ids[index][positions[x] as usize];
+                if batch.input_ids[index][positions[x] as usize] != 0 {
+                    //batch.masked_lm_positions[index][x] = positions[x];
+                    //let masked_value = batch.input_ids[index][positions[x] as usize];
+                    batch.labels[index][positions[x] as usize] = batch.input_ids[index][positions[x] as usize] as i32;
                     batch.input_ids[index][positions[x] as usize] = mask;
-                    batch.masked_lm_positions[index][x] = positions[x];
-                    batch.masked_lm_labels[index][x] = masked_value;
+                    
+                    //batch.masked_lm_positions[index][x] = positions[x];
+                    //batch.masked_lm_labels[index][x] = masked_value;
                 }
             }
         }
     }
-
-
-
-    
-    
 
 }
 
@@ -94,30 +101,36 @@ impl Batcher for BaseTokenizer {
     fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
         let result = self.tokenizer.encode(data, true).unwrap();
             let ids = result.get_ids();
-            
+            let s = self.sequence_length as usize;
+
             let mut current_index = 0;
             while current_index < ids.len() {
-                self.positions.shuffle(&mut thread_rng());
-                let mut length:usize = self.sequence_length as usize;
-                if (current_index + self.sequence_length as usize) < ids.len() {
-                    
-                    self.batch.input_ids[self.index].clone_from_slice(&ids[current_index..current_index+self.sequence_length as usize]);
+                //let mut length:usize;// = self.sequence_length as usize;
+                self.batch.input_ids[self.index][0] = self.cls; // Always put a CLS in token location 0
+                if (current_index + s - 1) < ids.len() {
+                    self.batch.input_ids[self.index][1..s as usize].clone_from_slice(&ids[current_index..current_index+s-1]);
                 }
                 else {
-                    length = ids.len() - current_index;
-                    self.batch.input_ids[self.index][0..length].clone_from_slice(&ids[current_index..current_index+length as usize]);
-                    self.batch.attention_mask[self.index][(self.sequence_length as usize-length)..self.sequence_length as usize].copy_from_slice(&self.attention_mask[0..length]);
+                    let  length = ids.len() - current_index;
+                    self.batch.input_ids[self.index][1..length].clone_from_slice(&ids[current_index..current_index+length-1]);
+                    if length < s {
+                        self.batch.input_ids[self.index][length] = self.sep;
+                    }
+                    //self.batch.attention_mask[self.index][(self.sequence_length as usize-length)..self.sequence_length as usize].copy_from_slice(&self.attention_mask[0..length]);
                 }
 
-
-                current_index += self.sequence_length as usize;
+                current_index += s - 1;
                 self.index += 1;
 
                 if self.index == self.batch_size as usize {
+
                     let mut old_batch = self.create_data(); 
                     std::mem::swap(&mut self.batch, &mut old_batch);
                     self.index = 0;
-                    self.mask_batch(&mut old_batch, length, self.mask);
+                    if self.store_original {
+                        old_batch.original = Some(old_batch.input_ids.clone());
+                    }
+                    self.mask_batch(&mut old_batch, self.mask);
                     return Some(old_batch);
                 }
             }
@@ -128,7 +141,10 @@ impl Batcher for BaseTokenizer {
         let mut old_batch = self.create_data(); 
         std::mem::swap(&mut self.batch, &mut old_batch);
         self.index = 0;
-        self.mask_batch(&mut old_batch, self.sequence_length as usize, self.mask);
+        if self.store_original {
+            old_batch.original = Some(old_batch.input_ids.clone());
+        }
+        self.mask_batch(&mut old_batch,  self.mask);
         return Some(old_batch);
     }
 

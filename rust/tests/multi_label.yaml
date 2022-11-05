@@ -15,8 +15,6 @@ basic:
       tokenizer_name: "bert-base-uncased"
   sink:
     type: "test"
-    config:
-      comparison: "../data/test.bin"
   node: !none
     
     
