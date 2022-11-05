@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::tasks::DatasetInfo;
@@ -23,11 +25,29 @@ pub enum ProviderLength {
     Epochs{epochs:usize}
 }
 
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct HuggingDescription {
+    pub dataset:String,
+    pub args:Option<String>,
+    pub operations:Vec<String>,
+    pub connections:Option<HashMap<String,String>>
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub enum SourceDescription {
+    #[serde(rename = "huggingface")]
+    HuggingFace(HuggingDescription),
+    #[serde(rename = "arrow")]
+    Arrow(String),
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ProviderConfig {
     pub shuffle:Option<bool>, // Shuffle the data
     pub flatten:Option<bool>, // Load all the data into memory
-    pub length:ProviderLength
+    pub length:ProviderLength,
+    pub source:SourceDescription
 }
 
 

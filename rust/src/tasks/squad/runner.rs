@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_yaml::Value;
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider}, tasks::generic_runner};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider, ProviderConfig}, tasks::{runner_simple}};
 
 use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow::SquadArrowGenerator, squad_tokenizer, SquadConfig, squad_endpoint::SquadEnpoint};
 
@@ -10,7 +10,7 @@ use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow::SquadArrowGenera
 
 
 // Create the Dataset Provider for Squad
-fn create_provider(_value:&Arc<serde_yaml::Value>) -> ArrowTransfer<SquadGeneral>{
+fn create_provider(_config:&ProviderConfig) -> ArrowTransfer<SquadGeneral>{
     let arrow_files = arrow_provider::download_huggingface_dataset("squad".to_string(), None).unwrap();
     let arrow_train = arrow_files.get_locations("train".to_string()).unwrap();
     let arrow_location = arrow_train.0[0].to_owned();
@@ -31,7 +31,7 @@ fn create_generator(value:&Arc<serde_yaml::Value>)-> Box<dyn crate::batcher::Bat
 }
 
 // Create the Endpoint for Squad
-fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::endpoint::EndPoint<SquadData> + Send> {
+fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::test_endpoint::EndPoint<SquadData> + Send> {
     let tokenizer = &value["tokenizer"]["config"];
     let config:SquadConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
     let endpoint = Box::new(SquadEnpoint::new(config));
@@ -42,8 +42,8 @@ fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::endpoint::En
 
 pub async fn run(value:Arc<Value>) -> bool{
 
-    let result = generic_runner::run_main(value, 
-        generic_runner::Either::Right(Box::new(create_provider)), 
+    let result = runner_simple::run_main(value, 
+        runner_simple::Either::Right(Box::new(create_provider)), 
         Box::new(create_generator) , 
         Box::new(create_endpoint));
     result.await 

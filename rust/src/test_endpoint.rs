@@ -20,7 +20,7 @@ impl <T>EndPoint<T> for DefaultTestEndPoint {
     }
 }
 // Create the Endpoint for Squad
-pub fn default_endpoint<T>(_value:&Arc<serde_yaml::Value>) -> Box<dyn crate::endpoint::EndPoint<T> + Send> {
+pub fn default_endpoint<T>(_value:&Arc<serde_yaml::Value>) -> Box<dyn crate::test_endpoint::EndPoint<T> + Send> {
     return Box::new(DefaultTestEndPoint{});
 }
 

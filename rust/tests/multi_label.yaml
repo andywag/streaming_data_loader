@@ -1,10 +1,12 @@
 basic:
   model: "multi-label"
   source:
-    
     length: !iterations
       iterations: 32
-        #iterations: 32 
+    source: !huggingface
+      dataset: "xed_en_fi"
+      args: "en_annotated"
+      operations: ["train"]
   tokenizer: 
     config: 
       batch_size: 32
@@ -15,8 +17,9 @@ basic:
     type: "test"
     config:
       comparison: "../data/test.bin"
-  node:
-    type: "none"
+  node: !none
+    
+    
 
 python_match:
   model: "multi-label"
@@ -24,6 +27,10 @@ python_match:
     shuffle: false
     length: !epochs
       epochs: 1 
+    source: !huggingface
+      dataset: "xed_en_fi"
+      args: "en_annotated"
+      operations: ["train"]
   tokenizer: 
     config: 
       batch_size: 1024
@@ -34,12 +41,10 @@ python_match:
     type: "zmq"
     config:
       address: "ipc:///tmp/emot_python_compare"
-  node:
-    type: "python"
-    config:
-      cwd: "../python"
-      cmd: "python3"
-      args: ["emot_dataset_compare.py"]
+  node: !python
+    command: "python3"
+    cwd: "../python"
+    args: ["emot_dataset_compare.py"]
 
 zmq_ipc:
   model: "multi-label"
@@ -47,6 +52,10 @@ zmq_ipc:
     flatten: true
     length: !epochs
       epochs: 6 
+    source: !huggingface
+      dataset: "xed_en_fi"
+      args: "en_annotated"
+      operations: ["train"]
   tokenizer: 
     config: 
       batch_size: 1024
@@ -57,7 +66,6 @@ zmq_ipc:
     type: "zmq"
     config:
       address: "ipc:///tmp/multi-label"
-  node:
-    type: "none"
+  node: !none
     
      

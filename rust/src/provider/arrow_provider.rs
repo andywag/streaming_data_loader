@@ -8,6 +8,7 @@ use tempfile::NamedTempFile;
 use std::io::Read;
 
 
+
 #[derive(Deserialize, Debug)]
 
 struct ArrowDescriptor {
@@ -90,3 +91,19 @@ pub fn create_hugging_description(dataset:String, extra:Option<String>, operatio
     let arrow_length = arrow_train.1;
     (arrow_location, arrow_length)
 }
+
+/* 
+fn create_arrow_provider<S:Clone, T>(config:&ProviderConfig) -> ArrowTransfer<S>{
+    match &config.source {
+        crate::provider::SourceDescription::HuggingFace(x) => {
+            let arrow_description = create_hugging_description(x.dataset.clone(), x.args.clone(), x.operations[0].clone());
+            let mut loader = ArrowTransfer::new(arrow_description.0, arrow_description.1);
+            let generator = Box::new(T::new(&loader.schema)) ;
+    
+            loader.generator = Some(generator);
+            return loader;
+        },
+        crate::provider::SourceDescription::Arrow(_) => todo!(),
+    };    
+}
+*/

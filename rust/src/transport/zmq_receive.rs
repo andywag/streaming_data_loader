@@ -1,11 +1,30 @@
 
 
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use std::time::{Instant};
 use std::process::{Command};
 
+#[derive(Debug,Deserialize,Serialize)]
+pub struct PythonCommand {
+    pub command:String,
+    pub cwd:String,
+    pub args:Vec<String>
+}
+
+#[derive(Debug,Deserialize,Serialize)]
+pub enum NodeConfig{
+    #[serde(rename = "python")]
+    Python(PythonCommand),
+    #[serde(rename = "none")]
+    None
+}
+
+//#[derive(Debug,Deserialize)]
+//pub struct NodeConfig {
+//    pub node:NodeEnum
+//}
 
 
 // Endpoint to Accomdate Testing where data is received and counted
@@ -40,9 +59,9 @@ pub async fn rust_node_transport<'de,T:Deserialize<'de>>(address:String, batch_s
 }
 
 // Wrapper around running a python version of the model
-pub async fn python_node_transport(command:String, cwd:String, args:Vec<String>) -> bool  {
-    println!("Running {} {} {:?}", command, cwd, args);
-    let result = Command::new(command).current_dir(cwd).args(args).output();
+pub async fn python_node_transport(python_command:PythonCommand) -> bool  {
+    println!("Running {} {} {:?}", python_command.command, python_command.cwd, python_command.args);
+    let result = Command::new(python_command.command).current_dir(python_command.cwd).args(python_command.args).output();
     let stderr = &result.unwrap().stdout[..]; 
     let std_string = std::str::from_utf8(stderr).unwrap();
     let fail = std_string.find("FAILED");
@@ -53,5 +72,10 @@ pub async fn python_node_transport(command:String, cwd:String, args:Vec<String>)
         None => true
     }
     //log::info!("Stderr {}", &result.unwrap().stderr);
+
+}
+
+pub async fn dummy_node_tranport() -> bool  {
+    return true;
 
 }

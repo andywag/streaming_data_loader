@@ -11,41 +11,22 @@ use tokio::task::{self, JoinHandle};
 
 
 use crate::batcher::{self, Batcher};
-use crate::endpoint::{self, EndPoint};
+use crate::test_endpoint::{self, EndPoint};
 use crate::provider::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};
 use crate::provider::{ProviderChannel};
 use crate::transport::{self};
 
 pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>, 
-    provider:Box<dyn Fn(&Arc<serde_yaml::Value>) -> ArrowTransfer<P>>,
+    provider:Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>,
     tx:tokio::sync::mpsc::Sender<ProviderChannel<P>>
     ) -> JoinHandle<()> {
-    // Create the Data Provider
-    //let iterations = value["source"]["iterations"].as_u64();//.unwrap().to_owned();
-    //let epochs = value["source"]["epochs"].as_u64();
-    //let p_config = ProviderConfig{length:ProviderLength::Iterations { iterations:20 }};
-    //let d = serde_yaml::to_string(&p_config);
-    //println!("HER {}", d.unwrap());
 
-    println!("Source {:?}", value["source"]);
+    // Create the Provider Configuration
     let provider_config = serde_yaml::from_value::<ProviderConfig>(value["source"].clone()).unwrap();
-    /* 
-    let provider_config = if iterations.is_some() {
-        provider::ProviderConfig::Iterations(ProviderConfigIterations{iterations:iterations.unwrap()})
-    }
-    else if epochs.is_some() {
-        provider::ProviderConfig::Epochs(ProviderConfigEpochs{epochs:epochs.unwrap()})
-    }
-    else {
-        provider::ProviderConfig::Epochs(ProviderConfigEpochs{epochs:1})
-    };
-    */
-    //let provider_config = provider::ProviderConfig::Iterations(ProviderConfigIterations{iterations:iterations});
 
-    let mut loader = provider(&value.clone());
-    let join_provider = task::spawn(async move {
-    
+    let mut loader = provider(&provider_config);
+    let join_provider = task::spawn(async move {    
         let load_result = loader.load_data(provider_config, tx);
         load_result.await;
     });
@@ -73,7 +54,7 @@ pub async fn create_endpoint<D:Serialize+Send+'static>(value:Arc<serde_yaml::Val
     let endpoint = endpoint(&value.clone());
 
     let handle = task::spawn(async move {
-        let result = endpoint::receive(rx, endpoint);
+        let result = test_endpoint::receive(rx, endpoint);
         result.await
             
     });  
@@ -86,7 +67,7 @@ pub enum Either<L,R> {
 }
 
 type DataProviderAsync<P> = Box<dyn Fn(&Arc<Value>, Sender<ProviderChannel<P>>) -> JoinHandle<()>>;
-type DataProviderSync<P> = Box<dyn Fn(&Arc<serde_yaml::Value>) -> ArrowTransfer<P>>;
+type DataProviderSync<P> = Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>;
 
 // TODO : Clean up the direct reading of the Serde Value and use a serde load to a struct
 pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(value:Arc<Value>,
@@ -99,6 +80,9 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);
     // Create the Channel from Tokenizer to Output
     let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ProviderChannel<D>>(1);
+
+    // Create the Data Provider Configuration
+    //let provider_config = serde_yaml::from_value::<ProviderConfig>(value["source"].clone()).unwrap();
 
     let join_provider = match base_provider {
         Either::Left(x) => x(&value.clone(), tx),
@@ -115,7 +99,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
         let endpoint = endpoint(&value.clone());
 
         task::spawn(async move {
-            let result = endpoint::receive(rx_trans, endpoint);
+            let result = test_endpoint::receive(rx_trans, endpoint);
             result.await
             
         })   

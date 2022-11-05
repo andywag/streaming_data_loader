@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde_yaml::Value;
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, wiki_file_provider}, tasks::generic_runner};
+use crate::{provider::{ProviderChannel, wiki_file_provider}, tasks::{runner_simple}};
 use tokio::sync::mpsc::Sender;
 
 use super::{masking_tokenizer, masking_config::MaskingConfig, masked_data::MaskedData, masking_endpoint::MaskingEndpoint};
@@ -40,7 +40,7 @@ fn create_generator(value:&Arc<serde_yaml::Value>)-> Box<dyn crate::batcher::Bat
 }
  
 // Create the Endpoint for Squad
-fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::endpoint::EndPoint<MaskedData> + Send> {
+fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::test_endpoint::EndPoint<MaskedData> + Send> {
     let tokenizer = &value["tokenizer"]["config"];
     let config:MaskingConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
     let endpoint = Box::new(MaskingEndpoint::new(config));
@@ -51,8 +51,8 @@ fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::endpoint::En
 
 pub async fn run(value:Arc<Value>) -> bool{
 
-    let result = generic_runner::run_main(value, 
-        generic_runner::Either::Left(Box::new(create_provider)), 
+    let result = runner_simple::run_main(value, 
+        runner_simple::Either::Left(Box::new(create_provider)), 
         Box::new(create_generator) , 
         Box::new(create_endpoint));
     result.await 

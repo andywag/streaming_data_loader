@@ -7,7 +7,8 @@ pub mod multi_label;
 pub mod squad;
 pub mod single_class;
 
-pub mod generic_runner;
+//pub mod runner_top;
+pub mod runner_simple;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetInfo {

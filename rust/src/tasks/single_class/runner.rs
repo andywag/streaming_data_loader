@@ -2,20 +2,25 @@ use std::sync::Arc;
 
 use serde_yaml::Value;
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}}, tasks::{generic_runner}};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, ProviderConfig}, tasks::{ runner_simple}};
 
 use super::{single_data::{SingleClassTransport, SingleClassData}, SingleClassConfig, single_arrow::SingleClassArrowGenerator};
 
 
 
 // Create the Dataset Provider for Squad
-fn create_provider(_value:&Arc<serde_yaml::Value>) -> ArrowTransfer<SingleClassTransport>{
-    let arrow_description = create_hugging_description("imdb".to_string(), None, "train".to_string());
-    let mut loader = ArrowTransfer::new(arrow_description.0, arrow_description.1);
-    let generator = Box::new(SingleClassArrowGenerator::new(&loader.schema)) ;
+fn create_provider(config:&ProviderConfig) -> ArrowTransfer<SingleClassTransport>{
+    match &config.source {
+        crate::provider::SourceDescription::HuggingFace(x) => {
+            let arrow_description = create_hugging_description(x.dataset.clone(), x.args.clone(), x.operations[0].clone());
+            let mut loader = ArrowTransfer::new(arrow_description.0, arrow_description.1);
+            let generator = Box::new(SingleClassArrowGenerator::new(&loader.schema)) ;
     
-    loader.generator = Some(generator);
-    return loader;
+            loader.generator = Some(generator);
+            return loader;
+        },
+        crate::provider::SourceDescription::Arrow(_) => todo!(),
+    };    
 }
 
 // Create the Tokenizer for Squad
@@ -31,10 +36,10 @@ fn create_generator(value:&Arc<serde_yaml::Value>)-> Box<dyn crate::batcher::Bat
 
 pub async fn run(value:Arc<Value>) -> bool{
 
-    let result = generic_runner::run_main(value, 
-        generic_runner::Either::Right(Box::new(create_provider)), 
+    let result = runner_simple::run_main(value, 
+        runner_simple::Either::Right(Box::new(create_provider)), 
         Box::new(create_generator), 
-        Box::new(crate::endpoint::default_endpoint));
+        Box::new(crate::test_endpoint::default_endpoint));
 
     result.await 
 }

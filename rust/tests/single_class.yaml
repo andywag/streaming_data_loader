@@ -3,7 +3,9 @@ basic:
   source:
     length: !iterations
       iterations: 32
-        #iterations: 32 
+    source: !huggingface
+      dataset: "imdb"
+      operations: ["train"]
   tokenizer: 
     config: 
       batch_size: 32
@@ -11,8 +13,7 @@ basic:
       tokenizer_name: "bert-base-uncased"
   sink:
     type: "test"
-  node:
-    type: "none"
+  node: !none
 
 python_match:
   model: "single-class"
@@ -20,6 +21,9 @@ python_match:
     shuffle: false
     length: !epochs
       epochs: 1 
+    source: !huggingface
+      dataset: "imdb"
+      operations: ["train"]
   tokenizer: 
     config: 
       batch_size: 1024
@@ -29,19 +33,20 @@ python_match:
     type: "zmq"
     config:
       address: "ipc:///tmp/imdb_python_compare"
-  node:
-    type: "python"
-    config:
-      cwd: "../python"
-      cmd: "python3"
-      args: ["imdb_dataset_compare.py"]
+  node: !python
+    cwd: "../python"
+    command: "python3"
+    args: ["imdb_dataset_compare.py"]
 
 zmq_ipc:
   model: "single-class"
   source:
     flatten: true
     length: !epochs
-      epochs: 6 
+      epochs: 6  
+    source: !huggingface
+      dataset: "imdb"
+      operations: ["train"] 
   tokenizer: 
     config: 
       batch_size: 1024
@@ -51,6 +56,5 @@ zmq_ipc:
     type: "zmq"
     config:
       address: "ipc:///tmp/single-class"
-  node:
-    type: "none"
+  node: !none
 

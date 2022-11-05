@@ -18,11 +18,11 @@ use serde_yaml::Value;
 #[command(author, version, about, long_about = None)]
 struct Args {
    /// Name of the person to greet
-   #[arg(short, long, default_value="tests/single_class.yaml")]
+   #[arg(short, long, default_value="tests/multi_label.yaml")]
    path: String,
 
    /// Number of times to greet
-   #[arg(short, long, default_value="python_match")]
+   #[arg(short, long, default_value="basic")]
    config: String,
 }
 

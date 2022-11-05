@@ -19,9 +19,8 @@ impl ArrowGenerator for SquadArrowGenerator {
     fn get_data(&self, data:&arrow::record_batch::RecordBatch) -> SquadGeneral {
         let question = StringArray::from(data.slice(0,1).column(self.q).data().to_owned()).value(0).to_string();
         let context = StringArray::from(data.slice(0,1).column(self.c).data().to_owned()).value(0).to_string();
-        let answers = StructArray::from(data.slice(0,1).column(self.a).data().to_owned());
         
-        //let spa1 = StringArray::from(answers.column(0).data().to_owned()).value(0).to_owned();
+        let answers = StructArray::from(data.slice(0,1).column(self.a).data().to_owned());
         let answer_list = ListArray::from(answers.column(0).data().to_owned()).value(0);
         let answer = StringArray::from(answer_list.data().to_owned()).value(0).to_string();
 

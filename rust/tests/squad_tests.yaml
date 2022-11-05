@@ -1,10 +1,14 @@
 
 
 basic:
+  model: "squad"
   source:
     shuffle: false
     length: !iterations
       iterations: 100
+    source: !huggingface
+      dataset: "squad"
+      operations: ["train"]
   tokenizer: 
     type: "squad"
     config: 
@@ -15,5 +19,4 @@ basic:
     type: "test"
     config:
       comparison: "../data/test.bin"
-  node:
-    type: "none"
+  node: !none
