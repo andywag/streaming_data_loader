@@ -33,7 +33,7 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<Prov
         Some(x)
     }
     else {
-        println!("DataSet Info Required");
+        log::error!("DataSet Info Required");
         None
     };
 

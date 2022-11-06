@@ -4,11 +4,14 @@ import zmq
 import threading
 import queue
 import pickle
-
+from typing import List
 
 class ExternalDataset(torch.utils.data.IterableDataset):
 
-    def __init__(self, address, maxsize=8):
+    def __init__(self, address, batch_size=1024, fields:List[str] = None, maxsize=8):
+        self.batch_size = batch_size
+        self.fields = fields
+
         self.ctx = zmq.Context()
         self.socket = self.ctx.socket(zmq.REQ)
         self.socket.connect(address)
@@ -48,10 +51,13 @@ class ExternalDataset(torch.utils.data.IterableDataset):
         while True:
             data = self.data_queue.get()
 
-            for x in range(1024):
+            for x in range(self.batch_size):
                 result = dict()
-                for k, v in data.items():
-                    result[k] = v[x]
+                keys = data.keys()
+                if self.fields is not None:
+                    keys = self.fields
+                for key in keys:
+                    result[key] = data[key][x]
                 yield result
 
     def __getitem__(self, idx):

@@ -36,6 +36,48 @@ basic_stream:
     type: "test"
   node: !none
 
+zmq_none:
+  model: "masking"
+  source:
+    length: !iterations
+      iterations: 50000
+    source: !wiki
+      location: "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz"
+      network: true
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 1024
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "bert-base-cased"
+  sink:
+    type: "zmq"
+    config:
+      address: "ipc:///tmp/masking_none"
+  node: !none
+
+zmq_local:
+  model: "masking"
+  source:
+    length: !iterations
+      iterations: 50000
+    source: !wiki
+      location: "../../../Downloads/enwiki-20220926-cirrussearch-content.json.gz"
+      network: false
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 1024
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "roberta-base"
+  sink:
+    type: "zmq"
+    config:
+      address: "ipc:///tmp/masking_none"
+  node: !none
+
 zmq_ipc:
   source:
     type: "wiki_file"

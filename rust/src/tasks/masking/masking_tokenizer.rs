@@ -14,7 +14,7 @@ pub struct BaseTokenizer {
     store_original:bool,
     batch:MaskedData,
     index:usize,
-    //attention_mask:Vec<u32>,
+    attention_mask:Vec<u32>,
     //positions:Vec<u32>, 
     mask:u32,
     cls:u32,
@@ -55,7 +55,7 @@ impl BaseTokenizer {
             store_original: store_original,
             batch:MaskedData::new(config.batch_size, config.sequence_length, mask_length, tokens.3),
             index:0, 
-            //attention_mask:vec![0;config.sequence_length as usize],
+            attention_mask:vec![0;config.sequence_length as usize],
             //positions:(0..config.sequence_length).collect(),
             cls:tokens.0,
             sep:tokens.1,
@@ -69,8 +69,6 @@ impl BaseTokenizer {
     }
      
    
-
-    // TODO : l input is incorrect 
     pub fn mask_batch(&self, batch:&mut MaskedData, mask:u32) {
         let mut positions:Vec<u32> = (0..self.sequence_length).collect();
 
@@ -79,13 +77,8 @@ impl BaseTokenizer {
 
             for x in 0..self.mask_length as usize {
                 if batch.input_ids[index][positions[x] as usize] != 0 {
-                    //batch.masked_lm_positions[index][x] = positions[x];
-                    //let masked_value = batch.input_ids[index][positions[x] as usize];
                     batch.labels[index][positions[x] as usize] = batch.input_ids[index][positions[x] as usize] as i32;
-                    batch.input_ids[index][positions[x] as usize] = mask;
-                    
-                    //batch.masked_lm_positions[index][x] = positions[x];
-                    //batch.masked_lm_labels[index][x] = masked_value;
+                    batch.input_ids[index][positions[x] as usize] = mask;       
                 }
             }
         }
@@ -116,7 +109,7 @@ impl Batcher for BaseTokenizer {
                     if length < s {
                         self.batch.input_ids[self.index][length] = self.sep;
                     }
-                    //self.batch.attention_mask[self.index][(self.sequence_length as usize-length)..self.sequence_length as usize].copy_from_slice(&self.attention_mask[0..length]);
+                    self.batch.attention_mask[self.index][(s-length+1)..s].copy_from_slice(&self.attention_mask[(s-length+1)..s]);
                 }
 
                 current_index += s - 1;

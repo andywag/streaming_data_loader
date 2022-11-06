@@ -70,9 +70,7 @@ pub async fn load_url(url:&String, length:ProviderLength, tx:Sender<ProviderChan
         crate::provider::ProviderLength::Iterations { iterations } => {it = Some(iterations)},
         crate::provider::ProviderLength::Epochs { epochs } => {ep = Some(epochs)},
     }
-
-
-    
+    let _result = tx.send(ProviderChannel::Info(crate::tasks::DatasetInfo { name: "wiki".to_string(), length: 1000000000 })).await;
 
     // Print decompressed txt content
 
@@ -136,7 +134,10 @@ pub async fn load_data(file_path:&String, length:ProviderLength, tx:Sender<Provi
         crate::provider::ProviderLength::Iterations { iterations } => {it = Some(iterations)},
         crate::provider::ProviderLength::Epochs { epochs } => {ep = Some(epochs)},
     }
+    let _result = tx.send(ProviderChannel::Info(crate::tasks::DatasetInfo { name: "wiki".to_string(), length: 1000000000 })).await;
 
+                    
+                    
 
     let mut data_count = 0;
     let mut epoch_count = 0;
