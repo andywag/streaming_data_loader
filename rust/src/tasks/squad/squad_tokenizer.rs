@@ -8,6 +8,7 @@ use crate::utils;
 use super::SquadConfig;
 use super::squad_data::{SquadData, SquadGeneral};
 
+/* 
 fn find_offset(index:usize, types:&[u32], offsets:&[(usize,usize)]) -> usize {
     let mut sp = 0;
     let mut ep = offsets.len();
@@ -36,6 +37,7 @@ fn find_offset(index:usize, types:&[u32], offsets:&[(usize,usize)]) -> usize {
     //println!("Found {} {} {:?}", sp, ep, offsets[sp]);
     return sp;
 }
+*/
 
 pub struct SquadTokenizer {
     pub batch_size:u32,
@@ -47,7 +49,9 @@ pub struct SquadTokenizer {
 
 impl SquadTokenizer {
     pub fn new(config:&SquadConfig) -> Self {
+        
         let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
+        
         Self {
             batch_size: config.batch_size,
             sequence_length: config.sequence_length,
@@ -67,6 +71,7 @@ impl SquadTokenizer {
         type T = SquadData;
 
         fn create_sync_batch(&mut self, data:SquadGeneral) -> Option<SquadData> {
+            
             let result = self.tokenizer.encode((data.question, data.context), true).unwrap();
     
             let length = min(result.len(), self.sequence_length as usize);
@@ -75,40 +80,40 @@ impl SquadTokenizer {
             self.batch.attention_mask[self.index][0..length].clone_from_slice(&result.get_attention_mask()[0..length]);
             self.batch.answers[self.index] = data.answer.clone();
             
-            //println!("Offsets {:?}", result.get_offsets());
-    
-            let mut start = find_offset(data.sp as usize, result.get_type_ids(), result.get_offsets());
-            let mut end = find_offset(data.ep as usize, result.get_type_ids(), result.get_offsets());
-    
-            let ans_token = self.tokenizer.encode(data.answer.unwrap(), false);
-            let ans_ids = ans_token.unwrap();
-    
-            //println!("HHHH {} {} {:?}", start, self.sequence_length, self.batch.answers[self.index]);
-            if start > self.sequence_length as usize{
-                return None;
-            }
-            if self.batch.input_ids[self.index].len() > start && ans_ids.get_ids()[0] != self.batch.input_ids[self.index][start as usize] {
-                // TODO : Hacked way of searching for the proper start/end points
-                // Doesn't catch all cases which run through the continue loop
-                // Misses some mismatch cases because only works on first char
-
-                for _ in 0..10 {
-                    start += 1;
-                    end += 1;
-                    if self.batch.input_ids[self.index].len() > start {
-                        if ans_ids.get_ids()[0] == self.batch.input_ids[self.index][start as usize] {
-                            break;
+            let mut start_token:Option<usize> = None;
+            let mut end_token:Option<usize> = None;
+            // Kludgey code to search through offsets to find the proper offsets
+            // Issue due to rusts handling of characters
+            match data.offset {
+                Some(offset) => {
+                    let offsets = result.get_offsets();
+                    for x in 0..offset+1 {
+                        start_token = result.char_to_token((data.sp) as usize +x, 1);
+                        end_token = result.char_to_token((data.ep-1) as usize + x, 1);
+                        match (start_token, end_token) {
+                            (Some(s), Some(e)) => {
+                                //log::info!("BBBB {} {} : {} {} {:?} {:?}", data.sp, data.ep, s, e, offsets[s], offsets[e]);
+                                if offsets[s].0 == data.sp as usize + x && offsets[e].1 == data.ep as usize + x{ 
+                                    break;
+                                }
+                            },
+                            _ => {}
                         }
                     }
-                }
-                if ans_ids.get_ids()[0] != self.batch.input_ids[self.index][start as usize] {
-                    return None;
-                }
-                if start >= self.sequence_length as usize || end >= self.sequence_length as usize {
-                    return None;
-                }
-                
+                },
+                None => {
+                    start_token = result.char_to_token(data.sp as usize, 1);
+                    end_token = result.char_to_token((data.ep-1) as usize, 1);
+                },
             }
+
+            //let d_vec = self.batch.input_ids[self.index][start_token.unwrap() as usize..end_token.unwrap()+1 as usize].to_owned();
+            //let result_str = self.tokenizer.decode(d_vec, true).unwrap(); 
+            //log::info!("Running {:?} {:?}", data.answer, result_str);
+            
+            self.batch.start_positions[self.index] = start_token.unwrap() as u32;
+            self.batch.end_positions[self.index] = end_token.unwrap() as u32;
+
             //println!("Here {} {}", self.index, self.batch_size);
             self.index += 1;
             if self.index == self.batch_size as usize {

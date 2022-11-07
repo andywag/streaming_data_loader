@@ -1,54 +1,489 @@
    Compiling data_loader v0.1.0 (/home/andy/projects/data_loader/rust)
-warning: unused imports: `Date64Array`, `Int32Array`, `Int32Type`, `ListArray`, `PrimitiveArray`
- --> src/tasks/single_class/single_arrow.rs:4:34
-  |
-4 | use arrow::{array::{StringArray, Int32Array, ListArray, Int64Array, PrimitiveArray, Date64Array}, datatypes::{Schema, Int32Type}};
-  |                                  ^^^^^^^^^^  ^^^^^^^^^              ^^^^^^^^^^^^^^  ^^^^^^^^^^^                       ^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` on by default
+warning: unused variable: `offsets`
+  --> src/tasks/squad/squad_tokenizer.rs:79:17
+   |
+79 |             let offsets = result.get_offsets();
+   |                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_offsets`
+   |
+   = note: `#[warn(unused_variables)]` on by default
 
-warning: `data_loader` (lib) generated 1 warning
-    Finished release [optimized] target(s) in 11.52s
+warning: value assigned to `start_token` is never read
+  --> src/tasks/squad/squad_tokenizer.rs:90:21
+   |
+90 |                     start_token = result.char_to_token((data.sp-1) as usize, 1);
+   |                     ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_assignments)]` on by default
+   = help: maybe it is overwritten before being read?
+
+warning: function `find_offset` is never used
+  --> src/tasks/squad/squad_tokenizer.rs:11:4
+   |
+11 | fn find_offset(index:usize, types:&[u32], offsets:&[(usize,usize)]) -> usize {
+   |    ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: `data_loader` (lib) generated 3 warnings
+    Finished release [optimized] target(s) in 10.69s
      Running `target/release/data_loader`
-Source Mapping {"shuffle": Bool(false), "length": TaggedValue { tag: !epochs, value: Mapping {"epochs": Number(1)} }}
-Args ["download_dataset.py", "--dataset", "imdb", "--store", "/tmp/.tmpFxTDdu"]
-Stderr "Reusing dataset imdb (/home/andy/.cache/huggingface/datasets/imdb/plain_text/1.0.0/2fdd8b9bcadd6e7055e742a706876ba43f19faee861df134affd7a3f60fc38a1)\n\r  0%|          | 0/3 [00:00<?, ?it/s]\r100%|██████████| 3/3 [00:00<00:00, 638.01it/s]\n"
+Args ["download_dataset.py", "--dataset", "squad", "--store", "/tmp/.tmpLBFAkZ"]
+Stderr "Reusing dataset squad (/home/andy/.cache/huggingface/datasets/squad/plain_text/1.0.0/d6ec3ceb99ca480ce37cdd35555d6cb2511d223b9150cce08a837ef62ffea453)\n\r  0%|          | 0/2 [00:00<?, ?it/s]\r100%|██████████| 2/2 [00:00<00:00, 472.57it/s]\n"
 Stdout "BASE\n"
-Loading Arrow File /home/andy/.cache/huggingface/datasets/imdb/plain_text/1.0.0/2fdd8b9bcadd6e7055e742a706876ba43f19faee861df134affd7a3f60fc38a1/imdb-train.arrow
-Running python3 ../python ["imdb_dataset_compare.py"]
-Starting Server at ipc:///tmp/imdb_python_compare
+Loading Arrow File /home/andy/.cache/huggingface/datasets/squad/plain_text/1.0.0/d6ec3ceb99ca480ce37cdd35555d6cb2511d223b9150cce08a837ef62ffea453/squad-train.arrow
+/home/andy/.cargo/registry/src/github.com-1ecc6299db9ec823/cached-path-0.5.3/src/cache.rs:415 [INFO] - Cached version of https://huggingface.co/bert-base-uncased/resolve/main/tokenizer.json is up-to-date
 /home/andy/.cargo/registry/src/github.com-1ecc6299db9ec823/cached-path-0.5.3/src/cache.rs:415 [INFO] - Cached version of https://huggingface.co/bert-base-uncased/resolve/main/tokenizer.json is up-to-date
 Sending Dataset Info
-Info DatasetInfo { name: "dataset", length: 25000 }
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 1
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 2
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 3
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 4
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 5
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 6
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 7
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 8
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 9
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 10
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 11
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 12
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 13
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 14
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 15
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 16
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 17
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 18
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 19
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 20
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 21
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 22
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 23
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 24
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 515 541 Some(130) Some(137)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Saint Bernadette Soubirous") "saint bernadette soubirous"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 188 213 Some(52) Some(56)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("a copper statue of Christ") "a copper statue of christ"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 279 296 Some(81) Some(83)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the Main Building") "the main building"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 381 420 Some(95) Some(101)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("a Marian place of prayer and reflection") "a marian place of prayer and reflection"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 92 126 Some(33) Some(39)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("a golden statue of the Virgin Mary") "a golden statue of the virgin mary"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 248 262 Some(63) Some(64)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("September 1876") "september 1876"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 441 446 Some(98) Some(98)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("twice") "twice"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 598 610 Some(123) Some(124)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("The Observer") "the observer"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 126 131 Some(39) Some(39)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("three") "three"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 908 912 Some(182) Some(182)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1987") "1987"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 119 123 Some(36) Some(36)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Rome") "rome"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 145 160 Some(44) Some(46)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Moreau Seminary") "moreau seminary"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 234 245 Some(59) Some(60)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Old College") "old college"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 356 384 Some(84) Some(87)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Retired priests and brothers") "retired priests and brothers"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 675 703 Some(149) Some(154)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Buechner Prize for Preaching") "buechner prize for preaching"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 487 492 Some(106) Some(107)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("eight") "with eight"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 46 50 Some(22) Some(22)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1920") "1920"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 126 148 Some(43) Some(46)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the College of Science") "the college of science"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 271 275 Some(74) Some(74)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("five") "five"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 155 164 Some(47) Some(48)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the 1870s") "the 1870s"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 496 520 Some(111) Some(113)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Learning Resource Center") "learning resource center"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 68 72 Some(28) Some(28)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("five") "five"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 155 188 Some(47) Some(52)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("The First Year of Studies program") "the first year of studies program"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 647 671 Some(135) Some(142)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("U.S. News & World Report") "u. s. news & world report"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 358 362 Some(89) Some(90)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1924") "in 1924"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 624 642 Some(132) Some(135)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Master of Divinity") "professional master of divinity"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1163 1194 Some(229) Some(233)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Alliance for Catholic Education") "the alliance for catholic education"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 92 96 Some(38) Some(38)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1854") "1854"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 757 795 Some(166) Some(172)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Department of Pre-Professional Studies") "the department of pre - professional studies"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 4 58 Some(15) Some(25)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Joan B. Kroc Institute for International Peace Studies") "joan b. kroc institute for international peace studies"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 466 516 Some(118) Some(125)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("President Emeritus of the University of Notre Dame") "president emeritus of the university of notre dame"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 303 307 Some(78) Some(78)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1986") "1986"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 377 385 Some(90) Some(93)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Ray Kroc") "ray kroc"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 360 370 Some(84) Some(86)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("McDonald's") "mcdonald ' s"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 136 138 Some(39) Some(39)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("14") "14"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 145 173 Some(42) Some(48)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Theodore M. Hesburgh Library") "theodore m. hesburgh library"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 188 192 Some(57) Some(57)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1963") "1963"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 344 358 Some(86) Some(88)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Millard Sheets") "millard sheets"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 394 409 Some(100) Some(101)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Touchdown Jesus") "touchdown jesus"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 109 114 Some(33) Some(36)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("3,577") "3, 577"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 138 143 Some(46) Some(49)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("19.7%") "19. 7 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 213 243 Some(67) Some(74)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the top 10 to 15 in the nation") "the top 10 to 15 in the nation"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 488 493 Some(119) Some(122)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("39.1%") "39. 1 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 618 637 Some(147) Some(150)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("more than 750 miles") "more than 750 miles"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 32 44 Some(31) Some(32)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("18th overall") "18th overall"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 362 365 Some(95) Some(95)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("8th") "8th"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 565 576 Some(136) Some(137)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1st overall") "1st overall"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 155 164 Some(53) Some(54)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("USA Today") "usa today"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 918 923 Some(188) Some(191)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("57.6%") "57. 6 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 0 29 Some(20) Some(29)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father Joseph Carrier, C.S.C.") "father joseph carrier, c. s. c."
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 353 364 Some(80) Some(82)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1851–1921") "1851 – 1921"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 406 428 Some(99) Some(102)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the Science Department") "of the science department"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 638 657 Some(132) Some(135)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Evolution and Dogma") "book evolution and dog"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 85 119 Some(33) Some(37)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Professor of Chemistry and Physics") "professor of chemistry and physics"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 3 7 Some(20) Some(20)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1882") "1882"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 136 158 Some(45) Some(47)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Professor Jerome Green") "professor jerome green"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 123 134 Some(43) Some(44)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Around 1899") "around 1899"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 222 245 Some(65) Some(70)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father Julius Nieuwland") "father julius nieuwland"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 49 69 Some(30) Some(33)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("an early wind tunnel") "an early wind tunnel"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 0 20 Some(22) Some(25)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("The Lobund Institute") "the lobund institute"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 963 972 Some(201) Some(202)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the 1940s") "the 1940s"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1049 1053 Some(216) Some(216)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1950") "1950"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1099 1103 Some(232) Some(232)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1958") "1958"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 86 90 Some(37) Some(37)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1928") "1928"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 0 22 Some(12) Some(15)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("The Review of Politics") "the review of politics"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 68 92 Some(25) Some(27)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("German Catholic journals") "german catholic journals"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 233 235 Some(59) Some(59)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("44") "44"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 4 22 Some(18) Some(20)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Review of Politics") "review of politics"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 80 92 Some(28) Some(29)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("John Jenkins") "john jenkins"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 118 128 Some(37) Some(38)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Notre Dame") "notre dame"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 427 454 Some(92) Some(95)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("International Peace studies") "for international peace studies"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 753 757 Some(148) Some(149)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("2013") "of 2013"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 891 905 Some(167) Some(169)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("climate change") "to climate change"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 71 76 Some(29) Some(32)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("8,448") "8, 448"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 196 204 Some(71) Some(74)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("21–24%") "21 – 24 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1446 1454 Some(309) Some(310)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("over 700") "with over"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1588 1625 Some(338) Some(344)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the Holy Cross Missions in Bangladesh") "for the holy cross missions in bangladesh"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 49 55 Some(23) Some(25)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("12,179") "12, 179"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 6 9 Some(16) Some(17)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("80%") "80 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 136 140 Some(45) Some(45)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("four") "four"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 350 352 Some(84) Some(84)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("15") "15"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 32 35 Some(24) Some(25)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("20%") "20 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 368 370 Some(88) Some(88)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("14") "14"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 73 99 Some(24) Some(32)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Congregatio a Sancta Cruce") "congregatio a sancta cruce"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 197 210 Some(58) Some(61)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("more than 93%") "more than 93 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 331 345 Some(86) Some(88)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("over 100 times") "over 100 times"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1237 1248 Some(267) Some(269)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Fifty-seven") "fifty - seven"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 251 259 Some(71) Some(73)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("over 80%") "over 80 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 702 717 Some(145) Some(146)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Washington Hall") "washington hall"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 90 94 Some(35) Some(35)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1879") "1879"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 228 246 Some(58) Some(63)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Rev. William Corby") "rev. william corby"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 385 396 Some(98) Some(100)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("17th of May") "17th of may"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 862 886 Some(182) Some(186)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("LaFortune Student Center") "lafortune student center"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 244 268 Some(61) Some(63)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("scholastic and classical") "scholastic and classical"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 595 614 Some(126) Some(128)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("College of Commerce") "college of commerce"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 8 26 Some(19) Some(21)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father James Burns") "father james burns"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 66 77 Some(37) Some(38)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("three years") "three years"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 430 448 Some(109) Some(111)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Harvard Law School") "harvard law school"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 117 129 Some(42) Some(45)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Knute Rockne") "knute rockne"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 204 207 Some(64) Some(64)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("105") "105"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 354 358 Some(94) Some(94)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1925") "1925"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 251 253 Some(72) Some(72)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("13") "13"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 274 279 Some(79) Some(79)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("three") "three"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 297 325 Some(73) Some(75)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the Protestant establishment") "the protestant establishment"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 571 587 Some(121) Some(126)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the Ku Klux Klan") "and the ku klux klan"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1193 1210 Some(261) Some(265)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Fr. Matthew Walsh") "president fr. matthew walsh"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 819 838 Some(178) Some(185)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("a week-long Klavern") "have a week - long klavern"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 842 852 Some(181) Some(183)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("South Bend") "in south bend"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 11 37 Some(16) Some(21)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father John Francis O'Hara") "father john francis o ' hara"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 11 37 Some(14) Some(19)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father John Francis O'Hara") "father john francis o ' hara"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 292 305 Some(78) Some(81)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Laetare Medal") "laetare medal"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 321 325 Some(88) Some(88)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1883") "1883"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 587 590 Some(146) Some(146)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("God") "god"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 428 442 Some(119) Some(121)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("more than half") "more than half"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 522 557 Some(123) Some(128)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Lobund Institute for Animal Studies") "lobund institute for animal studies"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 720 740 Some(167) Some(170)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Hall of Liberal Arts") "hall of liberal arts"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 4 34 Some(12) Some(26)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Rev. John J. Cavanaugh, C.S.C.") "rev. john j. cavanaugh, c. s. c."
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 575 593 Some(139) Some(140)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Medieval Institute") "medieval institute"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 37 48 Some(28) Some(30)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1917–2015") "1917 – 2015"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 181 183 None Some(69)
+src/tasks/squad/squad_tokenizer.rs:89 [INFO] - Fixed
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 262 272 Some(88) Some(91)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("$9 million") "from $ 9 million"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 82 91 None Some(43)
+src/tasks/squad/squad_tokenizer.rs:89 [INFO] - Fixed
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 439 442 None Some(136)
+src/tasks/squad/squad_tokenizer.rs:89 [INFO] - Fixed
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 82 95 Some(36) Some(39)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("coeducational") "coeducational"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 625 649 Some(144) Some(148)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Dean of Arts and Letters") "dean of arts and letters"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 921 954 Some(217) Some(221)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Vice President of Student Affairs") "vice president of student affairs"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1199 1203 Some(273) Some(273)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1971") "1971"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 141 161 Some(48) Some(52)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Saint Mary's College") "saint mary ' s college"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 64 75 Some(34) Some(36)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1987–2005") "1987 – 2005"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 314 318 Some(90) Some(91)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1240") "from 124"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 403 415 Some(106) Some(109)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("$350 million") "from $ 350 million"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 576 597 Some(149) Some(154)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("more than $70 million") "to more than $ 70 million"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 191 194 Some(65) Some(66)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("500") "than 500"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 6 10 Some(14) Some(14)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("2005") "2005"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 68 72 Some(44) Some(44)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("17th") "17th"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 138 144 Some(47) Some(48)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Malloy") "malloy"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 488 512 Some(108) Some(111)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Compton Family Ice Arena") "compton family ice arena"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 596 601 Some(132) Some(134)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("$400m") "$ 400m"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 162 188 Some(46) Some(49)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Congregation of Holy Cross") "congregation of holy cross"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 202 230 Some(59) Some(63)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Basilica of the Sacred Heart") "basilica of the sacred heart"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 349 363 Some(89) Some(90)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("French Revival") "french revival"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 474 487 Some(110) Some(112)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Luigi Gregori") "luigi gregori"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 730 734 Some(171) Some(171)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1896") "1896"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 56 64 Some(28) Some(31)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Fr. Zahm") "fr. zahm"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 73 77 Some(39) Some(39)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1950") "1950"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 157 173 Some(50) Some(53)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Joseph LaFortune") "joseph lafortune"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 284 302 Some(88) Some(92)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("83,000 square feet") "83, 000 square feet"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 535 547 Some(139) Some(143)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("$1.2 million") "$ 1. 2 million"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 120 122 Some(34) Some(34)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("29") "29"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 336 361 Some(71) Some(75)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Theodore Hesburgh Library") "theodore hesburgh library"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 398 414 Some(86) Some(88)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("almost 4 million") "almost 4 million"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 613 624 Some(133) Some(134)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Duncan Hall") "duncan hall"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 1755 1772 Some(348) Some(351)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Frank Eck Stadium") "frank eck stadium"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 142 146 Some(38) Some(38)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("2008") "2008"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 471 474 Some(102) Some(103)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("40%") "40 %"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 596 628 Some(133) Some(136)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Sustainable Endowments Institute") "sustainable endowments institute"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 750 796 Some(154) Some(161)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Kroc Institute for International Peace Studies") "kroc institute for international peace studies"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 198 202 Some(49) Some(49)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1968") "1968"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 289 325 Some(67) Some(75)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1 Suffolk Street in Trafalgar Square") "1 suffolk street in trafalgar square"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 535 550 Some(119) Some(121)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Global Gateways") "global gateways"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 210 214 Some(55) Some(55)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1998") "1998"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 0 31 Some(11) Some(16)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("The College of Arts and Letters") "the college of arts and letters"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 85 89 Some(34) Some(34)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1842") "1842"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 122 126 Some(43) Some(43)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1849") "1849"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 221 243 Some(54) Some(56)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Saint Louis University") "saint louis university"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 424 426 Some(105) Some(105)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("33") "33"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 78 99 Some(26) Some(28)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father Patrick Dillon") "father patrick dillon"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 60 64 Some(24) Some(24)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1865") "1865"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 134 143 Some(40) Some(41)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("six years") "six years"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 242 264 Some(58) Some(61)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Jordan Hall of Science") "jordan hall of science"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 275 285 Some(67) Some(70)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("over 1,200") "over 1, 200"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 4 26 Some(11) Some(13)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("School of Architecture") "school of architecture"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 159 168 Some(44) Some(45)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Bond Hall") "bond hall"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 179 188 Some(50) Some(52)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("five-year") "five - year"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 325 329 Some(77) Some(77)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Rome") "rome"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 624 651 Some(128) Some(132)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Driehaus Architecture Prize") "driehaus architecture prize"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 388 392 Some(90) Some(90)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("2015") "2015"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 405 437 Some(88) Some(93)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the first floor of Stanford Hall") "the first floor of stanford hall"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 538 564 Some(118) Some(121)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("over three million volumes") "over three million volumes"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 654 676 Some(140) Some(144)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("one of the 100 largest") "one of the 100 largest"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 0 38 Some(14) Some(21)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("The rise of Hitler and other dictators") "the rise of hitler and other dictators"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 162 169 Some(48) Some(48)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Germany") "germany"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 212 228 Some(61) Some(64)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("classics and law") "in classics and law"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 478 489 Some(111) Some(114)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Max Scheler") "under max schel"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 519 538 Some(118) Some(123)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("a renowned sculptor") "1962 ), a renowned sculptor"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 4 31 Some(21) Some(25)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("University of Notre Dame du") "university of notre dame du"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 92 120 None Some(40)
+src/tasks/squad/squad_tokenizer.rs:89 [INFO] - Fixed
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 220 240 Some(65) Some(70)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Our Lady of the Lake") "means \" our lady of the"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 287 302 Some(77) Some(80)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the Virgin Mary") "saint, the virgin"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 327 332 Some(85) Some(85)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1,250") "covers"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 62 94 Some(26) Some(30)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("its Fighting Irish football team") "its fighting irish football team"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 149 161 Some(38) Some(41)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Knute Rockne") "knute rockne"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 214 229 Some(56) Some(58)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("NCAA Division I") "ncaa division i"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 372 377 Some(80) Some(80)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("seven") "seven"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 454 456 Some(103) Some(103)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("13") "13"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 140 160 Some(37) Some(40)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("among the top twenty") "among the top twenty"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 294 298 Some(63) Some(63)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("four") "four"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 494 521 Some(99) Some(103)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Driehaus Architecture Prize") "driehaus architecture prize"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 557 569 Some(112) Some(114)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("more than 50") "more than 50"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 887 906 Some(172) Some(177)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Snite Museum of Art") "snite museum of art"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 3 7 Some(19) Some(19)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1842") "1842"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 34 72 Some(22) Some(32)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Célestine Guynemer de la Hailandière") "celestine guynemer de la hailandiere"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 111 145 Some(40) Some(46)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the Congregation of the Holy Cross") "of the congregation of the holy cross"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 290 307 Some(85) Some(89)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("November 26, 1842") "on november 26, 1842"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 336 373 Some(91) Some(100)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father Stephen Badin's old log chapel") "using father stephen badin ' s old log chapel"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 51 55 Some(25) Some(25)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1849") "1849"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 359 363 Some(81) Some(81)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1865") "1865"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 495 511 Some(103) Some(105)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Father Lemonnier") "father lemonnier"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 516 520 Some(114) Some(114)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1879") "1879"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 453 457 Some(97) Some(97)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("1873") "1873"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 24 28 Some(16) Some(18)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("NDtv") "ndtv"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 40 48 Some(23) Some(24)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("one show") "one show"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 128 135 Some(47) Some(51)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("WSND-FM") "wsnd - fm"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 440 444 Some(115) Some(117)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("WVFI") "wvfi"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 42 54 Some(24) Some(26)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("$215 million") "$ 215 million"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 169 181 Some(47) Some(50)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("June 3, 2008") "june 3, 2008"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 401 412 Some(87) Some(89)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Kite Realty") "kite realty"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 249 271 Some(66) Some(70)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("the City of South Bend") "the city of south bend"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 367 384 Some(94) Some(97)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("non-union workers") "non - union workers"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 82 122 Some(27) Some(30)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("National Collegiate Athletic Association") "national collegiate athletic association"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 293 307 Some(69) Some(71)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Horizon League") "the horizon league"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 889 915 Some(201) Some(204)
+src/tasks/squad/squad_tokenizer.rs:105 [INFO] - Running Some("Midwest Fencing Conference") "the midwest fencing conference"
+src/tasks/squad/squad_tokenizer.rs:84 [INFO] - Offset 959 970 None None
+src/tasks/squad/squad_tokenizer.rs:94 [INFO] - Error None None
+src/tasks/squad/squad_tokenizer.rs:95 [INFO] - Offsets [(0, 0), (0, 5), (6, 8), (9, 10), (11, 21), (22, 26), (27, 30), (31, 35), (36, 42), (43, 47), (48, 50), (51, 56), (57, 61), (62, 70), (71, 73), (73, 74), (75, 79), (80, 82), (83, 85), (85, 86), (0, 0), (0, 5), (6, 10), (11, 16), (17, 20), (21, 26), (27, 29), (30, 33), (34, 42), (43, 48), (48, 49), (50, 54), (55, 62), (63, 65), (66, 67), (68, 74), (75, 77), (78, 81), (82, 90), (91, 101), (102, 110), (111, 122), (123, 124), (124, 128), (128, 129), (130, 138), (139, 140), (140, 141), (142, 151), (152, 161), (162, 164), (165, 168), (169, 177), (178, 183), (184, 194), (195, 196), (196, 199), (199, 200), (201, 204), (205, 208), (209, 215), (216, 221), (222, 225), (226, 230), (230, 233), (233, 235), (236, 242), (243, 247), (247, 248), (249, 252), (253, 261), (262, 267), (268, 278), (279, 287), (288, 290), (291, 294), (295, 302), (303, 309), (310, 314), (315, 319), (319, 320), (320, 322), (323, 325), (326, 330), (330, 331), (331, 333), (333, 334), (335, 338), (339, 344), (345, 349), (350, 354), (354, 355), (355, 357), (358, 360), (361, 365), (365, 366), (366, 368), (368, 369), (370, 373), (374, 378), (379, 381), (382, 385), (386, 389), (390, 394), (395, 405), (406, 413), (414, 418), (418, 421), (421, 423), (423, 424), (425, 428), (428, 429), (429, 430), (431, 437), (438, 445), (446, 454), (454, 455), (456, 466), (466, 467), (468, 472), (472, 473), (474, 479), (480, 487), (487, 488), (489, 496), (496, 497), (498, 506), (506, 507), (508, 512), (512, 513), (514, 517), (518, 524), (524, 525), (526, 534), (534, 535), (536, 542), (542, 543), (544, 552), (553, 554), (555, 561), (561, 562), (563, 569), (570, 573), (574, 579), (580, 581), (582, 587), (587, 588), (589, 594), (595, 600), (600, 601), (601, 602), (603, 609), (610, 617), (618, 628), (628, 629), (630, 635), (636, 643), (643, 644), (645, 652), (652, 653), (654, 658), (658, 659), (660, 668), (668, 669), (670, 676), (676, 677), (678, 684), (684, 685), (686, 694), (694, 695), (696, 704), (705, 706), (707, 713), (713, 714), (715, 721), (721, 722), (723, 728), (729, 730), (731, 736), (737, 740), (741, 751), (751, 752), (753, 756), (757, 765), (766, 770), (771, 779), (780, 782), (783, 785), (786, 794), (795, 799), (800, 811), (812, 813), (813, 814), (814, 816), (816, 817), (818, 829), (830, 835), (836, 839), (840, 849), (850, 852), (853, 857), (857, 858), (859, 863), (864, 871), (872, 877), (878, 885), (886, 888), (889, 892), (893, 900), (901, 908), (909, 919), (919, 920), (921, 924), (925, 928), (929, 932), (932, 933), (933, 934), (935, 938), (939, 945), (946, 950), (951, 959), (960, 962), (963, 969), (970, 974), (974, 975), (0, 0)]
+thread 'tokio-runtime-worker' panicked at 'called `Option::unwrap()` on a `None` value', src/tasks/squad/squad_tokenizer.rs:99:66
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+RX ERROR
 src/provider/arrow_transfer.rs:150 [INFO] - Finished Data Loader
-src/transport/zmq_transmit.rs:67 [INFO] - Sent Packet 25
-src/batcher.rs:57 [INFO] - Finished Batcher
-src/transport/zmq_transmit.rs:57 [INFO] - Finished Transport
-src/transport/zmq_receive.rs:50 [INFO] - Stdout Done with Download
-
-src/tasks/generic_runner.rs:174 [INFO] - Finished Ok(true) Ok(true)
-src/main.rs:50 [INFO] - Final Result true
+src/tasks/runner_simple.rs:148 [INFO] - Finished Ok(false) Ok(true)
+src/main.rs:50 [INFO] - Final Result false

@@ -16,8 +16,8 @@ async fn basic_test(test_type:TestType, config:String) {
     loader::create_logger();
 
     let path = match test_type {
-        TestType::MASK =>  "tests/masking_tests.yaml",
-        TestType::SQUAD => "tests/squad_tests.yaml",
+        TestType::MASK =>  "tests/masking.yaml",
+        TestType::SQUAD => "tests/squad.yaml",
         TestType::MULTI => "tests/multi_label.yaml",
         TestType::SINGLE => "tests/single_class.yaml",
 

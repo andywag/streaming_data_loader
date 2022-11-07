@@ -59,7 +59,6 @@ pub async fn receive<T>(
             },
             Some(ProviderChannel::Data(data)) => {
                 passed &= endpoint.receive(data);
-                //println!("RX");    
             },
             None => {
                 println!("RX ERROR");

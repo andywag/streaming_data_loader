@@ -14,6 +14,8 @@ pub struct SquadArrowGenerator {
     pub a:usize,
 }
 
+
+
 impl ArrowGenerator for SquadArrowGenerator {
     type T = SquadGeneral;
     fn get_data(&self, data:&arrow::record_batch::RecordBatch) -> SquadGeneral {
@@ -27,10 +29,19 @@ impl ArrowGenerator for SquadArrowGenerator {
         // TODO : The start and end pointers don't properly work. I believe it's due to the character 
         let sp_list = ListArray::from(answers.column(1).data().to_owned()).value(0);
         let sp = Int32Array::from(sp_list.data().to_owned()).value(0);
-        let ep = sp + answer.len() as i32 + 1;
+        let ep = sp + answer.len() as i32;
 
+         
+        let char_vec: Vec<char> = context.chars().collect();
+        let byte_vec = context.as_bytes();
+        let mut offset:Option<usize> = None;
+        if char_vec.len() != byte_vec.len() {
+            offset = Some(byte_vec.len() - char_vec.len());            
+        }
         
-        let squad_data = SquadGeneral{ question: question, context: context, sp: sp as u32, ep: ep as u32, answer:Some(answer) };
+        
+
+        let squad_data = SquadGeneral{ question: question, context: context, sp: sp as u32, ep: ep as u32, answer:Some(answer), offset:offset };
         return squad_data;
     }
 }

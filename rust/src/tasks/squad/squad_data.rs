@@ -32,6 +32,7 @@ pub struct SquadGeneral {
     pub context:String,
     pub sp:u32,
     pub ep:u32,
+    pub offset:Option<usize>,
     pub answer:Option<String>
 }
 
