@@ -11,8 +11,8 @@ basic:
       batch_size: 32
       sequence_length: 384
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "test"
+  transport:
+    transport: !test
   node: !none
 
 python_match:
@@ -29,9 +29,8 @@ python_match:
       batch_size: 1024
       sequence_length: 384
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "zmq"
-    config:
+  transport:
+    transport: !zmq
       address: "ipc:///tmp/imdb_python_compare"
   node: !python
     cwd: "../python"
@@ -52,9 +51,9 @@ zmq_ipc:
       batch_size: 1024
       sequence_length: 96
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "zmq"
-    config:
+  transport:
+    transport: !zmq
       address: "ipc:///tmp/single-class"
+  
   node: !none
 

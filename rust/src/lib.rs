@@ -6,7 +6,6 @@ pub mod datasets;
 
 //pub mod data_config;
 pub mod batcher;
-pub mod test_endpoint;
 
 use log::{LevelFilter};
 use std::io::Write;

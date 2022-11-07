@@ -1,6 +1,6 @@
 use tokenizers::Tokenizer;
 
-use crate::{ utils, test_endpoint::EndPoint};
+use crate::{ utils, transport::test_endpoint::EndPoint};
 
 use super::{SquadConfig, squad_data::{SquadData}};
 

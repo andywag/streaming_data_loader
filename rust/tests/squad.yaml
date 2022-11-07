@@ -16,10 +16,8 @@ basic:
       batch_size: 1024
       sequence_length: 384
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "test"
-    config:
-      comparison: "../data/test.bin"
+  transport:
+    transport: !test
   node: !none
 
 zmq_none:
@@ -36,8 +34,7 @@ zmq_none:
       batch_size: 1024
       sequence_length: 384
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "zmq"
-    config:
+  transport:
+    transport: !zmq
       address: "ipc:///tmp/squad"
   node: !none

@@ -44,7 +44,7 @@ fn create_generator(value:&Arc<serde_yaml::Value>)-> Box<dyn crate::batcher::Bat
 }
  
 // Create the Endpoint for Squad
-fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::test_endpoint::EndPoint<MaskedData> + Send> {
+fn create_endpoint(value:&Arc<serde_yaml::Value>) -> Box<dyn crate::transport::test_endpoint::EndPoint<MaskedData> + Send> {
     let tokenizer = &value["tokenizer"]["config"];
     let config:MaskingConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
     let endpoint = Box::new(MaskingEndpoint::new(config));

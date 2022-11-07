@@ -11,12 +11,13 @@ use tokio::task::{self, JoinHandle};
 
 
 use crate::batcher::{self, Batcher};
-use crate::test_endpoint::{self, EndPoint};
+use crate::transport::test_endpoint::{self, EndPoint};
 use crate::provider::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};
 use crate::provider::{ProviderChannel};
 use crate::transport::zmq_receive::NodeConfig;
 use crate::transport::{self};
+use crate::transport::TransportConfig;
 
 pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>, 
     provider:Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>,
@@ -94,22 +95,23 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     // Create One of 2 Options 
     // 1. "test" : Create an internal test endpoint
     // 2. ""     : Create a zmq endpoint which talks to external process
-    let rx_select = value["sink"]["type"].as_str().map(|e| e.to_string());
-    let join_rx = if rx_select.unwrap() == "test" { // Local Test Point
-        let endpoint = endpoint(&value.clone());
+    let transport_config = serde_yaml::from_value::<TransportConfig>(value["transport"].clone()).unwrap();
+    let join_rx = match transport_config.transport {
+        transport::TransportEnum::Test => {
+            let endpoint = endpoint(&value.clone());
 
-        task::spawn(async move {
-            let result = test_endpoint::receive(rx_trans, endpoint);
-            result.await
+            task::spawn(async move {
+                let result = test_endpoint::receive(rx_trans, endpoint);
+                result.await
             
-        })   
-    }
-    else { // Send to Processing Node
-        let address = value["sink"]["config"]["address"].as_str().unwrap().to_string();        
-        task::spawn(async move {
-            let result = transport::zmq_transmit::receive_transport(address, rx_trans);
-            result.await
-        })
+            })   
+        },
+        transport::TransportEnum::Zmq{address} => {
+            task::spawn(async move {
+                let result = transport::zmq_transmit::receive_transport(address, rx_trans);
+                result.await
+            })
+        },
     };
 
     // Create one of 2 options 

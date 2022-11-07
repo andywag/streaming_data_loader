@@ -21,10 +21,6 @@ pub enum NodeConfig{
     None
 }
 
-//#[derive(Debug,Deserialize)]
-//pub struct NodeConfig {
-//    pub node:NodeEnum
-//}
 
 
 // Endpoint to Accomdate Testing where data is received and counted

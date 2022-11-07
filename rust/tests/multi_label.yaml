@@ -13,8 +13,8 @@ basic:
       sequence_length: 384
       number_labels: 9
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "test"
+  transport:
+    transport: !test
   node: !none
     
     
@@ -35,9 +35,8 @@ python_match:
       sequence_length: 96
       number_labels: 9
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "zmq"
-    config:
+  transport:
+    transport: !zmq
       address: "ipc:///tmp/emot_python_compare"
   node: !python
     command: "python3"
@@ -60,9 +59,8 @@ zmq_ipc:
       sequence_length: 96
       number_labels: 9
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "zmq"
-    config:
+  transport:
+    transport: !zmq
       address: "ipc:///tmp/multi-label"
   node: !none
     

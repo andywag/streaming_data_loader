@@ -13,8 +13,8 @@ basic:
       sequence_length: 128
       mask_length: 18
       tokenizer_name: "roberta-base"
-  sink:
-    type: "test"
+  transport:
+    transport: !test
   node: !none
 
 basic_stream:
@@ -32,8 +32,8 @@ basic_stream:
       sequence_length: 128
       mask_length: 18
       tokenizer_name: "bert-base-cased"
-  sink:
-    type: "test"
+  transport:
+    transport: !test
   node: !none
 
 zmq_none:
@@ -51,10 +51,10 @@ zmq_none:
       sequence_length: 128
       mask_length: 18
       tokenizer_name: "bert-base-cased"
-  sink:
-    type: "zmq"
-    config:
+  transport:
+    transport: !zmq
       address: "ipc:///tmp/masking_none"
+  
   node: !none
 
 zmq_local:
@@ -72,10 +72,9 @@ zmq_local:
       sequence_length: 128
       mask_length: 18
       tokenizer_name: "roberta-base"
-  sink:
-    type: "zmq"
-    config:
-      address: "ipc:///tmp/masking_none"
+  transport:
+    transport: !zmq
+      address: "ipc:///tmp/masking_local"
   node: !none
 
 zmq_ipc:
@@ -90,30 +89,13 @@ zmq_ipc:
       sequence_length: 512
       mask_length: 18
       tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "zmq"
-    config:
+  transport:
+    transport: !zmq
       address: "ipc:///tmp/zmqtest"
   node: !python
     cwd: "../python"
     command: "python3"
     args: ["test_train_transport.py","--config", "zmq_ipc"]
 
-zmq_tcp_none:
-  source:
-    type: "wiki_file"
-    location: "../data/test.json.gz"
-    iterations: 1000000
-  tokenizer: 
-    type: "masking"
-    config: 
-      batch_size: 16
-      sequence_length: 512
-      mask_length: 18
-      tokenizer_name: "bert-base-uncased"
-  sink:
-    type: "zmq"
-    config:
-      address: "tcp://localhost:4000"
-  node: !none
+
    

@@ -111,6 +111,15 @@ impl SquadTokenizer {
             //let result_str = self.tokenizer.decode(d_vec, true).unwrap(); 
             //log::info!("Running {:?} {:?}", data.answer, result_str);
             
+            // Condition to catch potential errors and continue operation
+            match (start_token, end_token) {
+                (Some(_), Some(_)) => {},
+                _ => {
+                    log::info!("Error with Data");
+                    return None
+                }
+            }
+
             self.batch.start_positions[self.index] = start_token.unwrap() as u32;
             self.batch.end_positions[self.index] = end_token.unwrap() as u32;
 
