@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use serde::Serialize;
-use tokio::task::{JoinHandle, self};
+use tokio::{task::{JoinHandle, self}, sync::mpsc::Receiver};
 
 use crate::provider::ProviderChannel;
 
@@ -20,13 +20,13 @@ impl <T>EndPoint<T> for DefaultTestEndPoint {
     }
 }
 // Create the Endpoint for Squad
-pub fn default_endpoint<T>(_value:&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<T> + Send> {
+pub fn default_endpoint<T>(_value:&Arc<serde_yaml::Value>) -> Box<dyn crate::transport::test_endpoint::EndPoint<T> + Send> {
     return Box::new(DefaultTestEndPoint{});
 }
 
 
 pub async fn receive<T>( 
-    mut rx:tokio::sync::mpsc::Receiver<ProviderChannel<T>>,
+    mut rx:Receiver<ProviderChannel<T>>,
     mut endpoint:Box<dyn EndPoint<T> + Send>
 ) -> bool {
     

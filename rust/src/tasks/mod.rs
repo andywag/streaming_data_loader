@@ -23,11 +23,16 @@ pub enum Task {
     Squad
 }
 
-pub async fn run(task:Task, config:Arc<serde_yaml::Value>) -> bool{
-    match task {
-        Task::Masking => masking::masking_runner::run(config).await,
-        Task::SingleClass => single_class::runner::run(config).await,
-        Task::MultiLabel => multi_label::runner::run(config).await,
-        Task::Squad => squad::runner::run(config).await,
-    }
+pub async fn run(task_str:Option<&str>, config_ptr:Arc<serde_yaml::Value>) -> bool{
+
+    match task_str {
+        Some("squad") => squad::runner::run(config_ptr).await,//squad::runner::run(config_ptr, operations[0].to_owned()).await,
+        Some("multi-label") => multi_label::runner::run(config_ptr).await,
+        Some("single-class") => single_class::runner::run(config_ptr).await,
+        Some("masking") => masking::masking_runner::run(config_ptr).await,
+        Some(x) => {log::error!("Model {x} Not Found"); false}
+        None => {log::error!("Model Not Found"); false}
+
+    } 
+    
 }

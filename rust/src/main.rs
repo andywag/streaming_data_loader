@@ -1,12 +1,4 @@
-
-
-
 use std::sync::Arc;
-
-use loader::tasks::masking;
-use loader::tasks::multi_label;
-use loader::tasks::single_class;
-use loader::tasks::squad;
 
 use clap::Parser;
 use serde_yaml::Value;
@@ -18,7 +10,7 @@ use serde_yaml::Value;
 #[command(author, version, about, long_about = None)]
 struct Args {
    /// Name of the person to greet
-   #[arg(short, long, default_value="tests/squad.yaml")]
+   #[arg(short, long, default_value="tests/masking.yaml")]
    path: String,
 
    /// Number of times to greet
@@ -39,14 +31,8 @@ async fn main()  {
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
     let config_ptr = Arc::new(config_file.get(args.config).unwrap().to_owned());
 
-    let result = match config_ptr["model"].as_str() {
-        Some("squad") => squad::runner::run(config_ptr).await,
-        Some("multi-label") => multi_label::runner::run(config_ptr).await,
-        Some("single-class") => single_class::runner::run(config_ptr).await,
-        Some("masking") => masking::masking_runner::run(config_ptr).await,
-        Some(x) => {log::error!("Model {x} Not Found"); false}
-        None => {log::error!("Model Must be specified in configuration file"); false}
-    };
+    let result = loader::tasks::run(config_ptr["model"].as_str(), config_ptr.clone()).await;
+
     log::info!("Final Result {}", result);
 
 

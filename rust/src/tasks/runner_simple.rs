@@ -6,6 +6,7 @@ use std::sync::Arc;
 use serde::Serialize;
 use serde::Deserialize;
 use serde_yaml::Value;
+use tokio::sync::mpsc::Receiver;
 use tokio::sync::mpsc::{Sender};
 use tokio::task::{self, JoinHandle};
 
@@ -37,8 +38,8 @@ pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>,
 
 pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
     generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
-    rx:tokio::sync::mpsc::Receiver<ProviderChannel<P>>, 
-    tx:tokio::sync::mpsc::Sender<ProviderChannel<D>>) -> JoinHandle<()> {
+    rx:Receiver<ProviderChannel<P>>, 
+    tx:Sender<ProviderChannel<D>>) -> JoinHandle<()> {
     // Create the Data Provider
     let generator = generator(&value);
 
@@ -76,7 +77,6 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     base_provider:Either<DataProviderAsync<P>,DataProviderSync<P>>,
     generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>) -> bool {
-
 
     // Create the Channel from Input to Tokenizer
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);

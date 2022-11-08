@@ -15,7 +15,7 @@ pub struct BaseTokenizer {
     batch:MaskedData,
     index:usize,
     attention_mask:Vec<u32>,
-    //positions:Vec<u32>, 
+    last_ids:Option<Vec<u32>>,
     mask:u32,
     cls:u32,
     sep:u32,
@@ -56,7 +56,7 @@ impl BaseTokenizer {
             batch:MaskedData::new(config.batch_size, config.sequence_length, mask_length, tokens.3),
             index:0, 
             attention_mask:vec![0;config.sequence_length as usize],
-            //positions:(0..config.sequence_length).collect(),
+            last_ids:None, 
             cls:tokens.0,
             sep:tokens.1,
             mask:tokens.2,
@@ -93,8 +93,21 @@ impl Batcher for BaseTokenizer {
 
     fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
         let result = self.tokenizer.encode(data, true).unwrap();
-            let ids = result.get_ids();
+            //let ids = result.get_ids();
             let s = self.sequence_length as usize;
+            
+            let mut new_ids:Option<Vec<u32>> = None;
+            std::mem::swap(&mut self.last_ids, &mut new_ids);
+
+            let ids = match new_ids {
+                Some(mut x) => {
+                    x.push(self.sep);
+                    x.push(self.sep);
+                    [x, result.get_ids().to_vec()].concat().to_vec()
+                },
+                None => result.get_ids().to_vec(),
+            };
+
 
             let mut current_index = 0;
             while current_index < ids.len() {
@@ -116,7 +129,11 @@ impl Batcher for BaseTokenizer {
                 self.index += 1;
 
                 if self.index == self.batch_size as usize {
-
+                    
+                    if current_index < ids.len() {
+                        self.last_ids = Some(ids.clone()[current_index..ids.len()].to_vec());
+                    }
+                    
                     let mut old_batch = self.create_data(); 
                     std::mem::swap(&mut self.batch, &mut old_batch);
                     self.index = 0;
@@ -127,6 +144,7 @@ impl Batcher for BaseTokenizer {
                     return Some(old_batch);
                 }
             }
+            self.last_ids = None;
             return None;
     }
 
