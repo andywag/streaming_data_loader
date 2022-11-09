@@ -21,7 +21,6 @@ impl ArrowGenerator for SingleClassArrowGenerator {
         let label3 = data.slice(0,1).column(self.l).data().to_owned();
         let label2 = Int64Array::from(label3).value(0);
         
-        //log::info!("HereBASE {:?}",  label2);
         let data = Self::T{text:text, label:label2 as u32};
         return data;
     }

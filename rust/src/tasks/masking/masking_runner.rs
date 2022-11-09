@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde_yaml::Value;
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, wiki_file_provider, ProviderConfig}, tasks::{runner_simple}};
+use crate::{provider::{ProviderChannel, wiki_file_provider, ProviderConfig, pile_file_provider}, tasks::{runner_simple}};
 use tokio::sync::mpsc::Sender;
 
 use super::{masking_tokenizer, MaskingConfig, masked_data::MaskedData, masking_test_endpoint::MaskingEndpoint};
@@ -25,6 +25,14 @@ fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>) -> Joi
                         wiki_file_provider::load_data(&x.location, provider_config.length, tx).await
                     }
                 },
+                crate::provider::SourceDescription::PileDescription(x) => {
+                    if x.network { // URL to web version of file
+                        pile_file_provider::load_url(&x.locations, provider_config.length, tx).await
+                    }
+                    else {// Downloaded File
+                        pile_file_provider::load_data(&x.locations, provider_config.length, tx).await
+                    }
+                }
                 _ => {
                     log::error!("Can't support Input Type");
                 }

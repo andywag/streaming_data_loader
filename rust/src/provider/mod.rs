@@ -5,8 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::tasks::DatasetInfo;
 
 
-
+pub mod provider_util;
 pub mod wiki_file_provider;
+pub mod pile_file_provider;
 pub mod arrow_provider;
 pub mod arrow_transfer;
 
@@ -42,9 +43,18 @@ pub struct WikiDescription {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub struct PileDescription {
+    pub locations:Vec<String>,
+    pub network:bool
+}
+
+
+#[derive(Deserialize, Serialize, Debug)]
 pub enum SourceDescription {
     #[serde(rename = "huggingface")]
     HuggingFace(HuggingDescription),
+    #[serde(rename = "pile")]
+    PileDescription(PileDescription),
     #[serde(rename = "arrow")]
     Arrow(String),
     #[serde(rename="wiki")]

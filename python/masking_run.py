@@ -12,13 +12,13 @@ from datasets import load_dataset
 from external_dataset import ExternalDataset
 
 
-def run_bert(external=True, tokenizer_name='bert-base-uncased'):
+def run_bert(external=True, tokenizer_name='bert-base-uncased', address='ipc:///tmp/masking_pile_none'):
     def tokenize_function(examples):
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
         data = tokenizer(examples['text'], padding="max_length", truncation=True, max_length=96)
         return data
 
-    tokenized_dataset = ExternalDataset("ipc:///tmp/masking_none", 1024, fields=["input_ids","attention_mask","labels"])
+    tokenized_dataset = ExternalDataset(address, 1024, fields=["input_ids","attention_mask","labels"])
 
     config = AutoConfig.from_pretrained(tokenizer_name)
     #config.problem_type = "single_label_classification"
@@ -47,11 +47,12 @@ def run_bert(external=True, tokenizer_name='bert-base-uncased'):
 
 parser = argparse.ArgumentParser(description='Test Data Loading')
 parser.add_argument('--tokenizer', type=str, default="bert-base-uncased")
+parser.add_argument('--address', type=str, default="ipc:///tmp/masking_pile_none")
 parser.add_argument('--rust', action='store_true')
 
 def main():
     args = parser.parse_args()
-    run_bert(args.rust, args.tokenizer)
+    run_bert(args.rust, args.tokenizer, args.address)
 
 if __name__ == '__main__':
     main()
