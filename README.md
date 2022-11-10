@@ -6,6 +6,13 @@ The purpose of this project is to provide a streaming dataloader for NLP which r
 2. Support for handling Streaming Interfaces
 3. Quick Startup to Avoid File Downloading and preprocessing
 
+## Quick Start
+
+1. Install Rust **curl https://sh.rustup.rs -sSf | sh**
+2. Run **python3 masking_run.py --all** from python folder
+
+These instructions will run BERT pretraining using the Pile dataset and will avoid all the pain associated with pretraining. 
+
 ## Dataset support
 
 The data loader is general but directly supports : 
