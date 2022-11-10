@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde_yaml::Value;
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, wiki_file_provider, ProviderConfig, pile_file_provider}, tasks::{runner_simple}};
+use crate::{provider::{ProviderChannel, ProviderConfig, general_file_provider,  SourceDescription, pile_datasets}, tasks::{runner_simple}};
 use tokio::sync::mpsc::Sender;
 
 use super::{masking_tokenizer, MaskingConfig, masked_data::MaskedData, masking_test_endpoint::MaskingEndpoint};
@@ -11,28 +11,33 @@ use super::{masking_tokenizer, MaskingConfig, masked_data::MaskedData, masking_t
 
 
 
+
 // Create the Dataset Provider for Squad
 fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>) -> JoinHandle<()> {
+
+
     let provider_config:ProviderConfig = serde_yaml::from_value(value["source"].to_owned()).unwrap();
     let handle = task::spawn(
         async move {
             match provider_config.source {
-                crate::provider::SourceDescription::Wiki(x) => {
-                    if x.network { // URL to web version of file
-                        wiki_file_provider::load_url(&x.location, provider_config.length, tx).await
-                    }
-                    else {// Downloaded File
-                        wiki_file_provider::load_data(&x.location, provider_config.length, tx).await
-                    }
+                SourceDescription::DataList(datasets) => {
+                    //log::info!("Datasets {:?}", datasets);
+                    general_file_provider::load_data_sets(datasets, provider_config.length, tx).await;
                 },
-                crate::provider::SourceDescription::PileDescription(x) => {
-                    if x.network { // URL to web version of file
-                        pile_file_provider::load_url(&x.locations, provider_config.length, tx).await
+                SourceDescription::Pile{typ} => {
+                    let datasets = pile_datasets::get_datasets(typ);
+                    match datasets {
+                        Some(x) => {
+                            general_file_provider::load_data_sets(x, provider_config.length, tx).await;
+                        }
+                        None => {
+                            log::error!("Data Set Not Supported");
+                            std::process::exit(0);
+                        }
                     }
-                    else {// Downloaded File
-                        pile_file_provider::load_data(&x.locations, provider_config.length, tx).await
-                    }
-                }
+                    
+                },
+         
                 _ => {
                     log::error!("Can't support Input Type");
                 }

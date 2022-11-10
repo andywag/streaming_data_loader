@@ -4,12 +4,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::tasks::DatasetInfo;
 
+use self::pile_datasets::{PileSets, PileDatasetType};
+
 
 pub mod provider_util;
-pub mod wiki_file_provider;
-pub mod pile_file_provider;
+//pub mod wiki_file_provider;
+//pub mod pile_file_provider;
 pub mod arrow_provider;
 pub mod arrow_transfer;
+
+pub mod pile_datasets;
+pub mod general_file_provider;
+pub mod gzip_file_provider;
+pub mod zstd_file_provider;
 
 pub enum ProviderChannel<T> {
     Complete,
@@ -43,9 +50,35 @@ pub struct WikiDescription {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct PileDescription {
+pub struct PileFullDescription {
     pub locations:Vec<String>,
     pub network:bool
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct PileDescription {
+    dataset:PileSets
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub enum DownloadType {
+    #[serde(rename = "gzip")]
+    Gzip, 
+    #[serde(rename = "zstd")]
+    Zstd
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Dataset {
+    pub location:String,
+    pub download_type:DownloadType,
+    pub network:bool
+    
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Datasets {
+    pub datasets:Vec<Dataset>
 }
 
 
@@ -54,11 +87,12 @@ pub enum SourceDescription {
     #[serde(rename = "huggingface")]
     HuggingFace(HuggingDescription),
     #[serde(rename = "pile")]
-    PileDescription(PileDescription),
+    Pile{typ:PileDatasetType},
     #[serde(rename = "arrow")]
     Arrow(String),
-    #[serde(rename="wiki")]
-    Wiki(WikiDescription)
+    #[serde(rename="list")]
+    DataList(Vec<Dataset>)
+
 }
 
 #[derive(Deserialize, Serialize, Debug)]

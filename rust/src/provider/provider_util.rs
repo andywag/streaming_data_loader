@@ -1,5 +1,15 @@
+use serde_json::Value;
 
-pub fn create_text(line:String, finder:&str) -> String{
+
+// Parses the json line and returns a text string
+pub fn create_json_text(line:String, tag:&str) -> Option<String> {
+    let v: Value = serde_json::from_str(line.as_str()).unwrap();
+    v[tag].as_str().map(|e| e.to_string())
+}
+
+// Extract the text from a json file with the string associated with finder
+// This method should be faster than doing a json decode
+pub fn create_text(line:String, finder:&str) -> Option<String>{
     let search:Vec<char> = finder.chars().collect();
     let mut index:usize = 0;
     let mut sp:usize = 0;
@@ -37,6 +47,12 @@ pub fn create_text(line:String, finder:&str) -> String{
         escape = c == '\\';
     }
     //println!("Here {} {}", sp, ep);
-    return new_text.into_iter().collect();
+    if new_text.len() > 32 {
+        return Some(new_text.into_iter().collect());
+    }
+    else {
+        return None;
+    }
 
 }
+

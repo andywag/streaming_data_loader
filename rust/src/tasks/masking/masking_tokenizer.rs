@@ -92,6 +92,7 @@ impl Batcher for BaseTokenizer {
     type T = MaskedData;
 
     fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
+        //log::info!("Data {}", data);
         let result = self.tokenizer.encode(data, true).unwrap();
             //let ids = result.get_ids();
             let s = self.sequence_length as usize;

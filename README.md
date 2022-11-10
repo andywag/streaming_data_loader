@@ -6,6 +6,19 @@ The purpose of this project is to provide a streaming dataloader for NLP which r
 2. Support for handling Streaming Interfaces
 3. Quick Startup to Avoid File Downloading and preprocessing
 
+## Dataset support
+
+The data loader is general but directly supports : 
+
+1. Wikipedia data from https://dumps.wikimedia.org/
+2. Pile data from from https://pile.eleuther.ai/
+    1. Total Dataset
+    2. Components of the Dataset :  
+        * Examples in https://github.com/andywag/streaming_data_loader/blob/master/rust/tests/masking.yaml
+        * Definitions in https://github.com/andywag/streaming_data_loader/blob/master/rust/src/provider/pile_datasets.rs
+3. Data stored in an Arror format
+    a. Streaming support from HuggingFace Datasets
+
 ## Status
 
 This project is still a work in progress and in a relatively early stage. Basic functionallity for training is working with examples for masking and single and multi label sequence classification. Current focus is on greater generalization and ease of use along with bug fixing. The hooks exist to allow **relatively easy** addition of new tasks/datasets. 

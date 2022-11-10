@@ -1,9 +1,9 @@
 import zmq
 import pickle
 import time
-import yaml
 import argparse
 import numpy as np
+import config_loader
 
 
 from transformers import  AutoModelForMaskedLM, AutoConfig, TrainingArguments, Trainer, AutoTokenizer
@@ -12,17 +12,19 @@ from datasets import load_dataset
 from external_dataset import ExternalDataset
 
 
-def run_bert(external=True, tokenizer_name='bert-base-uncased', address='ipc:///tmp/masking_pile_none'):
+def run_bert(iconfig):
+    tokenizer_name = iconfig['tokenizer']['config']['tokenizer_name']
+    sequence_length = iconfig['tokenizer']['config']['sequence_length']
+    batch_size = iconfig['tokenizer']['config']['batch_size']
+
     def tokenize_function(examples):
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        data = tokenizer(examples['text'], padding="max_length", truncation=True, max_length=96)
+        data = tokenizer(examples['text'], padding="max_length", truncation=True, max_length=sequence_length)
         return data
 
-    tokenized_dataset = ExternalDataset(address, 1024, fields=["input_ids","attention_mask","labels"])
+    tokenized_dataset = ExternalDataset(iconfig['transport']['transport'].address, batch_size, fields=["input_ids","attention_mask","labels"])
 
     config = AutoConfig.from_pretrained(tokenizer_name)
-    #config.problem_type = "single_label_classification"
-    #config.num_labels = 2
 
     training_args = TrainingArguments(output_dir="local",
                                       lr_scheduler_type="constant",
@@ -46,17 +48,19 @@ def run_bert(external=True, tokenizer_name='bert-base-uncased', address='ipc:///
 
 
 parser = argparse.ArgumentParser(description='Test Data Loading')
-parser.add_argument('--tokenizer', type=str, default="bert-base-uncased")
-parser.add_argument('--address', type=str, default="ipc:///tmp/masking_pile_none")
-parser.add_argument('--rust', action='store_true')
+
+parser.add_argument('--file', type=str, default="../rust/tests/masking.yaml")
+parser.add_argument('--config', type=str, default="zmq_pile_none")
 
 def main():
     args = parser.parse_args()
-    run_bert(args.rust, args.tokenizer, args.address)
+    config_file = config_loader.load(args.file)
+    config = config_file[args.config]
+    run_bert(config)
+
 
 if __name__ == '__main__':
     main()
 
 
 
-#test_transport("localhost",4000)

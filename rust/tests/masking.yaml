@@ -1,11 +1,13 @@
+
 basic:
   model: "masking"
   source:
     length: !iterations
       iterations: 32
-    source: !wiki
-      location: "../data/test.json.gz"
-      network: false
+    source: !list
+      - location: "../data/test.json.gz"
+        download_type: !gzip
+        network: false   
   tokenizer: 
     type: "masking"
     config: 
@@ -22,9 +24,10 @@ basic_stream:
   source:
     length: !iterations
       iterations: 32
-    source: !wiki
-      location: "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz"
-      network: true
+    source: !list
+      - location: "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz"
+        download_type: !gzip
+        network: true 
   tokenizer: 
     type: "masking"
     config: 
@@ -41,9 +44,10 @@ basic_pile:
   source:
     length: !iterations
       iterations: 32
-    source: !pile
-      locations: ["/home/andy/Downloads/test.jsonl.zst"]
-      network: false
+    source: !list
+      - location: "/home/andy/Downloads/test.jsonl.zst"
+        download_type: !zstd
+        network: false  
   tokenizer: 
     type: "masking"
     config: 
@@ -55,14 +59,31 @@ basic_pile:
     transport: !test
   node: !none
 
-basic_pile_stream:
+basic_pile_total:
   model: "masking"
   source:
     length: !iterations
       iterations: 32
     source: !pile
-      locations: ["https://mystic.the-eye.eu/public/AI/pile/train/00.jsonl.zst"]
-      network: true
+      typ: !total 
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 8
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "roberta-base"
+  transport:
+    transport: !test
+  node: !none
+
+basic_pile_wiki:
+  model: "masking"
+  source:
+    length: !iterations
+      iterations: 32
+    source: !pile
+      typ: !wiki 
   tokenizer: 
     type: "masking"
     config: 
@@ -75,65 +96,67 @@ basic_pile_stream:
   node: !none
 
 
-zmq_pile_none:
+basic_pile_enron:
   model: "masking"
   source:
-    length: !epochs
-      epochs: 4
+    length: !iterations
+      iterations: 32
     source: !pile
-      # TODO : Add Wildcard support to avoid listing the files
-      locations: ["https://mystic.the-eye.eu/public/AI/pile/train/00.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/01.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/02.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/03.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/04.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/05.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/06.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/07.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/08.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/09.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/10.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/11.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/12.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/13.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/14.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/15.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/16.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/17.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/18.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/19.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/20.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/21.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/22.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/23.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/24.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/25.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/26.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/27.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/28.jsonl.zst",
-                  "https://mystic.the-eye.eu/public/AI/pile/train/29.jsonl.zst"]
-      network: true
+      typ: !enron 
   tokenizer: 
     type: "masking"
     config: 
-      batch_size: 1024
+      batch_size: 8
       sequence_length: 128
       mask_length: 18
-      tokenizer_name: "bert-base-uncased"
+      tokenizer_name: "roberta-base"
   transport:
-    transport: !zmq
-      address: "ipc:///tmp/masking_pile_none"
+    transport: !test
   node: !none
 
+basic_pile_literotica:
+  model: "masking"
+  source:
+    length: !iterations
+      iterations: 32
+    source: !pile
+      typ: !literotica 
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 8
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "roberta-base"
+  transport:
+    transport: !test
+  node: !none
+
+basic_pile_git_small:
+  model: "masking"
+  source:
+    length: !iterations
+      iterations: 32
+    source: !pile
+      typ: !git_small 
+  tokenizer: 
+    type: "masking"
+    config: 
+      batch_size: 8
+      sequence_length: 128
+      mask_length: 18
+      tokenizer_name: "roberta-base"
+  transport:
+    transport: !test
+  node: !none
 
 zmq_none:
   model: "masking"
   source:
     length: !iterations
       iterations: 50000
-    source: !wiki
-      location: "https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz"
-      network: true
+    source: !pile
+      typ: !total
   tokenizer: 
     type: "masking"
     config: 
@@ -144,48 +167,4 @@ zmq_none:
   transport:
     transport: !zmq
       address: "ipc:///tmp/masking_none"
-  
   node: !none
-
-zmq_local:
-  model: "masking"
-  source:
-    length: !iterations
-      iterations: 50000
-    source: !wiki
-      location: "../../../Downloads/enwiki-20220926-cirrussearch-content.json.gz"
-      network: false
-  tokenizer: 
-    type: "masking"
-    config: 
-      batch_size: 1024
-      sequence_length: 128
-      mask_length: 18
-      tokenizer_name: "roberta-base"
-  transport:
-    transport: !zmq
-      address: "ipc:///tmp/masking_local"
-  node: !none
-
-zmq_ipc:
-  source:
-    type: "wiki_file"
-    location: "../data/test.json.gz"
-    iterations: 4000
-  tokenizer: 
-    type: "masking"
-    config: 
-      batch_size: 16
-      sequence_length: 512
-      mask_length: 18
-      tokenizer_name: "bert-base-uncased"
-  transport:
-    transport: !zmq
-      address: "ipc:///tmp/zmqtest"
-  node: !python
-    cwd: "../python"
-    command: "python3"
-    args: ["test_train_transport.py","--config", "zmq_ipc"]
-
-
-   
