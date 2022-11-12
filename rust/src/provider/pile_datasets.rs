@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Dataset, DownloadType};
+use super::{Dataset};
 
 #[derive(Deserialize, Serialize, Debug)]
 
 pub enum PileDatasetType {
     #[serde(rename="total")]
-    TOTAL,
+    Total,
     #[serde(rename="wiki")]
     Wiki,
     #[serde(rename="subtitles")]
@@ -36,21 +36,21 @@ pub enum PileDatasetType {
     #[serde(rename="philpapers")]
     PhilPapersDataset,
     #[serde(rename="uspto")]
-    USPTODataset, //'https://the-eye.eu/public/AI/pile_preliminary_components/pile_uspto.tar'
+    USPTODataset, 
     #[serde(rename="euro")]
-    EuroParlDataset, // 'https://the-eye.eu/public/AI/pile_preliminary_components/EuroParliamentProceedings_1996_2011.jsonl.zst'
+    EuroParlDataset, 
     #[serde(rename="ytsub")]
-    YTSubtitlesDataset, //'http://eaidata.bmk.sh/data/yt_subs.jsonl.zst'
+    YTSubtitlesDataset, 
     #[serde(rename="hacker")]
-    HackerNewsDataset , //'http://eaidata.bmk.sh/data/hn.jsonl.zst'
+    HackerNewsDataset , 
     #[serde(rename="git_full")]
-    FullGithubDataset, //'http://eaidata.bmk.sh/data/github.tar'
+    FullGithubDataset, 
     #[serde(rename="git_small")]
-    GithubDataset, //'http://eaidata.bmk.sh/data/github_small.jsonl.zst'),
+    GithubDataset, 
     #[serde(rename="openweb")]
-    OpenWebText2Dataset, //'http://eaidata.bmk.sh/data/openwebtext2.jsonl.zst.tar')
+    OpenWebText2Dataset, 
     #[serde(rename="common_crawl")]
-    CommonCrawlDataset,  //'http://eaidata.bmk.sh/data/pile_cc_filtered_deduped.jsonl.zst'),
+    CommonCrawlDataset,  
 }
 
 
@@ -60,7 +60,6 @@ fn get_internal_zstd(location:String, exists:bool) -> Option<Vec<Dataset>> {
     } else {
         let dataset = Dataset{
             location: location,
-            download_type: DownloadType::Zstd,
             network: true,
         };
         Some(vec!(dataset))
@@ -69,14 +68,13 @@ fn get_internal_zstd(location:String, exists:bool) -> Option<Vec<Dataset>> {
 
 pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
     match typ {
-        PileDatasetType::TOTAL => {
+        PileDatasetType::Total => {
             let mut result = Vec::<Dataset>::with_capacity(30);
             for x in 0..30 {
                 let location = if x < 10 {format!("https://mystic.the-eye.eu/public/AI/pile/train/0{}.jsonl.zst",x)}
                                else {format!("https://mystic.the-eye.eu/public/AI/pile/train/{}.jsonl.zst",x)};
                 let dataset = Dataset{
                     location: location,
-                    download_type: DownloadType::Zstd,
                     network: true,
                 };
                 result.push(dataset);
@@ -87,7 +85,6 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
         PileDatasetType::Wiki => {
             let _dataset = Dataset{
                 location: "http://eaidata.bmk.sh/data/wikipedia-en.tar.gz".to_string(),
-                download_type: DownloadType::Gzip,
                 network: true,
             };
             None
@@ -96,7 +93,6 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
         PileDatasetType::OpensubtitlesDataset => {
             let _dataset = Dataset{
                 location: "http://eaidata.bmk.sh/data/opensubtitles_out.tar".to_string(),
-                download_type: DownloadType::Gzip,
                 network: true,
             };
             None
@@ -105,7 +101,6 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
         PileDatasetType::BookCorpus => {
             let _dataset = Dataset{
                 location: "https://the-eye.eu/public/AI/pile_preliminary_components/books1.tar.gz".to_string(),
-                download_type: DownloadType::Gzip,
                 network: true,
             };
             None
@@ -179,24 +174,3 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
 }
 
 
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct WikiDataset {
-    dataset:Vec<Dataset>
-}
-
-impl WikiDataset {
-    pub fn new() -> Self {
-        Self {
-            dataset : vec!(Dataset{location:"http://eaidata.bmk.sh/data/wikipedia-en.tar.gz".to_string() , 
-                download_type:DownloadType::Gzip,
-                network:true})
-        }
-    }
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-
-pub enum PileSets {
-    Wiki(WikiDataset)
-}

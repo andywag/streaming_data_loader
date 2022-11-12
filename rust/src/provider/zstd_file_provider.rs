@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use super::{Dataset, ProviderChannel, general_file_provider::Counter};
 use async_compression::tokio::bufread::ZstdDecoder;
 use tokio::{io::{AsyncBufReadExt, BufReader, Lines}, fs::File};
@@ -8,7 +10,7 @@ use tokio_util::compat::FuturesAsyncReadCompatExt;
 
 type Decoder<T> = ZstdDecoder<T>;
 
-pub async fn create_lines(file_path:&String) -> Lines<BufReader<Decoder<BufReader<File>>>> {
+pub async fn create_lines(file_path:&PathBuf) -> Lines<BufReader<Decoder<BufReader<File>>>> {
     let file = File::open(file_path).await.unwrap();
     let reader = BufReader::new(file);
     let gzip_decoder = ZstdDecoder::new(reader);
@@ -17,8 +19,8 @@ pub async fn create_lines(file_path:&String) -> Lines<BufReader<Decoder<BufReade
     return lines;
 }
 
-pub async fn load_dataset(dataset:&Dataset, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>) {
-    let mut lines = create_lines(&dataset.location).await;
+pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>) {
+    let mut lines = create_lines(path).await;
     while let Some(line) = lines.next_line().await.unwrap() {
         let text = super::provider_util::create_json_text(line, "text");
         match text {

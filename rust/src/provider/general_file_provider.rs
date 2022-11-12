@@ -1,4 +1,6 @@
-use super::{ProviderChannel, ProviderLength, {Dataset, DownloadType}, gzip_file_provider, zstd_file_provider};
+use std::{path::PathBuf, str::FromStr};
+
+use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, get_cached_file}};
 use tokio::sync::mpsc::Sender;
 
 
@@ -69,12 +71,23 @@ pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sen
     loop {
 
         for dataset in &datasets {
-            let _ = match (&dataset.download_type, dataset.network) {
-                (DownloadType::Gzip, false) => gzip_file_provider::load_dataset(dataset, &mut counter, &tx).await,
-                (DownloadType::Gzip, true) => gzip_file_provider::load_url(dataset, &mut counter, &tx).await, 
-                (DownloadType::Zstd, false) => zstd_file_provider::load_dataset(dataset, &mut counter, &tx).await,
-                (DownloadType::Zstd, true) => zstd_file_provider::load_url(dataset, &mut counter, &tx).await,  
+            let typ = get_download_type(&dataset.location);
+            
+            let location = if !dataset.network {
+                 Some(PathBuf::from_str(&dataset.location.as_str()).unwrap())
+            }
+            else {
+                get_cached_file("../../blob2/data".to_string(), &dataset.location, true)
             };
+
+            match (typ,location) {
+                (DownloadType::Zstd, None) => zstd_file_provider::load_url(dataset, &mut counter, &tx).await,
+                (DownloadType::Zstd, Some(x)) => zstd_file_provider::load_dataset(&x, &mut counter, &tx).await,
+                (DownloadType::Gzip, None) => gzip_file_provider::load_url(dataset, &mut counter, &tx).await,
+                (DownloadType::Gzip, Some(x)) => gzip_file_provider::load_dataset(&x, &mut counter, &tx).await,
+                (DownloadType::Error, _) => log::error!("Dataset Type Not Defined"),
+            }
+
             if counter.done() {
                 log::info!("Finished Data Provider");
                 let _ = tx.send(ProviderChannel::Complete).await;

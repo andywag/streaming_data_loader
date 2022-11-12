@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tasks::DatasetInfo;
 
-use self::pile_datasets::{PileSets, PileDatasetType};
+use self::pile_datasets::{PileDatasetType};
 
 
 pub mod provider_util;
@@ -55,26 +55,15 @@ pub struct PileFullDescription {
     pub network:bool
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct PileDescription {
-    dataset:PileSets
-}
 
-#[derive(Deserialize, Serialize, Debug)]
-pub enum DownloadType {
-    #[serde(rename = "gzip")]
-    Gzip, 
-    #[serde(rename = "zstd")]
-    Zstd
-}
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Dataset {
     pub location:String,
-    pub download_type:DownloadType,
     pub network:bool
     
 }
+
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Datasets {

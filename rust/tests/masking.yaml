@@ -2,8 +2,8 @@
 basic:
   model: "masking"
   source:
-    length: !iterations
-      iterations: 32
+    length: !epochs
+      epochs: 1
     source: !list
       - location: "../data/test.json.gz"
         download_type: !gzip

@@ -43,10 +43,6 @@ fn test_masking_stream() {
     basic_test(TestType::MASK,"basic_stream".to_string());
 } 
 
-#[test]
-fn test_masking_pile_stream() {
-    basic_test(TestType::MASK,"basic_pile_stream".to_string());
-} 
 
 #[test]
 fn test_squad() {
