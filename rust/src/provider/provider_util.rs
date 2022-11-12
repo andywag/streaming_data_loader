@@ -27,9 +27,10 @@ pub fn get_cached_file(cache_path:String, url:&String, offline:bool) -> Option<P
 
     let cache = Cache::builder()
     .dir(base_path)
-    .connect_timeout(std::time::Duration::from_secs(3))
+    .connect_timeout(std::time::Duration::from_secs(20))
     .freshness_lifetime(10000000)
     .offline(offline)
+    //.progress_bar(progress_bar)
     .build()
     .unwrap();
 

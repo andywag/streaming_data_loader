@@ -38,8 +38,7 @@ The following examples show the basic operation along with the source code and c
 
 This example will run pretraining using a wiki dataset which is streamed from https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz. There are a few known issues with this dataset but it is converging over the initial iterations. The training for this will start immediately without the initial required preprocessing which makes pretraining so painful. 
 
-1. Run **cargo run --release -- --path tests/masking.yaml --config zmq_none** --- in rust folder 
-2. Run **python3 masking_run.py --rust** -- in python folder
+1. Run **python3 masking_run.py --all** from python folder
 
 Configuration and Source Code for this Example can be found
 * https://github.com/andywag/streaming_data_loader/blob/master/rust/tests/masking.yaml
@@ -49,7 +48,7 @@ Configuration and Source Code for this Example can be found
 
 This example will run multilabel classification using an emotions dataset downloaded from Huggingface. The first step of the process is to download the arrow dataset so the first time this example is run will have a slight delay while this is downloaded. Arrow also supports a streaming mode which is being worked on now. 
 
-1. Run **cargo run --release -- --path tests/multi_label.yaml --config zmq_ipc** --- in rust folder 
+1. Run **cargo run --release -- run zmq_ipc tests/multi_label.yaml** --- in rust folder 
 2. Run **python3 emot_run.py --rust** -- in python folder
 
 Configuration and Source Code for this Example can be found

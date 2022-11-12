@@ -60,6 +60,12 @@ impl Counter {
 }
 
 
+pub async fn save_data_sets(cache_path:String, datasets:Vec<Dataset>) {
+
+    for dataset in datasets {
+        get_cached_file(cache_path.clone(), &dataset.location, false);
+    }
+}
 
 pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sender<ProviderChannel<String>>) {
 

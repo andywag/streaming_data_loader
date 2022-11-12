@@ -13,7 +13,7 @@ import subprocess
 import multiprocessing as mp
 
 def run_loader(args):
-    subprocess.run(["cargo", "run", "--release", "--", "--config",args.config], cwd="../rust")
+    subprocess.run(["cargo", "run", "--release", "run", "zmq_none"], cwd="../rust")
 
 def run_bert(input_config):
     tokenizer_name = input_config['tokenizer']['config']['tokenizer_name']

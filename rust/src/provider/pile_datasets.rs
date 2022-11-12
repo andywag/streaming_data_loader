@@ -1,10 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 use super::{Dataset};
+use clap;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, clap::ValueEnum, Clone)]
 
 pub enum PileDatasetType {
+    #[serde(rename="none")]
+    None,
+    #[serde(rename="config")]
+    Config,
     #[serde(rename="total")]
     Total,
     #[serde(rename="wiki")]
@@ -68,6 +73,8 @@ fn get_internal_zstd(location:String, exists:bool) -> Option<Vec<Dataset>> {
 
 pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
     match typ {
+        PileDatasetType::None => None,
+        PileDatasetType::Config => None,
         PileDatasetType::Total => {
             let mut result = Vec::<Dataset>::with_capacity(30);
             for x in 0..30 {
