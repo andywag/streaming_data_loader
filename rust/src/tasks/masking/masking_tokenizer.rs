@@ -12,6 +12,7 @@ pub struct BaseTokenizer {
     pub mask_length:u32,
     tokenizer:Tokenizer,
     store_original:bool,
+    causal:bool, 
     batch:MaskedData,
     index:usize,
     attention_mask:Vec<u32>,
@@ -27,6 +28,7 @@ impl BaseTokenizer {
         let mask_length = config.mask_length;
         let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
         
+        let causal = config.tokenizer_name.contains("gpt");
         
         let location =  config.tokenizer_name.find("roberta");
         let tokens = match location {
@@ -53,6 +55,7 @@ impl BaseTokenizer {
             mask_length: mask_length,
             tokenizer: tokenizer,
             store_original: store_original,
+            causal:causal,
             batch:MaskedData::new(config.batch_size, config.sequence_length, mask_length, tokens.3),
             index:0, 
             attention_mask:vec![0;config.sequence_length as usize],
@@ -141,7 +144,9 @@ impl Batcher for BaseTokenizer {
                     if self.store_original {
                         old_batch.original = Some(old_batch.input_ids.clone());
                     }
-                    self.mask_batch(&mut old_batch, self.mask);
+                    if !self.causal {
+                        self.mask_batch(&mut old_batch, self.mask);
+                    }
                     return Some(old_batch);
                 }
             }
@@ -156,7 +161,9 @@ impl Batcher for BaseTokenizer {
         if self.store_original {
             old_batch.original = Some(old_batch.input_ids.clone());
         }
-        self.mask_batch(&mut old_batch,  self.mask);
+        if !self.causal {
+            self.mask_batch(&mut old_batch,  self.mask);
+        }
         return Some(old_batch);
     }
 

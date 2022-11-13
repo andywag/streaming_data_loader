@@ -59,6 +59,8 @@ loader.add_constructor("!test",  NoneHolder.constructor)
 loader.add_constructor("!zmq",  Zmq.constructor)
 loader.add_constructor("!list",  NoneHolder.constructor)
 loader.add_constructor("!total",  NoneHolder.constructor)
+loader.add_constructor("!huggingface",  NoneHolder.constructor)
+loader.add_constructor("!squad",  NoneHolder.constructor)
 
 def load(path:str):
     with open(path, 'r') as fp:

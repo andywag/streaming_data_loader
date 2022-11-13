@@ -160,7 +160,7 @@ zmq_none:
   tokenizer: 
     type: "masking"
     config: 
-      batch_size: 1024
+      batch_size: 32768
       sequence_length: 128
       mask_length: 18
       tokenizer_name: "bert-base-cased"

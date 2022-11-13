@@ -5,28 +5,6 @@ use loader::provider::{pile_datasets::{PileDatasetType, get_datasets}, general_f
 use serde_yaml::Value;
 
 
-/* 
-/// Simple program to greet a person
-#[derive(Parser, Debug, Clone)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-   /// Name of the person to greet
-   #[arg(short, long, default_value="tests/masking.yaml")]
-   path: String,
-
-   /// Number of times to greet
-   #[arg(short, long, default_value="basic")]
-   config: String,
-
-   /// Downloadload dataset 
-   #[clap(value_enum, default_value="none")]
-   download: PileDatasetType,
-
-    /// Downloadload dataset 
-    #[clap(long, default_value=None)]
-    cache: Option<String>,
-}
-*/
 
 #[derive(clap::Parser, Debug, Clone)]
 struct Args2 {

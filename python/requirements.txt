@@ -1,0 +1,6 @@
+zmq
+numpy
+transformers
+datasets
+torch
+wandb

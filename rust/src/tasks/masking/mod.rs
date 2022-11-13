@@ -2,6 +2,7 @@ pub mod masked_data;
 pub mod masking_tokenizer;
 pub mod masking_test_endpoint;
 pub mod masking_runner;
+pub mod gpt2_tokenizer;
 
 use serde::{Serialize, Deserialize};
 

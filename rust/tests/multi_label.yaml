@@ -43,7 +43,7 @@ python_match:
     cwd: "../python"
     args: ["emot_dataset_compare.py"]
 
-zmq_ipc:
+zmq_none:
   model: "multi-label"
   source:
     flatten: true

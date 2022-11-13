@@ -12,13 +12,13 @@ parser.add_argument('--store', type=str, default="cache.pkl")
 
 @dataclass
 class Descriptor:
-    name:str
-    paths:List[str]
-    num_rows:int
+    name: str
+    paths: List[str]
+    num_rows: int
 
 @dataclass
 class Transfer:
-    children:List[Descriptor]
+    children: List[Descriptor]
 
 
 def main():
@@ -42,6 +42,7 @@ def main():
     store = {"store": transfer}
     with open(args.store, 'wb') as fp:
         pickle.dump(transfer, fp)
+
 
 if __name__ == '__main__':
     main()

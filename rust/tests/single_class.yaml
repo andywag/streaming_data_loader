@@ -37,7 +37,7 @@ python_match:
     command: "python3"
     args: ["imdb_dataset_compare.py"]
 
-zmq_ipc:
+zmq_none:
   model: "single-class"
   source:
     flatten: true

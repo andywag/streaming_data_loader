@@ -9,7 +9,9 @@ The purpose of this project is to provide a streaming dataloader for NLP which r
 ## Quick Start
 
 1. Install Rust **curl https://sh.rustup.rs -sSf | sh**
-2. Run **python3 masking_run.py --all** from python folder
+2. Install Libraries **sudo apt-get install libzmq3-dev pkg-config  libssl-dev**
+3. Build Rust Libary **cargo build --release** from rust folder -- Might take a while on first build
+4. Run **python3 top_run.py --task mlm --all** from python folder -- What's Masked LM training using Pile Dataset
 
 These instructions will run BERT pretraining using the Pile dataset and will avoid all the pain associated preprocessing datasets normally associated with pretraining. 
 
@@ -32,13 +34,17 @@ This project is still a work in progress and in a relatively early stage. Basic 
 
 ## Operation/Examples
 
-The following examples show the basic operation along with the source code and configuration files for the operation. 
+There are currently a few example cases which are directly supported and can be run using : 
+
+1. **python3 top_run.py --task <task> --all** from the python folder
+    a. task = ["gpt2", "mlm", "squad", "imdb" (single label classification), "emot" (multi label classification)]
+
 
 ### Masking/Pretraining
 
 This example will run pretraining using a wiki dataset which is streamed from https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz. There are a few known issues with this dataset but it is converging over the initial iterations. The training for this will start immediately without the initial required preprocessing which makes pretraining so painful. 
 
-1. Run **python3 masking_run.py --all** from python folder
+1. Run **python3 top_run.py --task mlm --all** from python folder
 
 Configuration and Source Code for this Example can be found
 * https://github.com/andywag/streaming_data_loader/blob/master/rust/tests/masking.yaml
@@ -48,8 +54,8 @@ Configuration and Source Code for this Example can be found
 
 This example will run multilabel classification using an emotions dataset downloaded from Huggingface. The first step of the process is to download the arrow dataset so the first time this example is run will have a slight delay while this is downloaded. Arrow also supports a streaming mode which is being worked on now. 
 
-1. Run **cargo run --release -- run zmq_ipc tests/multi_label.yaml** --- in rust folder 
-2. Run **python3 emot_run.py --rust** -- in python folder
+1. Run **python3 top_run.py --task emot --all** from python folder
+
 
 Configuration and Source Code for this Example can be found
 * https://github.com/andywag/streaming_data_loader/blob/master/rust/tests/multi_label.yaml
