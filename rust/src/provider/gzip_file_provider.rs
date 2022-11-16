@@ -10,17 +10,35 @@ use tokio_util::compat::FuturesAsyncReadCompatExt;
 
  
 
-pub async fn create_lines(file_path:&PathBuf) -> Lines<BufReader<GzipDecoder<BufReader<File>>>> {
-    let file = File::open(file_path).await.unwrap();
-    let reader = BufReader::new(file);
+pub async fn create_lines(file_path:&PathBuf) -> Option<Lines<BufReader<GzipDecoder<BufReader<File>>>>> {
+    let file_opt = File::open(file_path).await;
+    match file_opt {
+        Ok(file) => {
+            let reader = BufReader::new(file);
+            let gzip_decoder = GzipDecoder::new(reader);
+            let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
+            Some(buf_reader.lines())
+        },
+        Err(_) => {
+            log::error!("File Not Found {:?}", file_path);
+            None
+        }
+    }
+
+    /*let reader = BufReader::new(file);
     let gzip_decoder = GzipDecoder::new(reader);
     let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
     let lines = buf_reader.lines();
     return lines;
+    */
 }
 
 pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>) {
-    let mut lines = create_lines(path).await;
+    let lines_opt = create_lines(path).await;
+    if lines_opt.is_none() {
+        return;
+    }
+    let mut lines = lines_opt.unwrap();
     while let Some(line) = lines.next_line().await.unwrap() {
         let text = super::provider_util::create_json_text(line, "text");
         match text {
@@ -49,6 +67,7 @@ pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<Provide
     let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
     let mut lines = buf_reader.lines();
 
+    let mut error_count = 0;
     loop {
         let data = lines.next_line().await;
         match data {
@@ -71,6 +90,10 @@ pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<Provide
             },
             Err(e) => {
                 log::error!("Error in File Read {:?}", e);
+                error_count += 1;
+                if error_count == 3 {
+                    return;
+                }
             },
         }
     }

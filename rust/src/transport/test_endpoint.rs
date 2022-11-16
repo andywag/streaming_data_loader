@@ -36,7 +36,6 @@ pub async fn receive<T>(
     match data_full {
         ProviderChannel::Complete => {
             println!("First Batch Required");
-            //_data = SquadData::new(1, 1);
         },
         ProviderChannel::Data(x) => {
             _data = x;

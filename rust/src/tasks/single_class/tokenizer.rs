@@ -46,18 +46,10 @@ impl SingleTokenizer {
             self.batch.token_type_ids[self.index][0..length].clone_from_slice(&result.get_type_ids()[0..length]);
             self.batch.attention_mask[self.index][0..length].clone_from_slice(&result.get_attention_mask()[0..length]);
             self.batch.label[self.index] = data.label;
-            //for x in data.labels {
-            //    self.batch.labels[self.index][x as usize] = 1.0;
-            //}
-                        
-            //println!("Here {} {}", self.index, data.label);
+            
             self.index += 1;
             if self.index == self.batch_size as usize {
-                let mut old_batch = self.create_data(); 
-                std::mem::swap(&mut self.batch, &mut old_batch);
-                self.index = 0;
-
-                return Some(old_batch);
+                return self.get_working_batch();
             }
             return None;
     }

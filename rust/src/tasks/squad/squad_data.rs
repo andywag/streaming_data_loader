@@ -23,6 +23,9 @@ impl SquadData {
             answers:vec![None;batch_size as usize]
         }
     }
+
+
+    
 }
 
 

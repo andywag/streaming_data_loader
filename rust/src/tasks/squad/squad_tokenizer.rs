@@ -123,14 +123,9 @@ impl SquadTokenizer {
             self.batch.start_positions[self.index] = start_token.unwrap() as u32;
             self.batch.end_positions[self.index] = end_token.unwrap() as u32;
 
-            //println!("Here {} {}", self.index, self.batch_size);
             self.index += 1;
             if self.index == self.batch_size as usize {
-                let mut old_batch = self.create_data(); 
-                std::mem::swap(&mut self.batch, &mut old_batch);
-                self.index = 0;
-                return Some(old_batch);
-                   
+                return self.get_working_batch();
             }
             return None;
     }
