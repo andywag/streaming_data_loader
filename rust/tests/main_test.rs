@@ -54,10 +54,10 @@ fn test_multi_label() {
     basic_test(TestType::MULTI,"basic".to_string());
 }
 
-#[test]
-fn test_multi_match() {
-    basic_test(TestType::MULTI, "python_match".to_string());
-}
+//#[test]
+//fn test_multi_match() {
+//    basic_test(TestType::MULTI, "python_match".to_string());
+//}
 
 #[test]
 fn test_single_class() {

@@ -51,7 +51,7 @@ def run_model(input_config):
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "single_label_classification"
         config.num_labels = 2
-        model = AutoModelForSequenceClassification.fron_pretrained("bert-base-uncased",config=config).train()
+        model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
     elif input_config['model'] == 'multi-label':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "multi_label_classification"
@@ -81,7 +81,7 @@ def run_model(input_config):
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
 #parser.add_argument('--file', type=str, default="../rust/tests/gpt.yaml")
 #parser.add_argument('--config', type=str, default="zmq_none")
-parser.add_argument('--task', type=str, choices=["gpt2", "mlm", "squad", "imdb", "emot"])
+parser.add_argument('--task', type=str, choices=["gpt2", "mlm", "squad", "imdb", "emot"], default="emot")
 parser.add_argument('--all', action='store_true')
 
 

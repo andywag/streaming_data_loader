@@ -1,37 +1,23 @@
-use std::cmp::min;
+use crate::{batcher::Batcher, tokenizer_wrapper::{TokenizerWrapper}};
 
-use tokenizers::{Tokenizer};
-use crate::batcher::Batcher;
 
-use crate::utils;
-
-use super::{single_data::{SingleClassData, SingleClassTransport}, SingleClassConfig};
+use super::{single_data::{SingleClassData, SingleClassTransport}};
 
 
 
 pub struct SingleTokenizer {
-    pub batch_size:u32,
-    pub sequence_length:u32,
-    tokenizer:Tokenizer,
-    batch:SingleClassData,
-    index:usize
+    tokenizer:TokenizerWrapper,
+    batch:SingleClassData
 }
 
 impl SingleTokenizer {
-    pub fn new(config:&SingleClassConfig) -> Self {
-        let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
+    pub fn new(batch:SingleClassData, tokenizer:TokenizerWrapper) -> Self {
         Self {
-            batch_size: config.batch_size,
-            sequence_length: config.sequence_length,
             tokenizer: tokenizer,
-            batch:SingleClassData::new(config.batch_size, config.sequence_length),
-            index:0
+            batch:batch,
         }
     }
 
-    fn create_data(&self) -> SingleClassData {
-        return SingleClassData::new(self.batch_size, self.sequence_length);
-    }
 }
 
     impl Batcher for SingleTokenizer {
@@ -39,28 +25,19 @@ impl SingleTokenizer {
         type T = SingleClassData;
 
         fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
-            let result = self.tokenizer.encode(data.text, true).unwrap();
-    
-            let length = min(result.len(), self.sequence_length as usize);
-            self.batch.input_ids[self.index][0..length].clone_from_slice(&result.get_ids()[0..length]);
-            self.batch.token_type_ids[self.index][0..length].clone_from_slice(&result.get_type_ids()[0..length]);
-            self.batch.attention_mask[self.index][0..length].clone_from_slice(&result.get_attention_mask()[0..length]);
-            self.batch.label[self.index] = data.label;
-            
-            self.index += 1;
-            if self.index == self.batch_size as usize {
+            let result = self.tokenizer.encode(data.text.into());
+            let result = self.batch.put_data(&result, data.label);
+
+            if result {
                 return self.get_working_batch();
             }
             return None;
     }
 
     fn get_working_batch(&mut self) -> Option<Self::T> {
-        if self.index == 0 {
-            return None;
-        }
-        let mut old_batch = self.create_data(); 
+        
+        let mut old_batch = self.batch.new_data(); 
         std::mem::swap(&mut self.batch, &mut old_batch);
-        self.index = 0;
         return Some(old_batch);
     }
 

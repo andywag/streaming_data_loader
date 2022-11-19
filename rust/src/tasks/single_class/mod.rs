@@ -10,10 +10,10 @@ trait ConfigTypes {
     type DataType;
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SingleClassConfig{
-    pub batch_size:u32,
-    pub sequence_length:u32,
+    pub batch_size:usize,
+    pub sequence_length:usize,
     pub tokenizer_name:String
 }
 

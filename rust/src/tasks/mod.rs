@@ -8,7 +8,9 @@ pub mod squad;
 pub mod single_class;
 
 pub mod runner_simple;
+
 pub mod gen_tokenizer;
+pub mod generic_tokenizer;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetInfo {

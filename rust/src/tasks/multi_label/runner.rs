@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_yaml::Value;
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, ProviderConfig}, tasks::{multi_label::multi_arrow::MultiArrowGenerator, runner_simple}};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, ProviderConfig}, tasks::{multi_label::multi_arrow::MultiArrowGenerator, runner_simple}, tokenizer_wrapper};
 
 use super::{multi_data::{MultiTransport, MultiData}, MultiConfig, multi_tokenizer::{self}};
 
@@ -30,7 +30,9 @@ fn create_provider(config:&ProviderConfig) -> ArrowTransfer<MultiTransport>{
 fn create_generator(value:&Arc<serde_yaml::Value>)-> Box<dyn crate::batcher::Batcher<S=MultiTransport,T=MultiData> + Send> {
     let tokenizer = &value["tokenizer"]["config"];
     let config:MultiConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
-    return Box::new(multi_tokenizer::MultiTokenizer::new(&config));
+    let tokenizer = tokenizer_wrapper::get_tokenizer(config.tokenizer_name.to_owned()).unwrap();
+    let data = MultiData::new(&config);
+    return Box::new(multi_tokenizer::MultiTokenizer::new(data, tokenizer));
 }
 
 

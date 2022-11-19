@@ -78,7 +78,23 @@ pub enum TokenizerWrapper {
 }
 
 impl TokenizerWrapper {
-    pub fn encode(&self, data:String) -> Vec<u32> {
+
+    pub fn get_tokenizer(&self) -> &Tokenizer {
+
+        match self {
+            TokenizerWrapper::Bert(t) => {
+                &t.tokenizer
+            },
+            TokenizerWrapper::Roberta(t) => {
+                &t.tokenizer
+            },
+            TokenizerWrapper::Gpt(t) => {
+                &t.tokenizer
+            },
+        }
+    }
+
+    pub fn encode_mask(&self, data:String) -> Vec<u32> {
 
         match self {
             TokenizerWrapper::Bert(t) => {
@@ -110,6 +126,23 @@ impl TokenizerWrapper {
                 return ids;
             },
         }
+    }
+
+
+    pub fn encode(&self, data:tokenizers::EncodeInput) -> tokenizers::Encoding {
+
+        let result = match self {
+            TokenizerWrapper::Bert(t) => {
+                t.tokenizer.encode(data, true)
+            },
+            TokenizerWrapper::Roberta(t) => {
+                t.tokenizer.encode(data, true)
+            },
+            TokenizerWrapper::Gpt(t) => {
+                t.tokenizer.encode(data, true)
+            },
+        };
+        result.unwrap()
     }
 
     pub fn mask_token(&self) -> Option<u32> {

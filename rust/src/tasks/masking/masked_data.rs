@@ -75,12 +75,8 @@ impl MaskedData {
     }
 
     pub fn done(&self) -> bool{
-        if self.index == self.input_ids.len() {
-            true
-        }
-        else {
-            false
-        }
+        self.index == self.input_ids.len()
+       
     }
 
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::tasks::masking::{masked_data::MaskedData, gpt_data::GptData};
-
+use crate::tasks::{masking::{masked_data::MaskedData, gpt_data::GptData}};
+pub mod data_generator;
 
 
 #[derive(Clone, Deserialize)]
@@ -16,6 +16,8 @@ impl DataSet {
         match self {
             DataSet::Mask(x) => DataSet::Mask(x.new_data()),
             DataSet::Gpt2(x) => DataSet::Gpt2(x.new_data()),
+            
+
         }
     }
 

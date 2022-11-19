@@ -11,9 +11,9 @@ pub mod runner;
 use serde::{Serialize, Deserialize};
 
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SquadConfig{
-    pub batch_size:u32,
-    pub sequence_length:u32,
+    pub batch_size:usize,
+    pub sequence_length:usize,
     pub tokenizer_name:String
 }

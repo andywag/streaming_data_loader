@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_yaml::Value;
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider, ProviderConfig}, tasks::{runner_simple}};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider, ProviderConfig}, tasks::{runner_simple}, tokenizer_wrapper};
 
 use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow::SquadArrowGenerator, squad_tokenizer, SquadConfig, squad_endpoint::SquadEnpoint};
 
@@ -27,7 +27,10 @@ fn create_provider(_config:&ProviderConfig) -> ArrowTransfer<SquadGeneral>{
 fn create_generator(value:&Arc<serde_yaml::Value>)-> Box<dyn crate::batcher::Batcher<S=SquadGeneral,T=SquadData> + Send> {
     let tokenizer = &value["tokenizer"]["config"];
     let config:SquadConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
-    return Box::new(squad_tokenizer::SquadTokenizer::new(&config));
+    let tokenizer = tokenizer_wrapper::get_tokenizer(config.tokenizer_name.to_owned()).unwrap();
+    let data = SquadData::new(&config);
+
+    return Box::new(squad_tokenizer::SquadTokenizer::new(data,tokenizer));
 }
 
 // Create the Endpoint for Squad

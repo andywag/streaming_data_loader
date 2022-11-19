@@ -50,7 +50,7 @@ impl Batcher for GenTokenizer {
     fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
 
        // Tokenize the Data
-       let mut ids = self.tokenizer.encode(data);
+       let mut ids = self.tokenizer.encode_mask(data);
        // Break the tokenized data into chunks
        let chunks = ids.chunks_mut(self.sequence_length as usize);
        // Encode and Batch the Data
