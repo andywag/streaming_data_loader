@@ -64,8 +64,7 @@ fn get_internal_zstd(location:String, exists:bool) -> Option<Vec<Dataset>> {
         None
     } else {
         let dataset = Dataset{
-            location: location,
-            network: true,
+            location: location
         };
         Some(vec!(dataset))
     }
@@ -82,7 +81,6 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
                                else {format!("https://mystic.the-eye.eu/public/AI/pile/train/{}.jsonl.zst",x)};
                 let dataset = Dataset{
                     location: location,
-                    network: true,
                 };
                 result.push(dataset);
             }
@@ -92,7 +90,6 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
         PileDatasetType::Wiki => {
             let _dataset = Dataset{
                 location: "http://eaidata.bmk.sh/data/wikipedia-en.tar.gz".to_string(),
-                network: true,
             };
             None
             //vec!(dataset)
@@ -100,7 +97,6 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
         PileDatasetType::OpensubtitlesDataset => {
             let _dataset = Dataset{
                 location: "http://eaidata.bmk.sh/data/opensubtitles_out.tar".to_string(),
-                network: true,
             };
             None
             //vec!(dataset)
@@ -108,7 +104,6 @@ pub fn get_datasets(typ:PileDatasetType) -> Option<Vec<Dataset>> {
         PileDatasetType::BookCorpus => {
             let _dataset = Dataset{
                 location: "https://the-eye.eu/public/AI/pile_preliminary_components/books1.tar.gz".to_string(),
-                network: true,
             };
             None
             //vec!(dataset)

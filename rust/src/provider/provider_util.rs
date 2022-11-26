@@ -8,6 +8,11 @@ pub enum DownloadType {
     Error
 }
 
+
+pub fn is_network(path:&String) -> bool {
+    path.contains("http")
+}
+
 pub fn get_download_type(path:&String) -> DownloadType{
     if &path[path.len()-4..path.len()] == ".zst" {
         return DownloadType::Zstd

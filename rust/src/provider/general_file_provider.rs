@@ -1,6 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
-use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, get_cached_file}};
+use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, get_cached_file, is_network}};
 use tokio::sync::mpsc::Sender;
 
 
@@ -79,7 +79,7 @@ pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sen
         for dataset in &datasets {
             let typ = get_download_type(&dataset.location);
             
-            let location = if !dataset.network {
+            let location = if !is_network(&dataset.location) {
                  Some(PathBuf::from_str(&dataset.location.as_str()).unwrap())
             }
             else {

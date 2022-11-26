@@ -59,9 +59,7 @@ pub struct PileFullDescription {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Dataset {
-    pub location:String,
-    pub network:bool
-    
+    pub location:String,    
 }
 
 

@@ -6,8 +6,6 @@ basic:
       epochs: 1
     source: !list
       - location: "../data/test.json.gz"
-        download_type: !gzip
-        network: false   
   tokenizer: 
     type: "t5-small"
     name: "t5-small"

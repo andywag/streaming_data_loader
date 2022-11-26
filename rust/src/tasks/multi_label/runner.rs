@@ -40,7 +40,8 @@ pub async fn run(value:Arc<Value>) -> bool{
     let result = runner_simple::run_main(value, 
         runner_simple::Either::Right(Box::new(create_provider)), 
         Box::new(create_generator) , 
-        Box::new(crate::transport::test_endpoint::default_endpoint));
+        Box::new(crate::transport::test_endpoint::default_endpoint),
+    None);
     result.await 
 }
 

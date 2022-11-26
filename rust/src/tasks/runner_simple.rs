@@ -74,14 +74,15 @@ pub enum Either<L,R> {
     Right(R)
 }
 
-type DataProviderAsync<P> = Box<dyn Fn(&Arc<Value>, Sender<ProviderChannel<P>>) -> JoinHandle<()>>;
+type DataProviderAsync<P> = Box<dyn Fn(&Arc<Value>, Sender<ProviderChannel<P>>, Option<String>) -> JoinHandle<()>>;
 type DataProviderSync<P> = Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>;
 
 // TODO : Clean up the direct reading of the Serde Value and use a serde load to a struct
 pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(value:Arc<Value>,
     base_provider:Either<DataProviderAsync<P>,DataProviderSync<P>>,
     generator:Box<dyn Fn(&Arc<serde_yaml::Value>, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
-    endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>) -> bool {
+    endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>,
+    cache:Option<String>) -> bool {
 
     // Create the Channel from Input to Tokenizer
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);
@@ -90,7 +91,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
 
     // Create the Data Provider Configuration
     let join_provider = match base_provider {
-        Either::Left(x) => x(&value.clone(), tx),
+        Either::Left(x) => x(&value.clone(), tx, cache),
         Either::Right(y) => create_data_provider(value.clone(), y, tx).await,
     };
 

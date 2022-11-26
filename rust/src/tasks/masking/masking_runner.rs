@@ -13,7 +13,7 @@ use crate::tasks::gen_tokenizer::GenTokenizer;
 
 
 // Create the Dataset Provider for Squad
-fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>) -> JoinHandle<()> {
+fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>, _cache:Option<String>) -> JoinHandle<()> {
 
 
     let provider_config:ProviderConfig = serde_yaml::from_value(value["source"].to_owned()).unwrap();
@@ -99,26 +99,32 @@ pub enum MaskType {
     Span
 }
 
-pub async fn run(value:Arc<Value>, mask_type:MaskType) -> bool{
+pub async fn run(value:Arc<Value>, cache:Option<String>, mask_type:MaskType) -> bool{
 
     let result = match mask_type {
         MaskType::Mlm => {
             runner_simple::run_main(value, 
                 runner_simple::Either::Left(Box::new(create_provider)), 
                 Box::new(create_generator), 
-                Box::new(create_endpoint))
+                Box::new(create_endpoint),
+                cache
+            )
         },
         MaskType::Causal => {
             runner_simple::run_main(value, 
                 runner_simple::Either::Left(Box::new(create_provider)), 
                 Box::new(create_causal_generator) , 
-                Box::new(create_causal_endpoint))
+                Box::new(create_causal_endpoint),
+                cache
+            )
         },
         MaskType::Span => {
             runner_simple::run_main(value, 
                 runner_simple::Either::Left(Box::new(create_provider)), 
                 Box::new(create_t5_generator) , 
-                Box::new(create_t5_endpoint)) 
+                Box::new(create_t5_endpoint),
+                cache
+            ) 
         },
     };
     result.await

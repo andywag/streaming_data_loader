@@ -26,7 +26,7 @@ async fn basic_test(test_type:TestType, config:String) {
     let f = std::fs::File::open(path).unwrap();
     let config_file:Value = serde_yaml::from_reader(f).unwrap();
     let config_ptr = Arc::new(config_file.get(config).unwrap().to_owned());
-    let result = loader::tasks::run(config_ptr["model"].as_str(), config_ptr.clone()).await;
+    let result = loader::tasks::run(config_ptr["model"].as_str(), config_ptr.clone(), None).await;
 
 
     log::info!("Result {}", result);
@@ -47,7 +47,7 @@ fn test_masking_stream() {
 
 #[test]
 fn test_t5() {
-    basic_test(TestType::MASK,"basic".to_string());
+    basic_test(TestType::T5,"basic".to_string());
 } 
 
 

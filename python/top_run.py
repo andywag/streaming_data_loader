@@ -15,7 +15,7 @@ os.environ['WANDB_DISABLED'] = 'true'
 
 
 def run_loader(args):
-    subprocess.run(["cargo", "run", "--release", "run", "zmq_none", args.file], cwd="../rust")
+    subprocess.run(["cargo", "run", "--release", "--", "--path", args.file, "--config", "zmq_none"], cwd="../rust")
 
 
 def run_model(input_config):
