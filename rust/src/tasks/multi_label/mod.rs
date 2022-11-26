@@ -19,7 +19,6 @@ pub struct MultiConfig{
     pub batch_size:usize,
     pub sequence_length:usize,
     pub number_labels:usize,
-    pub tokenizer_name:String
 }
 
 impl ConfigTypes for MultiConfig {

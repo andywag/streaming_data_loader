@@ -1,6 +1,6 @@
 
 basic:
-  model: "causal"
+  model: "t5"
   source:
     length: !epochs
       epochs: 1
@@ -9,31 +9,33 @@ basic:
         download_type: !gzip
         network: false   
   tokenizer: 
-    type: "gpt2"
-    name: "gpt2"
+    type: "t5-small"
+    name: "t5-small"
     config: 
-      batch_size: 1
+      batch_size: 8
       sequence_length: 128
-      mask_length: 18  
+      number_spans: 12
+      mask_probability: 0.15 
   transport:
     transport: !test
   node: !none
 
 zmq_none:
-  model: "causal"
+  model: "t5"
   source:
     length: !iterations
       iterations: 50000
     source: !pile
       typ: !total
   tokenizer: 
-    type: "gpt2"
-    name: "gpt2"
+    type: "t5-small"
+    name: "t5-small"
     config: 
       batch_size: 32768
       sequence_length: 128
-      mask_length: 18
+      number_spans: 12
+      mask_probability: 0.15 
   transport:
     transport: !zmq
-      address: "ipc:///tmp/causal_none"
+      address: "ipc:///tmp/t5_none"
   node: !none

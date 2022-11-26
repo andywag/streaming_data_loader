@@ -1,19 +1,18 @@
 
-use tokenizers::Tokenizer;
 
-use crate::{tasks::masking::{MaskingConfig}, utils, transport::test_endpoint::EndPoint, datasets::DataSet};
+use crate::{tasks::masking::{MaskingConfig}, transport::test_endpoint::EndPoint, datasets::DataSet};
 
 use super::gpt_data::GptData;
 
 pub struct Gpt2Endpoint {
-    pub tokenizer:Tokenizer
+    //pub tokenizer:Tokenizer
 }
 
 impl Gpt2Endpoint {
-    pub fn new(config:MaskingConfig) -> Self {
-        let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
+    pub fn new(_config:MaskingConfig) -> Self {
+        //let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
         Self {
-            tokenizer:tokenizer
+            //tokenizer:tokenizer
         }
     }
 

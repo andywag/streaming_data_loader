@@ -4,6 +4,7 @@ use serde_yaml::Value;
 
 enum TestType {
     MASK,
+    T5,
     SQUAD,
     MULTI,
     SINGLE
@@ -19,6 +20,7 @@ async fn basic_test(test_type:TestType, config:String) {
         TestType::SQUAD => "tests/squad.yaml",
         TestType::MULTI => "tests/multi_label.yaml",
         TestType::SINGLE => "tests/single_class.yaml",
+        TestType::T5 => "tests/t5.yaml"
     };
     
     let f = std::fs::File::open(path).unwrap();
@@ -41,6 +43,11 @@ fn test_masking() {
 #[test]
 fn test_masking_stream() {
     basic_test(TestType::MASK,"basic_stream".to_string());
+} 
+
+#[test]
+fn test_t5() {
+    basic_test(TestType::MASK,"basic".to_string());
 } 
 
 

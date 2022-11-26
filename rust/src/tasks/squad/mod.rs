@@ -15,5 +15,4 @@ use serde::{Serialize, Deserialize};
 pub struct SquadConfig{
     pub batch_size:usize,
     pub sequence_length:usize,
-    pub tokenizer_name:String
 }

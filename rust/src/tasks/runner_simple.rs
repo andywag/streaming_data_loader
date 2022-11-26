@@ -12,6 +12,8 @@ use tokio::task::{self, JoinHandle};
 
 
 use crate::batcher::{self, Batcher};
+use crate::tokenizer_wrapper;
+use crate::tokenizer_wrapper::TokenizerWrapper;
 use crate::transport::test_endpoint::{self, EndPoint};
 use crate::provider::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};
@@ -37,11 +39,14 @@ pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>,
 }
 
 pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
-    generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+    generator:Box<dyn Fn(&Arc<serde_yaml::Value>, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     rx:Receiver<ProviderChannel<P>>, 
     tx:Sender<ProviderChannel<D>>) -> JoinHandle<()> {
     // Create the Data Provider
-    let generator = generator(&value);
+    
+    let tokenizer_name = value["tokenizer"]["name"].as_str().unwrap().to_string().to_owned();
+    let tokenizer = tokenizer_wrapper::get_tokenizer(tokenizer_name).unwrap();
+    let generator = generator(&value, tokenizer);
 
     let join_tokenizer = task::spawn(async move {
         let result = batcher::create_batch(rx, tx, generator);
@@ -75,7 +80,7 @@ type DataProviderSync<P> = Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>;
 // TODO : Clean up the direct reading of the Serde Value and use a serde load to a struct
 pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(value:Arc<Value>,
     base_provider:Either<DataProviderAsync<P>,DataProviderSync<P>>,
-    generator:Box<dyn Fn(&Arc<serde_yaml::Value>)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+    generator:Box<dyn Fn(&Arc<serde_yaml::Value>, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>) -> bool {
 
     // Create the Channel from Input to Tokenizer
@@ -147,7 +152,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
 
 
     let result = tokio::join!(join_rx, join_tokenizer, join_provider, join_node);
-    log::info!("Finished {:?} {:?}", result.0, result.3);
+    log::info!("Finished : Internal-{:?} External-{:?}", result.0, result.3);
     return result.0.unwrap() && result.3.unwrap();
     
     

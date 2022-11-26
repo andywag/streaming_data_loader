@@ -12,15 +12,17 @@ pub struct GenTokenizer {
     pub sequence_length:usize,
     tokenizer:TokenizerWrapper,
     store:VecDeque<DataSet>, 
-    template:DataSet
+    template:DataSet, 
+    chunk:bool
 }
  
 impl GenTokenizer {
-    pub fn new(_config:&serde_yaml::Value, 
-        dataset:DataSet,
+    pub fn new(dataset:DataSet,
         batch_size:usize, 
         sequence_length:usize, 
-        tokenizer:TokenizerWrapper) -> Self {
+        tokenizer:TokenizerWrapper,
+        chunk:bool
+    ) -> Self {
         
         let first_set = dataset.clone().create_data();
         Self {
@@ -28,34 +30,44 @@ impl GenTokenizer {
             sequence_length: sequence_length,
             tokenizer: tokenizer,
             store:VecDeque::from(vec!(first_set)),
-            template:dataset
+            template:dataset, 
+            chunk:chunk
         }
     }
 
 
     fn handle_internal_batch(&mut self, ids:&mut [u32]) {
-        let result = self.store.back_mut().unwrap().put_data(ids);
-        if result {
+        let _result = self.store.back_mut().unwrap().put_data(ids);
+        //log::info!("Here {} {}", result, self.store.back().unwrap().done());
+        if self.store.back().unwrap().done() {
+            let remaining = self.store.back().unwrap().remaining();
             self.store.push_back(self.template.create_data());
+            if remaining.is_some() {
+                let mut r = remaining.unwrap();
+                let l = r.len();
+                self.handle_internal_batch(&mut r[0..l]);
+            }
         }
         
     }
 }
     
-// TODO : Handle Batch overlap : Currently throws out remaining sequence at the end of the batch
 impl Batcher for GenTokenizer {
     type S = String;
     type T = DataSet;
 
     fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
-
-       // Tokenize the Data
-       let mut ids = self.tokenizer.encode_mask(data);
-       // Break the tokenized data into chunks
-       let chunks = ids.chunks_mut(self.sequence_length as usize);
-       // Encode and Batch the Data
-       chunks.into_iter().for_each(|e|self.handle_internal_batch(e));
-       // Return the data if it is complete
+        // Tokenize the Data    
+        let mut ids = self.tokenizer.encode_mask(data);
+        // Break the tokenized data into chunks
+        if self.chunk {
+            let chunks = ids.chunks_mut(self.sequence_length as usize);
+            chunks.into_iter().for_each(|e|self.handle_internal_batch(e));
+        }
+        else {
+            let l = ids.len();
+            self.handle_internal_batch(&mut ids[0..l]);
+        }
        if self.store.front().unwrap().done() {
             self.store.pop_front()
        }

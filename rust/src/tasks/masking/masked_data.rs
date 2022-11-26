@@ -62,7 +62,6 @@ impl MaskedData {
     }
 
     pub fn put_data(&mut self, ids:&[u32]) -> bool{
-        //log::info!("Data {:?}", ids);
         self.input_ids[self.index][0..ids.len() as usize].clone_from_slice(ids);
         if ids.len() < self.sequence_length {
             let s = self.sequence_length;

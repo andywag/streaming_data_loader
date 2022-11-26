@@ -25,12 +25,6 @@ pub async fn create_lines(file_path:&PathBuf) -> Option<Lines<BufReader<GzipDeco
         }
     }
 
-    /*let reader = BufReader::new(file);
-    let gzip_decoder = GzipDecoder::new(reader);
-    let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
-    let lines = buf_reader.lines();
-    return lines;
-    */
 }
 
 pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>) {

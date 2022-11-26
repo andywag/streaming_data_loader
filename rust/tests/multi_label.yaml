@@ -8,11 +8,12 @@ basic:
       args: "en_annotated"
       operations: ["train"]
   tokenizer: 
+    name: "bert-base-uncased"
     config: 
       batch_size: 32
       sequence_length: 384
       number_labels: 9
-      tokenizer_name: "bert-base-uncased"
+      
   transport:
     transport: !test
   node: !none
@@ -30,11 +31,12 @@ python_match:
       args: "en_annotated"
       operations: ["train"]
   tokenizer: 
+    name: "bert-base-uncased"
     config: 
       batch_size: 1024
       sequence_length: 96
       number_labels: 9
-      tokenizer_name: "bert-base-uncased"
+      
   transport:
     transport: !zmq
       address: "ipc:///tmp/emot_python_compare"
@@ -54,11 +56,12 @@ zmq_none:
       args: "en_annotated"
       operations: ["train"]
   tokenizer: 
+    name: "bert-base-uncased"
     config: 
       batch_size: 1024
       sequence_length: 96
       number_labels: 9
-      tokenizer_name: "bert-base-uncased"
+      
   transport:
     transport: !zmq
       address: "ipc:///tmp/multi-label"

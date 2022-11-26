@@ -10,11 +10,12 @@ basic:
         network: false   
   tokenizer: 
     type: "masking"
+    name: "roberta-base"
     config: 
       batch_size: 8
       sequence_length: 128
       mask_length: 18
-      tokenizer_name: "roberta-base"
+      
   transport:
     transport: !test
   node: !none
@@ -30,11 +31,12 @@ basic_stream:
         network: true 
   tokenizer: 
     type: "masking"
+    name: "bert-base-cased"
     config: 
       batch_size: 8
       sequence_length: 128
       mask_length: 18
-      tokenizer_name: "bert-base-cased"
+      
   transport:
     transport: !test
   node: !none
@@ -49,11 +51,12 @@ zmq_none:
       typ: !total
   tokenizer: 
     type: "masking"
+    name: "bert-base-cased"
     config: 
       batch_size: 32768
       sequence_length: 128
       mask_length: 18
-      tokenizer_name: "bert-base-cased"
+      
   transport:
     transport: !zmq
       address: "ipc:///tmp/masking_none"

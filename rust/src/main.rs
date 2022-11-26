@@ -23,8 +23,8 @@ enum Action {
 
 #[tokio::main]
 async fn main()  {
-
     loader::create_logger();
+
     let args = Args2::parse();
     match args.action {
         Action::Run { path, config } => {

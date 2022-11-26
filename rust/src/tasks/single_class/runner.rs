@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_yaml::Value;
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, ProviderConfig}, tasks::{ runner_simple}, tokenizer_wrapper};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, ProviderConfig}, tasks::{ runner_simple}, tokenizer_wrapper::{TokenizerWrapper}};
 
 use super::{single_data::{SingleClassTransport, SingleClassData}, SingleClassConfig, single_arrow::SingleClassArrowGenerator, tokenizer::SingleTokenizer};
 
@@ -28,14 +28,12 @@ fn create_provider(config:&ProviderConfig) -> ArrowTransfer<SingleClassTransport
 }
 
 // Create the Tokenizer for Squad
-fn create_generator(value:&Arc<serde_yaml::Value>)-> Box<dyn crate::batcher::Batcher<S=SingleClassTransport,T=SingleClassData> + Send> {
-    let tokenizer = &value["tokenizer"]["config"];
-    let config:SingleClassConfig = serde_yaml::from_value(tokenizer.to_owned()).unwrap();
-    let tokenizer = tokenizer_wrapper::get_tokenizer(config.tokenizer_name.to_owned()).unwrap();
+fn create_generator(value:&Arc<serde_yaml::Value>, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=SingleClassTransport,T=SingleClassData> + Send> {
+    let config:SingleClassConfig = serde_yaml::from_value(value["tokenizer"]["config"].to_owned()).unwrap();
     let data = SingleClassData::new(&config);
+    
     return Box::new(SingleTokenizer::new(data, tokenizer));
 }
-
 
 
 // TODO : The squad implementation has quite a few flaws and is not fully functional

@@ -12,10 +12,11 @@ basic:
       operations: ["train"]
   tokenizer: 
     type: "squad"
+    name: "bert-base-uncased"
     config: 
       batch_size: 1024
       sequence_length: 384
-      tokenizer_name: "bert-base-uncased"
+      
   transport:
     transport: !test
   node: !none
@@ -30,10 +31,11 @@ zmq_none:
       dataset: "squad"
       operations: ["train"]
   tokenizer: 
+    name: "bert-base-uncased"
     config: 
       batch_size: 1024
       sequence_length: 384
-      tokenizer_name: "bert-base-uncased"
+      
   transport:
     transport: !zmq
       address: "ipc:///tmp/squad"

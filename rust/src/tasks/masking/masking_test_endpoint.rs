@@ -1,17 +1,16 @@
 
-use tokenizers::Tokenizer;
 
-use crate::{tasks::masking::{MaskingConfig, masked_data::MaskedData}, utils, transport::test_endpoint::EndPoint, datasets::DataSet};
+use crate::{tasks::masking::{MaskingConfig, masked_data::MaskedData}, transport::test_endpoint::EndPoint, datasets::DataSet};
 
 pub struct MaskingEndpoint {
-    pub tokenizer:Tokenizer
+    //pub tokenizer:Tokenizer
 }
 
 impl MaskingEndpoint {
-    pub fn new(config:MaskingConfig) -> Self {
-        let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
+    pub fn new(_config:MaskingConfig) -> Self {
+        //let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
         Self {
-            tokenizer:tokenizer
+        //    tokenizer:tokenizer
         }
     }
 

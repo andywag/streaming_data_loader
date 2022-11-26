@@ -23,6 +23,13 @@ pub struct GptTokenizer {
     pub eos:u32
 }
 
+pub struct T5Tokenizer {
+    pub tokenizer:Tokenizer,
+    pub eos:u32,
+    pub pad:u32,  
+    pub unk:u32,
+    pub extra:Vec<u32>
+}
 
 
 impl RobertaTokenizer {
@@ -71,26 +78,41 @@ impl GptTokenizer {
     }
 }
 
+impl T5Tokenizer {
+    pub fn new(tokenizer:Tokenizer) -> Self {
+
+        let eos = tokenizer.token_to_id("</s>").unwrap().to_owned();
+        let unk = tokenizer.token_to_id("<unk>").unwrap().to_owned();
+        let pad = tokenizer.token_to_id("<pad>").unwrap().to_owned();
+        let mut extra = Vec::<u32>::with_capacity(100);
+        for i in 0..100 {
+            extra.push(tokenizer.token_to_id(format!("<extra_id_{i}>").as_str()).unwrap().to_owned())
+        }
+
+        Self {
+            tokenizer: tokenizer,
+            eos:eos,
+            unk:unk,
+            pad:pad,
+            extra:extra
+        }
+    }
+}
+
+
 pub enum TokenizerWrapper {
     Bert(BertTokenizer),
     Roberta(RobertaTokenizer),
-    Gpt(GptTokenizer)
+    Gpt(GptTokenizer),
+    T5(T5Tokenizer)
 }
 
 impl TokenizerWrapper {
 
-    pub fn get_tokenizer(&self) -> &Tokenizer {
-
+    pub fn get_extra_ids(&self) -> Vec<u32> {
         match self {
-            TokenizerWrapper::Bert(t) => {
-                &t.tokenizer
-            },
-            TokenizerWrapper::Roberta(t) => {
-                &t.tokenizer
-            },
-            TokenizerWrapper::Gpt(t) => {
-                &t.tokenizer
-            },
+            TokenizerWrapper::T5(x) => x.extra.clone(),
+            _ => todo!(),
         }
     }
 
@@ -125,6 +147,15 @@ impl TokenizerWrapper {
                 ids.insert(ids.len(), t.eos);
                 return ids;
             },
+            TokenizerWrapper::T5(t) => {
+                let result = t.tokenizer.encode(data, true).unwrap();
+                let mut ids:Vec<u32> = result.get_ids().to_vec();
+
+                // Surround the sequence with the start and end tokens
+                ids.insert(0, t.eos);
+                ids.insert(ids.len(), t.eos);
+                return ids;
+            },
         }
     }
 
@@ -139,6 +170,9 @@ impl TokenizerWrapper {
                 t.tokenizer.encode(data, true)
             },
             TokenizerWrapper::Gpt(t) => {
+                t.tokenizer.encode(data, true)
+            },
+            TokenizerWrapper::T5(t) => {
                 t.tokenizer.encode(data, true)
             },
         };
@@ -174,6 +208,9 @@ pub fn get_tokenizer(location:String) -> Option<TokenizerWrapper> {
             }
             else if location_clone.contains("gpt") { 
                 return Some(TokenizerWrapper::Gpt(GptTokenizer::new(x)))
+            }
+            else if location_clone.contains("t5") { 
+                return Some(TokenizerWrapper::T5(T5Tokenizer::new(x)))
             }
             else {
                 log::error!("Couldn't Find Wrapper for Tokenizer {:?}", location_clone);

@@ -2,6 +2,8 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments, GPT2Config, \
     AutoModelForMaskedLM, AutoModelForQuestionAnswering, AutoModelForSequenceClassification
 from transformers import AutoConfig
+from transformers import T5ForConditionalGeneration
+
 from external_dataset import ExternalDataset
 import argparse
 import subprocess
@@ -18,7 +20,7 @@ def run_loader(args):
 
 def run_model(input_config):
     # Get the Common Configuration
-    tokenizer_name = input_config['tokenizer']['config']['tokenizer_name']
+    tokenizer_name = input_config['tokenizer']['name']
     sequence_length = input_config['tokenizer']['config']['sequence_length']
     batch_size = input_config['tokenizer']['config']['batch_size']
 
@@ -57,6 +59,9 @@ def run_model(input_config):
         config.problem_type = "multi_label_classification"
         config.num_labels = 9
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
+    elif input_config['model'] == 't5':
+        config = AutoConfig.from_pretrained(tokenizer_name)
+        model = T5ForConditionalGeneration.from_pretrained(tokenizer_name, config=config).train()
 
     training_args = TrainingArguments(output_dir="local",
                                       lr_scheduler_type="constant",
@@ -79,9 +84,7 @@ def run_model(input_config):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-#parser.add_argument('--file', type=str, default="../rust/tests/gpt.yaml")
-#parser.add_argument('--config', type=str, default="zmq_none")
-parser.add_argument('--task', type=str, choices=["gpt2", "mlm", "squad", "imdb", "emot"], default="emot")
+parser.add_argument('--task', type=str, choices=["gpt2", "mlm", "squad", "imdb", "emot", "t5"], default="emot")
 parser.add_argument('--all', action='store_true')
 
 
@@ -99,6 +102,8 @@ def main():
         args.file = "../rust/tests/single_class.yaml"
     elif args.task == 'emot':
         args.file = "../rust/tests/multi_label.yaml"
+    elif args.task == 't5':
+        args.file = "../rust/tests/t5.yaml"
 
     if args.all:
         pr = mp.Process(target=run_loader, args=(args,))

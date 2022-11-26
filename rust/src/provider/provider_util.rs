@@ -108,3 +108,47 @@ pub fn create_text(line:String, finder:&str) -> Option<String>{
 
 }
 
+
+pub fn clean_t5(text:String) -> Option<String> {
+    let chars = text.chars();
+    let mut word = String::with_capacity(16);
+    let mut sentence = Vec::<String>::with_capacity(128);
+    let mut result = Vec::<Vec<String>>::with_capacity(32);
+
+    let mut lorem = false;
+
+    for c in chars {
+        if c == '{' {
+            return None;
+        }
+        else if c == ' ' || c == '\n' || c == '\t' || c == '\r' { // whitespace -- create word
+            if word == "lorem" {
+                lorem = true;
+            }
+            if lorem && word == "ipsum" {
+                return None;
+            }
+            if word.len() > 0 && word != "javascript" {
+                    word.push(' ');
+                    sentence.push(word.clone());
+            }
+            word.clear();
+        } 
+        else if c == '.' || c == '!' || c == '?' { // sentence completion
+            word.push(c);
+            word.push(' ');
+            if sentence.len() > 3 {
+                result.push(sentence.clone());
+            }
+            word.clear();
+            sentence.clear();
+        }
+    }
+    if result.len() > 5 {
+        let fin:String = result.into_iter().flatten().collect();
+        Some(fin);   
+    }
+
+    None
+
+}
