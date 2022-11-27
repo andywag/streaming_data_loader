@@ -1,6 +1,6 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::{PathBuf}, str::FromStr};
 
-use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, get_cached_file, is_network}};
+use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, get_cached_file, is_network, get_local_path}, cache_writer};
 use tokio::sync::mpsc::Sender;
 
 
@@ -67,7 +67,7 @@ pub async fn save_data_sets(cache_path:String, datasets:Vec<Dataset>) {
     }
 }
 
-pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sender<ProviderChannel<String>>) {
+pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sender<ProviderChannel<String>>, cache:Option<String>) {
 
 
     let mut counter = Counter::new(length);
@@ -77,21 +77,44 @@ pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sen
     loop {
 
         for dataset in &datasets {
+
+            // Download Type
             let typ = get_download_type(&dataset.location);
-            
-            let location = if !is_network(&dataset.location) {
-                 Some(PathBuf::from_str(&dataset.location.as_str()).unwrap())
+
+            let location = if !is_network(&dataset.location) { // Local Path
+                 (typ, Some(PathBuf::from_str(&dataset.location.as_str()).unwrap()), None)
             }
             else {
-                get_cached_file("../../blob2/data".to_string(), &dataset.location, true)
+                match cache.to_owned() {
+                    Some(path) => {
+                        let cache_path = PathBuf::from_str(&path).unwrap();
+                        if !cache_path.exists() {
+                            log::error!("Cache Location : {:?} Doesn't Exist", cache_path);
+                        }
+                        let base_file_path = cache_path.join(get_local_path(&dataset.location));
+                        let zstd_location = cache_writer::existing_cache_file(&base_file_path);
+
+                        if zstd_location.is_some() {
+                            (DownloadType::Zstd, zstd_location, None) // Local Cache File -- No Writer
+                        }
+                        else {
+                            log::info!("File Path {:?} {:?}", base_file_path, dataset.location);
+                            let writer = cache_writer::CacheWriter::new(base_file_path);
+                            (typ, None, Some(writer))        
+                        }
+                    },
+                    None => (typ, None, None),
+                }
+                //get_cached_file("../../blob2/data".to_string(), &dataset.location, true)
             };
 
-            match (typ,location) {
-                (DownloadType::Zstd, None) => zstd_file_provider::load_url(dataset, &mut counter, &tx).await,
-                (DownloadType::Zstd, Some(x)) => zstd_file_provider::load_dataset(&x, &mut counter, &tx).await,
-                (DownloadType::Gzip, None) => gzip_file_provider::load_url(dataset, &mut counter, &tx).await,
-                (DownloadType::Gzip, Some(x)) => gzip_file_provider::load_dataset(&x, &mut counter, &tx).await,
-                (DownloadType::Error, _) => log::error!("Dataset Type Not Defined"),
+
+            match location {
+                (DownloadType::Zstd, None, z) => zstd_file_provider::load_url(dataset, &mut counter, &tx, z).await,
+                (DownloadType::Zstd, Some(x), _) => zstd_file_provider::load_dataset(&x, &mut counter, &tx).await,
+                (DownloadType::Gzip, None, z) => gzip_file_provider::load_url(dataset, &mut counter, &tx, z).await,
+                (DownloadType::Gzip, Some(x), _) => gzip_file_provider::load_dataset(&x, &mut counter, &tx).await,
+                (DownloadType::Error, _, _) => log::error!("Dataset Type Not Defined"),
             }
 
             if counter.done() {

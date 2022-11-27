@@ -18,6 +18,8 @@ pub mod general_file_provider;
 pub mod gzip_file_provider;
 pub mod zstd_file_provider;
 
+pub mod cache_writer;
+
 pub enum ProviderChannel<T> {
     Complete,
     Info(DatasetInfo),

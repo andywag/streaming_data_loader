@@ -9,6 +9,11 @@ pub enum DownloadType {
 }
 
 
+pub fn get_local_path(path:&String) -> String {
+    path.replace("http", "").replace(":", "").replace("/", "_").replace(".", "_")
+    
+}
+
 pub fn is_network(path:&String) -> bool {
     path.contains("http")
 }

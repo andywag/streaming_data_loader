@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{Dataset, ProviderChannel, general_file_provider::Counter};
+use super::{Dataset, ProviderChannel, general_file_provider::Counter, cache_writer::CacheWriter};
 use async_compression::tokio::bufread::ZstdDecoder;
 use tokio::{io::{AsyncBufReadExt, BufReader, Lines}, fs::File};
 
@@ -37,7 +37,7 @@ pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<Provid
     }
 }
 
-pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>) {
+pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>, mut cache_writer:Option<CacheWriter>) {
 
     let response = reqwest::get(dataset.location.to_owned()).await.unwrap();
     let stream = response
@@ -51,11 +51,15 @@ pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<Provide
 
     loop {
         let data = lines.next_line().await;
+        log::info!("Here {:?}", data);
         match data {
             Ok(Some(line)) => {
                 let text = super::provider_util::create_json_text(line, "text");
+                //log::info!("Here {:?}", text);
                 match text {
                     Some(x) => {
+                        
+                        cache_writer.as_mut().map(|s| s.write_line(x.to_owned()));
                         let _res = tx.send(ProviderChannel::Data(x)).await;
                         if counter.inc_data() {
                             return;
@@ -67,7 +71,8 @@ pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<Provide
                 }
             },
             Ok(None) => {
-                continue;
+                log::info!("Line Not Available");
+                return;
             },
             Err(e) => {
                 log::error!("Error in File Read {:?}", e);

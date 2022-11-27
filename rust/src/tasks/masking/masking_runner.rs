@@ -13,7 +13,7 @@ use crate::tasks::gen_tokenizer::GenTokenizer;
 
 
 // Create the Dataset Provider for Squad
-fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>, _cache:Option<String>) -> JoinHandle<()> {
+fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>, cache:Option<String>) -> JoinHandle<()> {
 
 
     let provider_config:ProviderConfig = serde_yaml::from_value(value["source"].to_owned()).unwrap();
@@ -22,13 +22,13 @@ fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>, _cache
             match provider_config.source {
                 SourceDescription::DataList(datasets) => {
                     //log::info!("Datasets {:?}", datasets);
-                    general_file_provider::load_data_sets(datasets, provider_config.length, tx).await;
+                    general_file_provider::load_data_sets(datasets, provider_config.length, tx, cache).await;
                 },
                 SourceDescription::Pile{typ} => {
                     let datasets = pile_datasets::get_datasets(typ);
                     match datasets {
                         Some(x) => {
-                            general_file_provider::load_data_sets(x, provider_config.length, tx).await;
+                            general_file_provider::load_data_sets(x, provider_config.length, tx, cache).await;
                         }
                         None => {
                             log::error!("Data Set Not Supported");
