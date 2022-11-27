@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{Dataset, ProviderChannel, general_file_provider::Counter, cache_writer::CacheWriter};
+use super::{Dataset, ProviderChannel, general_file_provider::Counter, cache_writer::CacheWriter, source_filter::SourceFilter};
 use async_compression::tokio::bufread::ZstdDecoder;
 use tokio::{io::{AsyncBufReadExt, BufReader, Lines}, fs::File};
 
@@ -19,10 +19,10 @@ pub async fn create_lines(file_path:&PathBuf) -> Lines<BufReader<Decoder<BufRead
     return lines;
 }
 
-pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>) {
+pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>, filter:&SourceFilter) {
     let mut lines = create_lines(path).await;
     while let Some(line) = lines.next_line().await.unwrap() {
-        let text = super::provider_util::create_json_text(line, "text");
+        let text = filter.get_text(line);
         match text {
             Some(x) => {
                 let _res_ = tx.send(ProviderChannel::Data(x)).await;
@@ -37,7 +37,11 @@ pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<Provid
     }
 }
 
-pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>, mut cache_writer:Option<CacheWriter>) {
+pub async fn load_url(dataset:&Dataset, 
+    counter:&mut Counter, 
+    tx:&Sender<ProviderChannel<String>>, 
+    mut cache_writer:Option<CacheWriter>,
+    filter:&SourceFilter) {
 
     let response = reqwest::get(dataset.location.to_owned()).await.unwrap();
     let stream = response
@@ -51,16 +55,15 @@ pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<Provide
 
     loop {
         let data = lines.next_line().await;
-        log::info!("Here {:?}", data);
         match data {
             Ok(Some(line)) => {
-                let text = super::provider_util::create_json_text(line, "text");
+                let text = filter.get_text(line);
                 //log::info!("Here {:?}", text);
                 match text {
                     Some(x) => {
                         
                         cache_writer.as_mut().map(|s| s.write_line(x.to_owned()));
-                        let _res = tx.send(ProviderChannel::Data(x)).await;
+                        let _res = tx.send(ProviderChannel::Data(x.to_owned())).await;
                         if counter.inc_data() {
                             return;
                         }

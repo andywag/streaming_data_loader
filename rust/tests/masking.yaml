@@ -4,6 +4,7 @@ basic:
   source:
     length: !epochs
       epochs: 1
+    filter: !json_text
     source: !list
       - location: "../data/test.json.gz"
   tokenizer: 

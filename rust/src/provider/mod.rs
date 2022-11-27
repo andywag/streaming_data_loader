@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tasks::DatasetInfo;
 
-use self::pile_datasets::{PileDatasetType};
+use self::{pile_datasets::{PileDatasetType}, source_filter::SourceFilter};
 
 
 pub mod provider_util;
@@ -19,6 +19,7 @@ pub mod gzip_file_provider;
 pub mod zstd_file_provider;
 
 pub mod cache_writer;
+pub mod source_filter;
 
 pub enum ProviderChannel<T> {
     Complete,
@@ -89,7 +90,8 @@ pub struct ProviderConfig {
     pub shuffle:Option<bool>, // Shuffle the data
     pub flatten:Option<bool>, // Load all the data into memory
     pub length:ProviderLength,
-    pub source:SourceDescription
+    pub source:SourceDescription,
+    pub filter:Option<SourceFilter>
 }
 
 

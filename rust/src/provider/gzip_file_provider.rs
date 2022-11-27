@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{Dataset, ProviderChannel, general_file_provider::Counter, cache_writer::CacheWriter};
+use super::{Dataset, ProviderChannel, general_file_provider::Counter, cache_writer::CacheWriter, source_filter::SourceFilter};
 use async_compression::tokio::bufread::GzipDecoder;
 use tokio::{io::{AsyncBufReadExt, BufReader, Lines}, fs::File};
 
@@ -27,14 +27,14 @@ pub async fn create_lines(file_path:&PathBuf) -> Option<Lines<BufReader<GzipDeco
 
 }
 
-pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>) {
+pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>, filter:&SourceFilter) {
     let lines_opt = create_lines(path).await;
     if lines_opt.is_none() {
         return;
     }
     let mut lines = lines_opt.unwrap();
     while let Some(line) = lines.next_line().await.unwrap() {
-        let text = super::provider_util::create_json_text(line, "text");
+        let text = filter.get_text(line);
         match text {
             Some(x) => {
                 let _res_ = tx.send(ProviderChannel::Data(x)).await;
@@ -49,7 +49,11 @@ pub async fn load_dataset(path:&PathBuf, counter:&mut Counter, tx:&Sender<Provid
     }
 }
 
-pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<ProviderChannel<String>>, mut cache_writer:Option<CacheWriter>) {
+pub async fn load_url(dataset:&Dataset, 
+    counter:&mut Counter, 
+    tx:&Sender<ProviderChannel<String>>, 
+    mut cache_writer:Option<CacheWriter>,
+    filter:&SourceFilter) {
 
     let response = reqwest::get(dataset.location.to_owned()).await.unwrap();
     let stream = response
@@ -66,7 +70,8 @@ pub async fn load_url(dataset:&Dataset, counter:&mut Counter, tx:&Sender<Provide
         let data = lines.next_line().await;
         match data {
             Ok(Some(line)) => {
-                let text = super::provider_util::create_json_text(line, "text");
+                //let text = super::provider_util::create_json_text(line, "text");
+                let text = filter.get_text(line);
                 match text {
                     Some(x) => {
                         cache_writer.as_mut().map(|s| s.write_line(x.to_owned()));

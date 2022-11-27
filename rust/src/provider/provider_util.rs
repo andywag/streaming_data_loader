@@ -1,6 +1,4 @@
 use serde_json::Value;
-use std::{path::PathBuf, str::FromStr};
-use cached_path::Cache;
 
 pub enum DownloadType {
     Zstd,
@@ -29,28 +27,6 @@ pub fn get_download_type(path:&String) -> DownloadType{
         DownloadType::Error
     }
 }
-
-
-pub fn get_cached_file(cache_path:String, url:&String, offline:bool) -> Option<PathBuf> {
-
-    let base_path = PathBuf::from_str(cache_path.as_str()).unwrap();
-
-    let cache = Cache::builder()
-    .dir(base_path)
-    .connect_timeout(std::time::Duration::from_secs(20))
-    .freshness_lifetime(10000000)
-    .offline(offline)
-    //.progress_bar(progress_bar)
-    .build()
-    .unwrap();
-
-    let result = cache.cached_path(url.as_str());
-    match result {
-        Ok(x) => Some(x),
-        Err(_) => None,
-    }
-}
-
 
 
 

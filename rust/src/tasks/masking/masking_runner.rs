@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde_yaml::Value;
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, ProviderConfig, general_file_provider,  SourceDescription, pile_datasets}, tasks::{runner_simple}, tokenizer_wrapper::{TokenizerWrapper}, datasets::DataSet};
+use crate::{provider::{ProviderChannel, ProviderConfig, general_file_provider,  SourceDescription, pile_datasets, source_filter::SourceFilter}, tasks::{runner_simple}, tokenizer_wrapper::{TokenizerWrapper}, datasets::DataSet};
 use tokio::sync::mpsc::Sender;
 
 use super::{MaskingConfig, gpt2_test_endpoint::Gpt2Endpoint, gpt_data::GptData, masked_data::MaskedData, masking_test_endpoint::MaskingEndpoint, T5Config, t5_data::T5Data, t5_test_endpoint::T5Endpoint};
@@ -17,18 +17,20 @@ fn create_provider(value:&Arc<Value>, tx:Sender<ProviderChannel<String>>, cache:
 
 
     let provider_config:ProviderConfig = serde_yaml::from_value(value["source"].to_owned()).unwrap();
+    let filter = provider_config.filter.unwrap_or(SourceFilter::JsonText);
+    
     let handle = task::spawn(
         async move {
             match provider_config.source {
                 SourceDescription::DataList(datasets) => {
                     //log::info!("Datasets {:?}", datasets);
-                    general_file_provider::load_data_sets(datasets, provider_config.length, tx, cache).await;
+                    general_file_provider::load_data_sets(datasets, provider_config.length, tx, cache, &filter).await;
                 },
                 SourceDescription::Pile{typ} => {
                     let datasets = pile_datasets::get_datasets(typ);
                     match datasets {
                         Some(x) => {
-                            general_file_provider::load_data_sets(x, provider_config.length, tx, cache).await;
+                            general_file_provider::load_data_sets(x, provider_config.length, tx, cache, &filter).await;
                         }
                         None => {
                             log::error!("Data Set Not Supported");

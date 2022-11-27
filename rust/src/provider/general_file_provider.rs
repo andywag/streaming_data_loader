@@ -1,6 +1,6 @@
 use std::{path::{PathBuf}, str::FromStr};
 
-use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, get_cached_file, is_network, get_local_path}, cache_writer};
+use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, is_network, get_local_path}, cache_writer, source_filter::SourceFilter};
 use tokio::sync::mpsc::Sender;
 
 
@@ -60,14 +60,13 @@ impl Counter {
 }
 
 
-pub async fn save_data_sets(cache_path:String, datasets:Vec<Dataset>) {
 
-    for dataset in datasets {
-        get_cached_file(cache_path.clone(), &dataset.location, false);
-    }
-}
 
-pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sender<ProviderChannel<String>>, cache:Option<String>) {
+pub async fn load_data_sets(datasets:Vec<Dataset>, 
+    length:ProviderLength, 
+    tx:Sender<ProviderChannel<String>>, 
+    cache:Option<String>,
+    filter:&SourceFilter) {
 
 
     let mut counter = Counter::new(length);
@@ -110,10 +109,10 @@ pub async fn load_data_sets(datasets:Vec<Dataset>, length:ProviderLength, tx:Sen
 
 
             match location {
-                (DownloadType::Zstd, None, z) => zstd_file_provider::load_url(dataset, &mut counter, &tx, z).await,
-                (DownloadType::Zstd, Some(x), _) => zstd_file_provider::load_dataset(&x, &mut counter, &tx).await,
-                (DownloadType::Gzip, None, z) => gzip_file_provider::load_url(dataset, &mut counter, &tx, z).await,
-                (DownloadType::Gzip, Some(x), _) => gzip_file_provider::load_dataset(&x, &mut counter, &tx).await,
+                (DownloadType::Zstd, None, z) => zstd_file_provider::load_url(dataset, &mut counter, &tx, z, filter).await,
+                (DownloadType::Zstd, Some(x), _) => zstd_file_provider::load_dataset(&x, &mut counter, &tx, filter).await,
+                (DownloadType::Gzip, None, z) => gzip_file_provider::load_url(dataset, &mut counter, &tx, z, filter).await,
+                (DownloadType::Gzip, Some(x), _) => gzip_file_provider::load_dataset(&x, &mut counter, &tx, filter).await,
                 (DownloadType::Error, _, _) => log::error!("Dataset Type Not Defined"),
             }
 
