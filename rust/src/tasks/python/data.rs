@@ -1,8 +1,7 @@
-
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GptData {
+pub struct PythonData {
     pub input_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<u32>>,
     pub labels:Vec<Vec<i32>>,
@@ -15,7 +14,7 @@ pub struct GptData {
     label_base:Vec<i32>,
 }
 
-impl GptData {
+impl PythonData {
     pub fn new(batch_size:usize, sequence_length:usize) -> Self{
         Self {
             input_ids: vec![vec![0;sequence_length as usize];batch_size as usize],
@@ -31,7 +30,7 @@ impl GptData {
     }
 
     pub fn new_data(&mut self) -> Self {
-        GptData::new(self.batch_size, self.sequence_length)
+        PythonData::new(self.batch_size, self.sequence_length)
     }
 
     pub fn put_data(&mut self, ids:&[u32]) -> bool{

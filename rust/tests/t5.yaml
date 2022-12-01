@@ -43,6 +43,7 @@ zmq_git_hub:
   source:
     length: !iterations
       iterations: 50000
+    filter: !python_text
     source: !pile
       typ: !git_small
   tokenizer: 

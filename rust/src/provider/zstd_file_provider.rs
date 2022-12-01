@@ -57,6 +57,7 @@ pub async fn load_url(dataset:&Dataset,
         let data = lines.next_line().await;
         match data {
             Ok(Some(line)) => {
+                //log::info!("Line {:?}", line);
                 let text = filter.get_text(line);
                 //log::info!("Here {:?}", text);
                 match text {

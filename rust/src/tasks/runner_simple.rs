@@ -22,6 +22,7 @@ use crate::transport::zmq_receive::NodeConfig;
 use crate::transport::{self};
 use crate::transport::TransportConfig;
 
+
 pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>, 
     provider:Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>,
     tx:tokio::sync::mpsc::Sender<ProviderChannel<P>>
@@ -44,8 +45,13 @@ pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(value:
     tx:Sender<ProviderChannel<D>>) -> JoinHandle<()> {
     // Create the Data Provider
     
+    
+   
     let tokenizer_name = value["tokenizer"]["name"].as_str().unwrap().to_string().to_owned();
-    let tokenizer = tokenizer_wrapper::get_tokenizer(tokenizer_name).unwrap();
+    let tokenizer_mode = value["tokenizer"]["mode"].as_str().unwrap_or("huggingface").to_string().to_owned();
+    
+
+    let tokenizer = tokenizer_wrapper::get_tokenizer(tokenizer_name, tokenizer_mode).unwrap();
     let generator = generator(&value, tokenizer);
 
     let join_tokenizer = task::spawn(async move {
