@@ -12,8 +12,8 @@ use tokio::task::{self, JoinHandle};
 
 
 use crate::batcher::{self, Batcher};
-use crate::tokenizer_wrapper;
-use crate::tokenizer_wrapper::TokenizerWrapper;
+use crate::tokenizer::tokenizer_wrapper;
+use crate::tokenizer::tokenizer_wrapper::TokenizerWrapper;
 use crate::transport::test_endpoint::{self, EndPoint};
 use crate::provider::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};

@@ -5,8 +5,7 @@ pub mod tasks;
 pub mod datasets;
 
 pub mod batcher;
-pub mod tokenizer_wrapper;
-pub mod tokenizer_holder;
+pub mod tokenizer;
 
 use log::{LevelFilter};
 use std::io::Write;

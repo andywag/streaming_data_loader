@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 
 use crate::batcher::Batcher;
 use crate::datasets::DataSet;
-use crate::tokenizer_wrapper::{TokenizerWrapper};
+use crate::tokenizer::tokenizer_wrapper::{TokenizerWrapper};
 
 
 

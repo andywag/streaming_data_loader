@@ -74,7 +74,7 @@ impl <'a>StateMachine<'a> {
         return true;
     }
 
-    pub fn put_token(&mut self, token:Token, text:&str, level:usize) -> TokenResult {
+    pub fn put_token(&mut self, token:Token, text:&str, level:usize) -> Option<TokenResult> {
         
         self.ready_line = token == Token::SymbolColon;
         let result = match token {
@@ -107,6 +107,10 @@ impl <'a>StateMachine<'a> {
                 TokenResult { token: token.clone(), level: level, position: None, text:None }
             }
         };
+        
+        if self.state.len() == 0 {
+            return None;
+        }
 
         match self.state.last().to_owned().unwrap() {
             State::Root | State::Body => {
@@ -116,7 +120,7 @@ impl <'a>StateMachine<'a> {
                         self.ident_state = IdentState::Write;
                     },
                     Token::KeyClass | Token::KeyIf | Token::KeyElse | Token::KeyElif | Token::KeyWhile | Token::KeyFor 
-                    | Token::KeyTry | Token::KeyExcept | Token::KeyWith => {
+                    | Token::KeyTry | Token::KeyExcept | Token::KeyWith | Token::KeyFinally => {
                         self.state.push(State::CHead);
                         self.context.push_context();
                         self.ident_state = IdentState::Read;
@@ -148,9 +152,9 @@ impl <'a>StateMachine<'a> {
         self.level = level;
         
         //log::info!("S {:?} {:?}", self.state, self.ident_state);
-        log::info!("T {:?}", result);
+        //log::info!("T {:?}", result);
 
-        result
+        Some(result)
         
         
     }

@@ -53,21 +53,22 @@ pub async fn load_url(dataset:&Dataset,
     let buf_reader = tokio::io::BufReader::with_capacity(100000, gzip_decoder);
     let mut lines = buf_reader.lines();
 
+    let mut _count = 0;
     loop {
         let data = lines.next_line().await;
         match data {
             Ok(Some(line)) => {
                 //log::info!("Line {:?}", line);
                 let text = filter.get_text(line);
-                //log::info!("Here {:?}", text);
                 match text {
                     Some(x) => {
-                        
+
                         cache_writer.as_mut().map(|s| s.write_line(x.to_owned()));
                         let _res = tx.send(ProviderChannel::Data(x.to_owned())).await;
                         if counter.inc_data() {
                             return;
                         }
+                        _count += 1;
                     },
                     None => {
                         continue

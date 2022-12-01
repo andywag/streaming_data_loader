@@ -1,4 +1,4 @@
-use crate::{batcher::Batcher, tokenizer_wrapper::{TokenizerWrapper}};
+use crate::{batcher::Batcher, tokenizer::tokenizer_wrapper::{TokenizerWrapper}};
 
 
 use super::{single_data::{SingleClassData, SingleClassTransport}};

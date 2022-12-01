@@ -1,6 +1,6 @@
 
 use crate::batcher::Batcher;
-use crate::tokenizer_wrapper::{TokenizerWrapper};
+use crate::tokenizer::tokenizer_wrapper::{TokenizerWrapper};
 
 
 use super::squad_data::{SquadData, SquadGeneral};

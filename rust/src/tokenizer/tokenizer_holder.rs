@@ -45,7 +45,7 @@ impl TokenizerHolder {
                     "<mask>" | "[MASK]" => Some(5),
                     "<pad>" | "[PAD]" => Some(0),
                     "<s>" | "[CLS]" => Some(1),
-                    "</s>" => Some(2),
+                    "</s>" | "[SEP]" => Some(2),
                     "<|endoftext|>" => Some(3),
                     "<unk" => Some(4),
 

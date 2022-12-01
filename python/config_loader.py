@@ -63,6 +63,7 @@ loader.add_constructor("!huggingface",  NoneHolder.constructor)
 loader.add_constructor("!squad",  NoneHolder.constructor)
 loader.add_constructor("!json_text",  NoneHolder.constructor)
 loader.add_constructor("!fast_text",  NoneHolder.constructor)
+loader.add_constructor("!python_text",  NoneHolder.constructor)
 
 def load(path:str):
     with open(path, 'r') as fp:

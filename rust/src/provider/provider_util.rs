@@ -43,7 +43,9 @@ pub fn split_path(path:String) -> Option<String> {
 pub fn create_json_python_text(line:String, tag:&str) -> Option<String> {
     let v: Value = serde_json::from_str(line.as_str()).unwrap();
     let repo_language = v["meta"]["file_name"].as_str();
+    //log::info!("Repo Language {:?}", repo_language);
     if repo_language.is_some() && repo_language.unwrap().contains(".py") {
+        //log::info!("Found File {:?}", repo_language);
         v[tag].as_str().map(|e| e.to_string())
     }
     else {

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde_yaml::Value;
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, ProviderConfig, general_file_provider,  SourceDescription, pile_datasets, source_filter::SourceFilter}, tasks::{runner_simple}, tokenizer_wrapper::{TokenizerWrapper}, datasets::DataSet};
+use crate::{provider::{ProviderChannel, ProviderConfig, general_file_provider,  SourceDescription, pile_datasets, source_filter::SourceFilter}, tasks::{runner_simple}, datasets::DataSet, tokenizer::tokenizer_wrapper::TokenizerWrapper};
 use tokio::sync::mpsc::Sender;
 
 use super::{MaskingConfig, gpt2_test_endpoint::Gpt2Endpoint, gpt_data::GptData, masked_data::MaskedData, masking_test_endpoint::MaskingEndpoint, T5Config, t5_data::T5Data, t5_test_endpoint::T5Endpoint};

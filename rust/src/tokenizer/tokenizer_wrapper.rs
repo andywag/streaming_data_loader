@@ -2,7 +2,10 @@
 use tokenizers::Tokenizer;
 use std::thread;
 
-use crate::{tokenizer_holder::TokenizerHolder, tasks::python::base_tokenizer::PythonTokenizer};
+use crate::tasks::python::base_tokenizer::PythonTokenizer;
+
+use super::tokenizer_holder::TokenizerHolder;
+
 
 
 pub struct BertTokenizer {

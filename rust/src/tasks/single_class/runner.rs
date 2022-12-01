@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_yaml::Value;
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, ProviderConfig}, tasks::{ runner_simple}, tokenizer_wrapper::{TokenizerWrapper}};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, ProviderConfig}, tasks::{ runner_simple}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}};
 
 use super::{single_data::{SingleClassTransport, SingleClassData}, SingleClassConfig, single_arrow::SingleClassArrowGenerator, tokenizer::SingleTokenizer};
 

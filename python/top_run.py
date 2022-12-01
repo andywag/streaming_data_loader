@@ -17,7 +17,7 @@ os.environ['WANDB_DISABLED'] = 'true'
 """
 
 def run_loader(args):
-    subprocess.run(["cargo", "run", "--release", "--", "--path", args.file, "--config", "zmq_none"], cwd="../rust")
+    subprocess.run(["cargo", "run", "--release", "--", "--path", args.file, "--config", args.config], cwd="../rust")
 
 
 def run_model(input_config):
@@ -86,14 +86,14 @@ def run_model(input_config):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["gpt2", "mlm", "squad", "imdb", "emot", "t5"], default="emot")
-parser.add_argument('--all', action='store_true')
+parser.add_argument('--task', type=str, choices=["gpt2", "mlm", "squad", "imdb", "emot", "t5"], default="mlm")
+parser.add_argument('--config', type=str, default='git_python')
+parser.add_argument('--all', action='store_true', default=True)
 
 
 def main():
     args = parser.parse_args()
 
-    config = "zmq_none"
     if args.task == 'gpt2':
         args.file = "../rust/tests/gpt.yaml"
     elif args.task == 'mlm':
@@ -112,7 +112,7 @@ def main():
         pr.start()
 
     config_file = config_loader.load(args.file)
-    config = config_file[config]
+    config = config_file[args.config]
     run_model(config)
 
 

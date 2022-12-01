@@ -1,7 +1,7 @@
 
 use crate::batcher::Batcher;
 
-use crate::tokenizer_wrapper::{TokenizerWrapper};
+use crate::tokenizer::tokenizer_wrapper::{TokenizerWrapper};
 
 use super::multi_data::{MultiData, MultiTransport};
 

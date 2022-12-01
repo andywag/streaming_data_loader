@@ -321,7 +321,7 @@ pub fn get_level(lexer:&mut logos::Lexer<Token>, indent_width:&mut Option<usize>
     let mut level = 0;
     while let Some(itoken) = lexer.next() {
         match itoken {
-            Token::Comment | Token::AString | Token::TString | Token::String | Token::Newline=> {
+            Token::Comment | Token::Newline=> {
                 level = 0
             }
             Token::WS => {
@@ -343,7 +343,7 @@ pub fn get_level(lexer:&mut logos::Lexer<Token>, indent_width:&mut Option<usize>
 }
 
 
-pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Vec<TokenResult> {
+pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec<TokenResult>> {
     let mut tokens = Vec::<TokenResult>::with_capacity(1024);
 
     let mut lexer = Token::lexer(text);
@@ -353,54 +353,73 @@ pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Vec<TokenR
 
     let context = ContextStore::new(global_store);
     let mut state_machine = StateMachine::new(context);
+    let mut _key_count = 0;
 
     while let Some(token) = lexer.next() {
         let (tok, lev) = match token {
             Token::WS | Token::Tab | Token::Comment => (None, level), // Ignore White space unless line beginning
             Token::Newline => {
                 let result = get_level(&mut lexer, &mut indent_width);
+                
                 let newline_ok = state_machine.newline(result.1);
-                if newline_ok {
+                if newline_ok && result.1 <= level + 1 {
                     result
                 }
                 else {
-                    (None, level)
+                    (result.0, level)
                 }
             } 
             _ => {
+                if token == Token::KeyClass || token == Token::KeyDef {
+                    _key_count += 1;
+                }
                 (Some(token), level)
             }
         };
         level = lev;
         if tok.is_some() {
             let result = state_machine.put_token(tok.unwrap(), lexer.slice(), level);
-            tokens.push(result);
+            if result.is_none() {
+                return None;
+            }
+            tokens.push(result.unwrap());
         }
         
     }
 
-    return tokens;
+    return Some(tokens);
 }
 
 pub struct PythonTokenizer {
-    global_store:IdentLookup
+    global_store:IdentLookup,
+    index:u32
 }
 
 impl PythonTokenizer {
     pub fn new(s:usize) -> Self {
         Self {
-            global_store:IdentLookup::new(s)
+            global_store:IdentLookup::new(s),
+            index:0
         }
     }
     pub fn encode(&mut self, data:String) -> Vec<u32> {
+        //log::info!("Encoding Data {:?}", data);
+        
         let mut ids = Vec::<u32>::with_capacity(512);
-        let tokens = lex_simple(&data, &mut self.global_store);
-        for token in tokens {
+        let tokens_opt = lex_simple(&data, &mut self.global_store);
+        if tokens_opt.is_none() {
+            //log::info!("Parser Failed");
+            //use std::fs;
+            //fs::write(format!("temp{}.py",self.index), data.clone());
+            self.index += 1;
+            return Vec::<u32>::new();
+        }
+        for token in tokens_opt.unwrap() {
             if token.token == Token::Ident {
                 match token.position {
                     Some(p) => {
-                        ids.push(p.0 as u32);
-                        ids.push(p.1 as u32);
+                        ids.push(p.0 as u32 + 100);
+                        ids.push(p.1 as u32 + 110);
                     },
                     None => {},
                 }
@@ -414,6 +433,7 @@ impl PythonTokenizer {
 
 }
 
+/* 
 #[test]
 pub fn test_python_token() {
     crate::create_logger();
@@ -427,7 +447,7 @@ pub fn test_python_token() {
     //}
     
 
-}
+}*/
 
 #[test]
 pub fn test_file() {
@@ -438,7 +458,7 @@ pub fn test_file() {
 
     let mut global_store = IdentLookup::new(1024);
 
-    let mut file = File::open("../python/top_run2.py").unwrap();
+    let mut file = File::open("temp3.py").unwrap();
     let mut contents = String::new();
     let _= file.read_to_string(&mut contents);
    
@@ -448,6 +468,6 @@ pub fn test_file() {
     //    println!("Token: {:?}", token);
     //}
     
-
 }
+
 
