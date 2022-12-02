@@ -4,7 +4,7 @@ use super::{base_tokenizer::Token, ident_store::{ ContextStore}};
 pub struct TokenResult {
     pub token:Token,
     pub level:usize,
-    pub position:Option<(usize,usize)>,
+    pub position:Option<(u32,u32)>,
     pub text:Option<String>
 }
 
@@ -65,7 +65,8 @@ impl <'a>StateMachine<'a> {
                 self.replace_head(State::Body);
             }
             _ => {
-                for _ in level..self.level {
+                //log::info!("Popping {} {} {}", level, self.level, self.context.len());
+                for _ in level..self.context.len()-2 {
                     self.context.pop_context();
                     self.state.pop();
                 }
@@ -88,7 +89,7 @@ impl <'a>StateMachine<'a> {
                             self.context.get_or_global(text)
                         }
                         else {
-                            self.context.put_local(text)
+                            self.context.get_or_put_local(text)
                         }   
                     }
                     IdentState::Write =>  {
@@ -96,7 +97,7 @@ impl <'a>StateMachine<'a> {
                             self.context.get_or_global(text)
                         }
                         else {
-                            self.context.put_local(text)
+                            self.context.get_or_put_local(text)
                         }   
                     }
                    
@@ -152,7 +153,10 @@ impl <'a>StateMachine<'a> {
         self.level = level;
         
         //log::info!("S {:?} {:?}", self.state, self.ident_state);
+        //if result.token == Token::Ident {
         //log::info!("T {:?}", result);
+        //}
+        
 
         Some(result)
         

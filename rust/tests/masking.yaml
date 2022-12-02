@@ -63,7 +63,7 @@ git_python:
   model: "masking"
   source:
     length: !iterations
-      iterations: 500000
+      iterations: 5000000
     source: !list
       - location: "/home/andy/Downloads/github_small.jsonl.zst"
     filter: !python_text  
@@ -73,12 +73,11 @@ git_python:
     mode: "python"
     config: 
       batch_size: 32768
-      sequence_length: 128
-      mask_length: 18
+      sequence_length: 512
+      mask_length: 80
   #transport:
   #  transport: !test
   #node: !none
   transport:
     transport: !zmq
       address: "ipc:///tmp/masking_python"
-  node: !none

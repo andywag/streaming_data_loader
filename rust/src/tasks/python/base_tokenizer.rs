@@ -225,6 +225,8 @@ pub enum Token {
     Ident,
     #[regex(r"(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")]
     Number,
+    #[regex(r"0x(?:0|[1-9][0-9]*)")]
+    HexNumber,
     #[regex(r"[@!\$~\+\-&\|\^=<>\*/%]+", lex_operator)]
     Op(Operator),
     #[regex(r"#[^\r\n]*(\r\n|\n)?")]
@@ -251,15 +253,15 @@ pub enum Token {
 
 
 pub fn get_token_id(token:Token) -> u32{
-    let start:u32 = 30;
+    let start:u32 = 100;
     match token {
 
-        Token::Comment => 20,
-        Token::WS => 21,
-        Token::Tab => 22,
-        Token::Newline => 23,
-        Token::Error => 24,
-        Token::Root => 25,
+        Token::Comment => 90,
+        Token::WS => 91,
+        Token::Tab => 92,
+        Token::Newline => 93,
+        Token::Error => 94,
+        Token::Root => 95,
         Token::KeyFalse => start,
         Token::KeyNone => start + 1,
         Token::KeyTrue => start + 2,
@@ -309,6 +311,7 @@ pub fn get_token_id(token:Token) -> u32{
         Token::String | Token::AString | Token::TString => start + 46,
         Token::Ident => start + 47,
         Token::Number => start + 48,
+        Token::HexNumber => start + 49,
 
 
         Token::Op(x) => x.get_id(start+49),
@@ -321,6 +324,7 @@ pub fn get_level(lexer:&mut logos::Lexer<Token>, indent_width:&mut Option<usize>
     let mut level = 0;
     while let Some(itoken) = lexer.next() {
         match itoken {
+            Token::AString | Token::String | Token::TString => {}
             Token::Comment | Token::Newline=> {
                 level = 0
             }
@@ -342,8 +346,29 @@ pub fn get_level(lexer:&mut logos::Lexer<Token>, indent_width:&mut Option<usize>
     (None, 0)
 }
 
+pub fn check_python(text:&str) -> bool{
+    let mut lexer = Token::lexer(text);
+    let mut key_count = 0;
+    while let Some(token) = lexer.next() {
+        match token {
+             Token::KeyDel | Token::KeyDef | Token::KeyElif | Token::KeyExcept => {key_count += 1;}
+            _ => {}
+        }
+        if key_count > 8 {
+            return true;
+        }
+    }
+    return false;
+
+}
+
 
 pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec<TokenResult>> {
+    if !check_python(text) {
+        return None;
+    }
+
+    
     let mut tokens = Vec::<TokenResult>::with_capacity(1024);
 
     let mut lexer = Token::lexer(text);
@@ -351,16 +376,25 @@ pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec
     let mut level = 0;
     let mut indent_width:Option<usize> = None;
 
-    let context = ContextStore::new(global_store);
+    let local_store = &mut IdentLookup::new(1024);
+    let context = ContextStore::new(global_store, local_store);
     let mut state_machine = StateMachine::new(context);
-    let mut _key_count = 0;
+
+    while let Some(token) = lexer.next() {
+        match token {
+            Token::WS | Token::Newline | Token::AString | Token::String | Token::TString | Token::Comment => {}
+            _ => break
+        };
+    }
 
     while let Some(token) = lexer.next() {
         let (tok, lev) = match token {
             Token::WS | Token::Tab | Token::Comment => (None, level), // Ignore White space unless line beginning
             Token::Newline => {
                 let result = get_level(&mut lexer, &mut indent_width);
-                
+                let token_result = TokenResult{ token:Token::Newline, level:0, position: None, text: None };
+                tokens.push(token_result);
+                //log::info!("Inside NewLine {:?}", result);
                 let newline_ok = state_machine.newline(result.1);
                 if newline_ok && result.1 <= level + 1 {
                     result
@@ -370,9 +404,6 @@ pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec
                 }
             } 
             _ => {
-                if token == Token::KeyClass || token == Token::KeyDef {
-                    _key_count += 1;
-                }
                 (Some(token), level)
             }
         };
@@ -384,10 +415,16 @@ pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec
             }
             tokens.push(result.unwrap());
         }
-        
+    }
+    //log::info!("Data Length :  {}", tokens.len());
+    if tokens.len() > 64 {
+        return Some(tokens);
+    }
+    else {
+        return None;
     }
 
-    return Some(tokens);
+    
 }
 
 pub struct PythonTokenizer {
@@ -418,8 +455,8 @@ impl PythonTokenizer {
             if token.token == Token::Ident {
                 match token.position {
                     Some(p) => {
-                        ids.push(p.0 as u32 + 100);
-                        ids.push(p.1 as u32 + 110);
+                        ids.push(p.0 as u32 + 10);
+                        ids.push(p.1 as u32 + 200);
                     },
                     None => {},
                 }
@@ -458,13 +495,13 @@ pub fn test_file() {
 
     let mut global_store = IdentLookup::new(1024);
 
-    let mut file = File::open("temp3.py").unwrap();
+    let mut file = File::open("temp.py").unwrap();
     let mut contents = String::new();
     let _= file.read_to_string(&mut contents);
    
 
     let _tokens = lex_simple(contents.as_str(), &mut global_store);
-    //for token in tokens {
+    //for token in _tokens {
     //    println!("Token: {:?}", token);
     //}
     

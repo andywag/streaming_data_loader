@@ -825,6 +825,7 @@ dependencies = [
  "clap 4.0.12",
  "env_logger",
  "futures",
+ "lfu_cache",
  "log",
  "logos",
  "rand",
@@ -1524,6 +1525,12 @@ dependencies = [
  "lexical-util",
  "static_assertions",
 ]
+
+[[package]]
+name = "lfu_cache"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "687e68de7dcfcbadb71f72c7e0a844edcd4e303930f76b8f47ee979d1ffdec03"
 
 [[package]]
 name = "libc"

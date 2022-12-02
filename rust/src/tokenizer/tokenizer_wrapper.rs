@@ -125,7 +125,7 @@ fn get_hugging_tokenizer(location:String) -> Option<Tokenizer> {
 pub fn get_tokenizer(location:String, mode:String) -> Option<TokenizerWrapper> {
     
     let x = match mode.as_str() {
-        "python" => TokenizerHolder::Python(PythonTokenizer::new(32768)),
+        "python" => TokenizerHolder::Python(PythonTokenizer::new(16384)),
         _ => {
             let tokenizer = get_hugging_tokenizer(location.clone());
             TokenizerHolder::HuggingFace(tokenizer.unwrap())
