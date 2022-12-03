@@ -1,8 +1,8 @@
 use tokenizers::Tokenizer;
 
-use crate::{transport::test_endpoint::EndPoint};
+use crate::{transport::test_endpoint::EndPoint, config::TrainingConfig};
 
-use super::{SquadConfig, squad_data::{SquadData}};
+use super::{squad_data::{SquadData}};
 
 fn _check_batch(data:SquadData, tokenizer:&Tokenizer) -> bool{
 
@@ -50,7 +50,7 @@ pub struct SquadEnpoint {
 }
 
 impl SquadEnpoint {
-    pub fn new(_config:SquadConfig) -> Self {
+    pub fn new(_config:TrainingConfig) -> Self {
         //let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
         Self {
         //    _tokenizer:tokenizer

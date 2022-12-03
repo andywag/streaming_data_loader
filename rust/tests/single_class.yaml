@@ -8,9 +8,10 @@ basic:
       operations: ["train"]
   tokenizer: 
     name: "bert-base-uncased"
-    config: 
-      batch_size: 32
-      sequence_length: 384
+  batch:
+    batch_size: 32
+    sequence_length: 384
+
   transport:
     transport: !test
   node: !none

@@ -1,17 +1,27 @@
-use std::sync::Arc;
 
-use clap::Parser;
-use serde_yaml::Value;
+use clap::{Parser, ValueEnum};
+use loader::{tasks::cases::BasicCases};
+
+ 
+#[derive(ValueEnum, Clone, Debug)]
+
+enum Task {
+    Mlm,
+    Clm,
+    T5,
+    Squad,
+    Single,
+    Multi,
+    Python
+}
+
+
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-   /// Name of the person to greet
-   #[arg(short, long, default_value="tests/masking.yaml")]
-   path: String,
-   /// Number of times to greet
-   #[arg(short, long, default_value="basic")]
-   config: String,
+    #[clap(long, value_enum, default_value_t=Task::Mlm)]
+    task: Task,
 
    #[arg(long, default_value=None)]
    cache: Option<String>,
@@ -21,9 +31,27 @@ struct Args {
 
 #[tokio::main]
 async fn main()  {
-    loader::create_logger();
+    loader::logger::create_logger();
 
     let args = Args::parse();
+
+    let config = match args.task {
+        Task::Mlm => BasicCases::Bert,
+        Task::Clm => BasicCases::Gpt,
+        Task::T5 => BasicCases::T5,
+        Task::Squad => BasicCases::Squad,
+        Task::Single => BasicCases::Single,
+        Task::Multi => BasicCases::Multi,
+        Task::Python => BasicCases::Python
+    };
+    
+
+    let example = config.get_config(false);
+
+    
+    let result = loader::tasks::run(example, args.cache).await;
+    log::info!("Final Result {}", result);
+    /* 
 
     let real_path = args.path;
     let real_config = args.config; 
@@ -53,11 +81,14 @@ async fn main()  {
         }
     };
 
+    let training_config = serde_yaml::from_value::<TrainingConfig>(config_value_opt.unwrap().clone()).unwrap();
+    log::info!("Training Config {:?}", training_config);
+
     //let config_ptr = Arc::new(config_file.get(real_config).unwrap().to_owned());
     // Run the Loader
-    let result = loader::tasks::run(config_ptr["model"].as_str(), config_ptr.clone(), args.cache).await;
+    let result = loader::tasks::run(training_config, args.cache).await;
     log::info!("Final Result {}", result);
-
+    */
 
 
 }

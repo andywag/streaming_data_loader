@@ -3,6 +3,8 @@ use serde::{Serialize, Deserialize};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
+use crate::batcher::BatchConfig;
+
 use super::MaskingConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,8 +15,8 @@ pub struct MaskedData {
     index:usize,
 
     config:MaskingConfig,
-    batch_size:usize,
-    sequence_length:usize,
+    batch_config:BatchConfig,
+
     masked_length:usize,
     attention_base:Vec<u32>,
     position_base:Vec<u32>,
@@ -22,21 +24,19 @@ pub struct MaskedData {
 }
 
 impl MaskedData {
-    pub fn new(config:MaskingConfig, mask:u32) -> Self{
-        let position_base:Vec<u32> = (0..config.sequence_length as u32).collect();
-        let batch_size = config.batch_size;
-        let sequence_length = config.sequence_length;
+    pub fn new(config:MaskingConfig, batch_config:BatchConfig, mask:u32) -> Self{
+        let position_base:Vec<u32> = (0..batch_config.sequence_length as u32).collect();
+        let sequence_length = batch_config.sequence_length;
         let mask_length = config.mask_length;
 
         Self {
-            input_ids: vec![vec![0;config.sequence_length];config.batch_size],
-            attention_mask: vec![vec![1;config.sequence_length];config.batch_size],
-            labels:vec![vec![-100;config.sequence_length]; config.batch_size],
+            input_ids: vec![vec![0;batch_config.sequence_length];batch_config.batch_size],
+            attention_mask: vec![vec![1;batch_config.sequence_length];batch_config.batch_size],
+            labels:vec![vec![-100;batch_config.sequence_length]; batch_config.batch_size],
             index:0, 
 
             config:config,
-            batch_size:batch_size,
-            sequence_length:sequence_length,
+            batch_config:batch_config,
             masked_length:mask_length,
             attention_base:vec![0;sequence_length as usize],
             position_base:position_base,
@@ -45,7 +45,7 @@ impl MaskedData {
     }
 
     pub fn new_data(&mut self) -> Self {
-        MaskedData::new(self.config.clone(), self.mask)
+        MaskedData::new(self.config.clone(), self.batch_config.clone(), self.mask)
     }
 
     pub fn mask_batch(&mut self) {
@@ -63,8 +63,8 @@ impl MaskedData {
 
     pub fn put_data(&mut self, ids:&[u32]) -> bool{
         self.input_ids[self.index][0..ids.len() as usize].clone_from_slice(ids);
-        if ids.len() < self.sequence_length {
-            let s = self.sequence_length;
+        if ids.len() < self.batch_config.sequence_length {
+            let s = self.batch_config.sequence_length;
             self.attention_mask[self.index][(s-ids.len())..s].copy_from_slice(&self.attention_base[(s-ids.len())..s]);
         }
 

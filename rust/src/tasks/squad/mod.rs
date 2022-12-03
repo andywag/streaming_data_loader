@@ -13,6 +13,4 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SquadConfig{
-    pub batch_size:usize,
-    pub sequence_length:usize,
 }

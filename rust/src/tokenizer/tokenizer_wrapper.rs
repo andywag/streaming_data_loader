@@ -1,10 +1,7 @@
 
-use tokenizers::Tokenizer;
-use std::thread;
 
-use crate::tasks::python::base_tokenizer::PythonTokenizer;
 
-use super::tokenizer_holder::TokenizerHolder;
+use super::{tokenizer_holder::TokenizerHolder, tokenizer_config::{ TokenizerTask, TokenizerInternalConfig}};
 
 
 
@@ -103,74 +100,52 @@ impl TokenizerWrapper {
 
 
 
-fn get_hugging_tokenizer(location:String) -> Option<Tokenizer> {
-    let (tx,rx)= std::sync::mpsc::channel::<Tokenizer>();
-    //let location_clone = location.clone();
-    thread::spawn(move || {
-        let base = Tokenizer::from_pretrained(location, None);
-        let _ =tx.send(base.unwrap());
-    });
-    match rx.recv() {
-        Ok(x) => {
-            Some(x)
-        },
-        Err(e) => {
-            log::error!("Couldn't Open Tokenizer {:?}", e);
-            None
-        },
-    }    
-}
 
 /// Convenience Function to Get Tokenizer Uses thread to get around issues with tokio async
-pub fn get_tokenizer(location:String, mode:String) -> Option<TokenizerWrapper> {
+pub fn get_tokenizer(config:TokenizerInternalConfig) -> Option<TokenizerWrapper> {
     
-    let x = match mode.as_str() {
-        "python" => TokenizerHolder::Python(PythonTokenizer::new(16384)),
-        _ => {
-            let tokenizer = get_hugging_tokenizer(location.clone());
-            TokenizerHolder::HuggingFace(tokenizer.unwrap())
-        }
-    }; 
+    //let mode = config.mode.unwrap_or("test".to_string());
+    //let location = config.name;
 
-    if location.contains("roberta") {
-        let wrapper = BertTokenizer{  
-            mask: x.token_to_id("<mask>").unwrap(), 
-            cls:  x.token_to_id("<s>").unwrap(), 
-            sep:  x.token_to_id("</s>").unwrap(), 
-            pad:  x.token_to_id("<pad>").unwrap(),
-            tokenizer: x};
-        return Some(TokenizerWrapper::Bert(wrapper));
+    let holder = super::tokenizer_holder::create_tokenizer_holder(config.typ);
+    match config.task {
+        TokenizerTask::Bert =>  {
+            let wrapper = BertTokenizer{  
+                mask: holder.token_to_id("[MASK]").unwrap(), 
+                cls:  holder.token_to_id("[CLS]").unwrap(), 
+                sep:  holder.token_to_id("[SEP]").unwrap(), 
+                pad:  holder.token_to_id("[PAD]").unwrap(),
+                tokenizer: holder};
+            return Some(TokenizerWrapper::Bert(wrapper));
+        },
+        TokenizerTask::Roberta => {
+            let wrapper = BertTokenizer{  
+                mask: holder.token_to_id("<mask>").unwrap(), 
+                cls:  holder.token_to_id("<s>").unwrap(), 
+                sep:  holder.token_to_id("</s>").unwrap(), 
+                pad:  holder.token_to_id("<pad>").unwrap(),
+                tokenizer: holder};
+            return Some(TokenizerWrapper::Bert(wrapper));
+        },
+        TokenizerTask::T5 => {
+            let mut extra = Vec::<u32>::with_capacity(100);
+            for i in 0..100 {
+                extra.push(holder.token_to_id(format!("<extra_id_{i}>").as_str()).unwrap().to_owned())
+            }
+            let wrapper = T5Tokenizer{  
+                extra: extra,
+                eos:  holder.token_to_id("</s>").unwrap().to_owned(), 
+                unk:  holder.token_to_id("<unk>").unwrap().to_owned(), 
+                pad:  holder.token_to_id("<pad>").unwrap().to_owned(),
+                tokenizer: holder};
+            return Some(TokenizerWrapper::T5(wrapper));
+        },
+        TokenizerTask::Gpt => {
+            let wrapper = GptTokenizer{ 
+                eos: holder.token_to_id("<|endoftext|>").unwrap().to_owned(), 
+                tokenizer: holder};
+            return Some(TokenizerWrapper::Gpt(wrapper));
+        },
     }
-    else if location.contains("bert") {
-        let wrapper = BertTokenizer{  
-            mask: x.token_to_id("[MASK]").unwrap().to_owned(), 
-            cls:  x.token_to_id("[CLS]").unwrap().to_owned(), 
-            sep:  x.token_to_id("[SEP]").unwrap().to_owned(), 
-            pad:  x.token_to_id("[PAD]").unwrap().to_owned(),
-            tokenizer: x};
-        return Some(TokenizerWrapper::Bert(wrapper));
-    }
-    else if location.contains("gpt") { 
-        let wrapper = GptTokenizer{ 
-            eos: x.token_to_id("<|endoftext|>").unwrap().to_owned(), 
-            tokenizer: x};
-        return Some(TokenizerWrapper::Gpt(wrapper));
-    }
-    else if location.contains("t5") { 
-        let mut extra = Vec::<u32>::with_capacity(100);
-        for i in 0..100 {
-            extra.push(x.token_to_id(format!("<extra_id_{i}>").as_str()).unwrap().to_owned())
-        }
-        let wrapper = T5Tokenizer{  
-            extra: extra,
-            eos:  x.token_to_id("</s>").unwrap().to_owned(), 
-            unk:  x.token_to_id("<unk>").unwrap().to_owned(), 
-            pad:  x.token_to_id("<pad>").unwrap().to_owned(),
-            tokenizer: x};
-        return Some(TokenizerWrapper::T5(wrapper));
-    }
-    else {
-        log::error!("Couldn't Find Wrapper for Tokenizer {:?}", location);
-    }
-    None
+    
 }

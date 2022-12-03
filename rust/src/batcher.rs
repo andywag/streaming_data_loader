@@ -1,9 +1,26 @@
 use std::sync::Arc;
 
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use tokio::{sync::mpsc::Receiver, task::{JoinHandle, self}};
 
 use crate::{provider::ProviderChannel};
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+
+pub struct BatchConfig {
+    pub batch_size:usize,
+    pub sequence_length:usize
+}
+
+impl BatchConfig {
+    pub fn create_vector<T:Clone>(&self, value:T) -> Vec<Vec<T>> {
+        vec![vec![value;self.sequence_length];self.batch_size]
+    }
+    pub fn create_vector_1d<T:Clone>(&self, value:T) -> Vec<T> {
+        vec![value;self.batch_size]
+    }
+}
+
 
 pub trait Batcher {
     type S;

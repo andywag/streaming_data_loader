@@ -1,9 +1,14 @@
 
 
+use serde::{Deserialize, Serialize};
 use tokenizers::{Tokenizer};
 
-use crate::tasks::python::base_tokenizer::PythonTokenizer;
+use crate::tasks::python::python_tokenizer::PythonTokenizer;
 
+use super::tokenizer_config::{TokenizerType};
+use std::thread;
+
+#[derive(Deserialize, Serialize, Debug)]
 
 pub enum TokenizerHolder {
     HuggingFace(Tokenizer),
@@ -55,6 +60,36 @@ impl TokenizerHolder {
         }
     }
 
-    
+}
 
+fn get_hugging_tokenizer(location:String) -> Option<Tokenizer> {
+    let (tx,rx)= std::sync::mpsc::channel::<Tokenizer>();
+    //let location_clone = location.clone();
+    thread::spawn(move || {
+        let base = Tokenizer::from_pretrained(location, None);
+        let _ =tx.send(base.unwrap());
+    });
+    match rx.recv() {
+        Ok(x) => {
+            Some(x)
+        },
+        Err(e) => {
+            log::error!("Couldn't Open Tokenizer {:?}", e);
+            None
+        },
+    }    
+}
+
+
+pub fn create_tokenizer_holder(config:TokenizerType) -> TokenizerHolder {
+    match config {
+        TokenizerType::HuggingFace(name) => {
+            let tokenizer = get_hugging_tokenizer(name).unwrap();
+            TokenizerHolder::HuggingFace(tokenizer)
+        }
+        TokenizerType::Python => {
+            let tokenizer = PythonTokenizer::new(2048);
+            TokenizerHolder::Python(tokenizer)
+        }
+    }
 }

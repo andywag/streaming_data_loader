@@ -2,6 +2,8 @@
 use serde::{Serialize, Deserialize};
 use std::cmp::min;
 
+use crate::batcher::BatchConfig;
+
 use super::SquadConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,25 +16,26 @@ pub struct SquadData {
     pub answers:Vec<Option<String>>,
 
     config:SquadConfig,
+    batch_config:BatchConfig,
 
     index:usize,
 }
 
 
 impl SquadData {
-    pub fn new(config:&SquadConfig) -> Self{
-        let sequence_length = config.sequence_length as usize;
-        let batch_size = config.batch_size as usize;
+    pub fn new(config:&SquadConfig, batch_config:BatchConfig) -> Self{
+        let batch_size = batch_config.batch_size as usize;
 
         Self {
             
-            input_ids: vec![vec![0;sequence_length as usize];batch_size as usize],
-            attention_mask: vec![vec![1;sequence_length as usize];batch_size as usize],
-            token_type_ids: vec![vec![1;sequence_length as usize];batch_size as usize],
-            start_positions: vec![0;batch_size as usize],
-            end_positions: vec![0;batch_size as usize],
+            input_ids: batch_config.create_vector(0),
+            attention_mask: batch_config.create_vector(0),
+            token_type_ids: batch_config.create_vector(0),
+            start_positions: batch_config.create_vector_1d(0),
+            end_positions: batch_config.create_vector_1d(0),
             answers:vec![None;batch_size as usize],
             config:config.clone(),
+            batch_config:batch_config,
 
             index:0
             
@@ -40,12 +43,12 @@ impl SquadData {
     }
 
     pub fn new_data(&self) -> Self {
-        SquadData::new(&self.config)
+        SquadData::new(&self.config, self.batch_config.clone())
     }
 
     pub fn put_data(&mut self, result:&tokenizers::Encoding, data:SquadGeneral) -> bool {
 
-        let length = min(result.len(), self.config.sequence_length as usize);
+        let length = min(result.len(), self.batch_config.sequence_length as usize);
         self.input_ids[self.index][0..length].clone_from_slice(&result.get_ids()[0..length]);
         self.token_type_ids[self.index][0..length].clone_from_slice(&result.get_type_ids()[0..length]);
         self.attention_mask[self.index][0..length].clone_from_slice(&result.get_attention_mask()[0..length]);
@@ -96,7 +99,7 @@ impl SquadData {
     }
 
     pub fn done(&self) -> bool {
-        self.index == self.config.batch_size
+        self.index == self.batch_config.batch_size
     }
     
 }

@@ -5,7 +5,7 @@ use std::{fs::File, sync::Arc};
 
 use crate::tasks::DatasetInfo;
 
-use super::{ProviderChannel, ProviderConfig};
+use super::{ProviderChannel, provider_config::ProviderConfig};
 
 
 // Trait to support generic Loading of an Arror File into data Type 
@@ -123,8 +123,8 @@ impl <T:Clone>ArrowTransfer<T> {
         let mut it:Option<usize> = None;
         let mut ep:Option<usize> = None;
         match config.length {
-            crate::provider::ProviderLength::Iterations { iterations } => {it = Some(iterations)},
-            crate::provider::ProviderLength::Epochs { epochs } => {ep = Some(epochs)},
+            crate::provider::provider_config::ProviderLength::Iterations { iterations } => {it = Some(iterations)},
+            crate::provider::provider_config::ProviderLength::Epochs { epochs } => {ep = Some(epochs)},
         }
         let shuffle = match config.shuffle {
             Some(x) => x,

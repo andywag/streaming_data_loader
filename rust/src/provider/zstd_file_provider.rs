@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::{Dataset, ProviderChannel, general_file_provider::Counter, cache_writer::CacheWriter, source_filter::SourceFilter};
+use super::{ProviderChannel, general_file_provider::Counter, cache_writer::CacheWriter, source_filter::SourceFilter, provider_config::Dataset};
 use async_compression::tokio::bufread::ZstdDecoder;
 use tokio::{io::{AsyncBufReadExt, BufReader, Lines}, fs::File};
 

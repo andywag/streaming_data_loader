@@ -1,6 +1,6 @@
 
 
-use crate::{tasks::masking::{MaskingConfig}, transport::test_endpoint::EndPoint, datasets::DataSet};
+use crate::{transport::test_endpoint::EndPoint, datasets::DataSet, config::TrainingConfig};
 
 use super::gpt_data::GptData;
 
@@ -9,7 +9,7 @@ pub struct Gpt2Endpoint {
 }
 
 impl Gpt2Endpoint {
-    pub fn new(_config:MaskingConfig) -> Self {
+    pub fn new(_config:TrainingConfig) -> Self {
         //let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
         Self {
             //tokenizer:tokenizer

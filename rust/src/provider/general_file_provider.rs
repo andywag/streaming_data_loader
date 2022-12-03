@@ -1,6 +1,6 @@
 use std::{path::{PathBuf}, str::FromStr};
 
-use super::{ProviderChannel, ProviderLength, {Dataset}, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, is_network, get_local_path}, cache_writer, source_filter::SourceFilter};
+use super::{ProviderChannel, gzip_file_provider, zstd_file_provider, provider_util::{get_download_type, DownloadType, is_network, get_local_path}, cache_writer, source_filter::SourceFilter, provider_config::{ProviderLength, Dataset}};
 use tokio::sync::mpsc::Sender;
 
 
@@ -18,8 +18,8 @@ impl Counter {
         let mut iterations_:Option<usize> = None;
         let mut epochs_:Option<usize> = None;
         match length {
-            crate::provider::ProviderLength::Iterations { iterations } => {iterations_ = Some(iterations)},
-            crate::provider::ProviderLength::Epochs { epochs } => {epochs_ = Some(epochs)},
+            ProviderLength::Iterations { iterations } => {iterations_ = Some(iterations)},
+            ProviderLength::Epochs { epochs } => {epochs_ = Some(epochs)},
         }
         Self {
             iterations:iterations_,

@@ -1,8 +1,9 @@
 
 
 use logos::Logos;
+use serde::{Deserialize, Serialize};
 
-use super::{ident_store::{IdentLookup, ContextStore}, base_parser::{StateMachine, TokenResult}};
+use super::{context_map::{ContextLookup, ContextStore}, python_parser::{StateMachine, TokenResult}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Operator {
@@ -363,7 +364,7 @@ pub fn check_python(text:&str) -> bool{
 }
 
 
-pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec<TokenResult>> {
+pub fn lex_simple<'a>(text:&str, global_store:&'a mut ContextLookup) -> Option<Vec<TokenResult>> {
     if !check_python(text) {
         return None;
     }
@@ -376,7 +377,7 @@ pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec
     let mut level = 0;
     let mut indent_width:Option<usize> = None;
 
-    let local_store = &mut IdentLookup::new(1024);
+    let local_store = &mut ContextLookup::new(1024);
     let context = ContextStore::new(global_store, local_store);
     let mut state_machine = StateMachine::new(context);
 
@@ -427,15 +428,16 @@ pub fn lex_simple<'a>(text:&str, global_store:&'a mut IdentLookup) -> Option<Vec
     
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PythonTokenizer {
-    global_store:IdentLookup,
+    global_store:ContextLookup,
     index:u32
 }
 
 impl PythonTokenizer {
     pub fn new(s:usize) -> Self {
         Self {
-            global_store:IdentLookup::new(s),
+            global_store:ContextLookup::new(s),
             index:0
         }
     }
@@ -455,8 +457,11 @@ impl PythonTokenizer {
             if token.token == Token::Ident {
                 match token.position {
                     Some(p) => {
-                        ids.push(p.0 as u32 + 10);
-                        ids.push(p.1 as u32 + 200);
+                        /*for x in p {
+                            ids.push(x.0 as u32 + 10);
+                            ids.push(x.1 as u32 + 200);
+                        }*/
+                        ids.push(p[0].0 as u32 + 10);
                     },
                     None => {},
                 }
@@ -484,7 +489,7 @@ pub fn test_python_token() {
     //}
     
 
-}*/
+}
 
 #[test]
 pub fn test_file() {
@@ -505,6 +510,6 @@ pub fn test_file() {
     //    println!("Token: {:?}", token);
     //}
     
-}
+}*/
 
 

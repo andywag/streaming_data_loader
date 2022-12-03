@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Dataset};
+use super::{provider_config::Dataset};
 use clap;
 
 #[derive(Deserialize, Serialize, Debug, clap::ValueEnum, Clone)]

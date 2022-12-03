@@ -1,9 +1,11 @@
 use std::{collections::HashMap};
 
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
 
-pub struct IdentLookup {
+#[derive(Debug, Serialize, Deserialize)]
+
+pub struct ContextLookup {
     pub to_key:HashMap<String, usize>,
     pub from_key:HashMap<usize, String>,
     size:usize,
@@ -11,7 +13,7 @@ pub struct IdentLookup {
 }
 
 
-impl IdentLookup {
+impl ContextLookup {
     pub fn new(s:usize) -> Self {
         Self {
             to_key: HashMap::<String,usize>::with_capacity(s),
@@ -48,17 +50,17 @@ impl IdentLookup {
 }
 
 pub struct ContextStore<'a> {
-    global_store:&'a mut IdentLookup,
-    local_store:&'a mut IdentLookup,
-    context:Vec<IdentLookup>
+    global_store:&'a mut ContextLookup,
+    local_store:&'a mut ContextLookup,
+    context:Vec<ContextLookup>
 }
 
 impl <'a>ContextStore<'a> {
-    pub fn new(global_store:&'a mut IdentLookup, local_store:&'a mut IdentLookup) -> Self{
+    pub fn new(global_store:&'a mut ContextLookup, local_store:&'a mut ContextLookup) -> Self{
         Self {
             global_store:global_store,
             local_store:local_store,
-            context:Vec::<IdentLookup>::with_capacity(8)
+            context:Vec::<ContextLookup>::with_capacity(8)
         }
     }
 
@@ -71,7 +73,7 @@ impl <'a>ContextStore<'a> {
     }
 
     pub fn push_context(&mut self) {
-        let lut = IdentLookup::new(2048);
+        let lut = ContextLookup::new(2048);
         self.context.push(lut);
     }
 

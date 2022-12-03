@@ -4,7 +4,7 @@ use std::sync::Arc;
 use serde::Serialize;
 use tokio::{task::{JoinHandle, self}, sync::mpsc::Receiver};
 
-use crate::provider::ProviderChannel;
+use crate::{provider::ProviderChannel, config::TrainingConfig};
 
 
 pub trait EndPoint<T> {
@@ -20,7 +20,7 @@ impl <T>EndPoint<T> for DefaultTestEndPoint {
     }
 }
 // Create the Endpoint for Squad
-pub fn default_endpoint<T>(_value:&Arc<serde_yaml::Value>) -> Box<dyn crate::transport::test_endpoint::EndPoint<T> + Send> {
+pub fn default_endpoint<T>(_config:TrainingConfig) -> Box<dyn crate::transport::test_endpoint::EndPoint<T> + Send> {
     return Box::new(DefaultTestEndPoint{});
 }
 

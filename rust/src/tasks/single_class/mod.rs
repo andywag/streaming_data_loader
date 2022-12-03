@@ -12,8 +12,7 @@ trait ConfigTypes {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SingleClassConfig{
-    pub batch_size:usize,
-    pub sequence_length:usize,
+
 }
 
 impl ConfigTypes for SingleClassConfig {

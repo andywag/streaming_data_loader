@@ -10,10 +10,11 @@ basic:
   tokenizer: 
     name: "bert-base-uncased"
     config: 
-      batch_size: 32
-      sequence_length: 384
       number_labels: 9
-      
+  batch:
+    batch_size: 8
+    sequence_length: 128
+
   transport:
     transport: !test
   node: !none

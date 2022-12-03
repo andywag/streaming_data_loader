@@ -16,8 +16,6 @@ trait ConfigTypes {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct MultiConfig{
-    pub batch_size:usize,
-    pub sequence_length:usize,
     pub number_labels:usize,
 }
 

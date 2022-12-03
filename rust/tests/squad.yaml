@@ -13,9 +13,9 @@ basic:
   tokenizer: 
     type: "squad"
     name: "bert-base-uncased"
-    config: 
-      batch_size: 1024
-      sequence_length: 384
+  batch: 
+    batch_size: 1024
+    sequence_length: 384
       
   transport:
     transport: !test

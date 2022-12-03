@@ -6,14 +6,14 @@ use serde::{Deserialize, Serialize};
 use std::time::{Instant};
 use std::process::{Command};
 
-#[derive(Debug,Deserialize,Serialize)]
+#[derive(Debug,Deserialize,Serialize, Clone)]
 pub struct PythonCommand {
     pub command:String,
     pub cwd:String,
     pub args:Vec<String>
 }
 
-#[derive(Debug,Deserialize,Serialize)]
+#[derive(Debug,Deserialize,Serialize, Clone)]
 pub enum NodeConfig{
     #[serde(rename = "python")]
     Python(PythonCommand),

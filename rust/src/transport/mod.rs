@@ -5,7 +5,7 @@ pub mod zmq_transmit;
 pub mod zmq_receive;
 pub mod test_endpoint;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 
 pub enum TransportEnum {
     #[serde(rename = "test")]
@@ -14,7 +14,7 @@ pub enum TransportEnum {
     Zmq{address:String}
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct TransportConfig {
     pub transport:TransportEnum
    

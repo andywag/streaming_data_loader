@@ -1,10 +1,10 @@
-use super::{base_tokenizer::Token, ident_store::{ ContextStore}};
+use super::{python_tokenizer::Token, context_map::{ ContextStore}};
 
 #[derive(Debug)]
 pub struct TokenResult {
     pub token:Token,
     pub level:usize,
-    pub position:Option<(u32,u32)>,
+    pub position:Option<Vec<(u32,u32)>>,
     pub text:Option<String>
 }
 
@@ -75,34 +75,58 @@ impl <'a>StateMachine<'a> {
         return true;
     }
 
+    pub fn get_position(&mut self, sp:&str) -> (u32,u32) {
+        let position = match self.ident_state {
+            IdentState::Local => { // Write to the local Context
+                self.context.put_local(sp)
+            }
+            IdentState::Read =>  {
+                if self.context.len() <= 3 {
+                    self.context.get_or_global(sp)
+                }
+                else {
+                    self.context.get_or_put_local(sp)
+                }   
+            }
+            IdentState::Write =>  {
+                if self.context.len() <= 2 {
+                    self.context.get_or_global(sp)
+                }
+                else {
+                    self.context.get_or_put_local(sp)
+                }   
+            } 
+        };
+        position
+    }
+
+    pub fn check_ident(&self, text:&str) -> bool{
+        let mut last = false;
+        for c in text.chars() {
+            let current = c.is_uppercase();
+            if last && current {
+                return false;
+            }
+            last = current;
+        }
+        return true;
+    }
+
     pub fn put_token(&mut self, token:Token, text:&str, level:usize) -> Option<TokenResult> {
         
         self.ready_line = token == Token::SymbolColon;
         let result = match token {
             Token::Ident => {
-                let position = match self.ident_state {
-                    IdentState::Local => { // Write to the local Context
-                        self.context.put_local(text)
-                    }
-                    IdentState::Read =>  {
-                        if self.context.len() <= 3 {
-                            self.context.get_or_global(text)
-                        }
-                        else {
-                            self.context.get_or_put_local(text)
-                        }   
-                    }
-                    IdentState::Write =>  {
-                        if self.context.len() <= 2 {
-                            self.context.get_or_global(text)
-                        }
-                        else {
-                            self.context.get_or_put_local(text)
-                        }   
-                    }
-                   
-                };
-                TokenResult { token: token.clone(), level: level, position: Some(position), text: Some(text.to_string()) }
+                if !self.check_ident(text) {
+                    //log::info!("Failed {}", text);
+                    TokenResult { token: token.clone(), level: level, position: None, text: Some(text.to_string()) }
+                }
+                else {
+                    let split = text.split("_");
+                    let positions:Vec<(u32,u32)> = split.map(|s| self.get_position(s.to_lowercase().as_str())).collect();
+                    
+                    TokenResult { token: token.clone(), level: level, position: Some(positions), text: Some(text.to_string()) }
+                }
             }
             _ => {
                 TokenResult { token: token.clone(), level: level, position: None, text:None }

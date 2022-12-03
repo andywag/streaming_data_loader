@@ -1,35 +1,35 @@
 
 
 
-use std::sync::Arc;
 
 use serde::Serialize;
 use serde::Deserialize;
-use serde_yaml::Value;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::mpsc::{Sender};
 use tokio::task::{self, JoinHandle};
 
 
+use crate::batcher::BatchConfig;
 use crate::batcher::{self, Batcher};
+use crate::config::TrainingConfig;
+use crate::datasets::DataSet;
+use crate::tokenizer::tokenizer_config::TokenizerInternalConfig;
 use crate::tokenizer::tokenizer_wrapper;
 use crate::tokenizer::tokenizer_wrapper::TokenizerWrapper;
 use crate::transport::test_endpoint::{self, EndPoint};
-use crate::provider::ProviderConfig;
+use crate::provider::provider_config::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};
 use crate::provider::{ProviderChannel};
 use crate::transport::zmq_receive::NodeConfig;
 use crate::transport::{self};
-use crate::transport::TransportConfig;
 
 
-pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>, 
+pub async fn create_data_provider<P:Clone + Send + 'static>(provider_config:ProviderConfig, 
     provider:Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>,
     tx:tokio::sync::mpsc::Sender<ProviderChannel<P>>
     ) -> JoinHandle<()> {
 
     // Create the Provider Configuration
-    let provider_config = serde_yaml::from_value::<ProviderConfig>(value["source"].clone()).unwrap();
 
     let mut loader = provider(&provider_config);
     let join_provider = task::spawn(async move {    
@@ -39,20 +39,18 @@ pub async fn create_data_provider<P:Clone + Send + 'static>(value:Arc<Value>,
     join_provider
 }
 
-pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
-    generator:Box<dyn Fn(&Arc<serde_yaml::Value>, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(
+    tokenizer_config:TokenizerInternalConfig,
+    config_batch:BatchConfig,
+    dataset:DataSet,
+    generator:Box<dyn Fn(BatchConfig, DataSet, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     rx:Receiver<ProviderChannel<P>>, 
     tx:Sender<ProviderChannel<D>>) -> JoinHandle<()> {
     // Create the Data Provider
     
     
-   
-    let tokenizer_name = value["tokenizer"]["name"].as_str().unwrap().to_string().to_owned();
-    let tokenizer_mode = value["tokenizer"]["mode"].as_str().unwrap_or("huggingface").to_string().to_owned();
-    
-
-    let tokenizer = tokenizer_wrapper::get_tokenizer(tokenizer_name, tokenizer_mode).unwrap();
-    let generator = generator(&value, tokenizer);
+    let tokenizer = tokenizer_wrapper::get_tokenizer(tokenizer_config).unwrap();
+    let generator = generator(config_batch, dataset, tokenizer);
 
     let join_tokenizer = task::spawn(async move {
         let result = batcher::create_batch(rx, tx, generator);
@@ -61,56 +59,48 @@ pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(value:
     join_tokenizer
 }
 
-pub async fn create_endpoint<D:Serialize+Send+'static>(value:Arc<serde_yaml::Value>,
-    endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>,
-    rx:tokio::sync::mpsc::Receiver<ProviderChannel<D>>) -> JoinHandle<bool> {
-    // Create the Data Provider
-    let endpoint = endpoint(&value.clone());
 
-    let handle = task::spawn(async move {
-        let result = test_endpoint::receive(rx, endpoint);
-        result.await
-            
-    });  
-    handle
+
+pub enum ProviderType<L,R> {
+    Sync(L),
+    Async(R)
 }
 
-pub enum Either<L,R> {
-    Left(L),
-    Right(R)
-}
-
-type DataProviderAsync<P> = Box<dyn Fn(&Arc<Value>, Sender<ProviderChannel<P>>, Option<String>) -> JoinHandle<()>>;
+type DataProviderAsync<P> = Box<dyn Fn(ProviderConfig, Sender<ProviderChannel<P>>, Option<String>) -> JoinHandle<()>>;
 type DataProviderSync<P> = Box<dyn Fn(&ProviderConfig) -> ArrowTransfer<P>>;
 
 // TODO : Clean up the direct reading of the Serde Value and use a serde load to a struct
-pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(value:Arc<Value>,
-    base_provider:Either<DataProviderAsync<P>,DataProviderSync<P>>,
-    generator:Box<dyn Fn(&Arc<serde_yaml::Value>, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
-    endpoint:Box<dyn Fn(&Arc<serde_yaml::Value>) -> Box<dyn EndPoint<D> + Send>>,
+pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(
+    config:TrainingConfig,
+    dataset:DataSet,
+    base_provider:ProviderType<DataProviderAsync<P>,DataProviderSync<P>>,
+    generator:Box<dyn Fn(BatchConfig, DataSet, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+    endpoint:Box<dyn Fn(TrainingConfig) -> Box<dyn EndPoint<D> + Send>>,
     cache:Option<String>) -> bool {
 
+    let config_copy = config.clone();
     // Create the Channel from Input to Tokenizer
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);
     // Create the Channel from Tokenizer to Output
     let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ProviderChannel<D>>(1);
 
+    // Data Loading Configuration
+
     // Create the Data Provider Configuration
     let join_provider = match base_provider {
-        Either::Left(x) => x(&value.clone(), tx, cache),
-        Either::Right(y) => create_data_provider(value.clone(), y, tx).await,
+        ProviderType::Sync(x) => x(config.source, tx, cache),
+        ProviderType::Async(y) => create_data_provider(config.source, y, tx).await,
     };
 
     // Create the batcher
-    let join_tokenizer = create_tokenizer(value.clone(), generator, rx, tx_trans);
+    let join_tokenizer = create_tokenizer(config.tokenizer, config.batch, dataset, generator, rx, tx_trans);
 
     // Create One of 2 Options 
     // 1. "test" : Create an internal test endpoint
     // 2. ""     : Create a zmq endpoint which talks to external process
-    let transport_config = serde_yaml::from_value::<TransportConfig>(value["transport"].clone()).unwrap();
-    let join_rx = match transport_config.transport {
+    let join_rx = match config.transport.transport{
         transport::TransportEnum::Test => {
-            let endpoint = endpoint(&value.clone());
+            let endpoint = endpoint(config_copy);
 
             task::spawn(async move {
                 let result = test_endpoint::receive(rx_trans, endpoint);
@@ -129,26 +119,15 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     // Create one of 2 options 
     // 1. "none"   : No Operation with either the test mode 
     // 2. "python" : External Python Command
-    //let node_select = value["node"]["type"].as_str().unwrap();
 
-    let node_config = serde_yaml::from_value::<NodeConfig>(value["node"].clone());
-    let join_node = match node_config {
-        Result::Ok(NodeConfig::Python(config)) => { // Python Option
+    let join_node = match config.node {
+        NodeConfig::Python(config) => { // Python Option
             task::spawn(async move {
                 let result = transport::zmq_receive::python_node_transport(config);
                 result.await
             })
         },
-        Result::Ok(NodeConfig::None) => { // Bypass Option
-            task::spawn(async move {
-                let result = transport::zmq_receive::dummy_node_tranport();
-                result.await
-            })
-        },
-        Result::Err(e) => { // Error
-            // TODO : Crash Run rather than continue operations
-            log::error!("Error Decoding configuration {:?}", e);
-            
+        NodeConfig::None => { // Bypass Option
             task::spawn(async move {
                 let result = transport::zmq_receive::dummy_node_tranport();
                 result.await

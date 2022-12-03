@@ -1,6 +1,6 @@
 
 
-use crate::{tasks::masking::{T5Config}, transport::test_endpoint::EndPoint, datasets::DataSet};
+use crate::{ transport::test_endpoint::EndPoint, datasets::DataSet, config::TrainingConfig};
 
 use super::t5_data::T5Data;
 
@@ -9,7 +9,7 @@ pub struct T5Endpoint {
 }
 
 impl T5Endpoint {
-    pub fn new(_config:T5Config) -> Self {
+    pub fn new(_config:TrainingConfig) -> Self {
         //let tokenizer = utils::get_tokenizer(config.tokenizer_name.to_owned());
         Self {
         //    tokenizer:tokenizer
@@ -31,9 +31,8 @@ impl T5Endpoint {
 impl EndPoint<DataSet> for T5Endpoint {
     fn receive(&mut self, data:DataSet) -> bool {
         match data {
-            DataSet::Mask(_) => todo!(),
-            DataSet::Gpt2(_) => todo!(),
             DataSet::T5(x) =>  self.check_batch(x),
+            _ => false,
             //DataSet::T5(x) => self.check_batch(x);
             //_ => todo!();
         };

@@ -7,12 +7,13 @@ basic:
     filter: !json_text
     source: !list
       - location: "../data/test.json.gz"
+  batch:
+    batch_size: 8
+    sequence_length: 128
   tokenizer: 
     type: "masking"
     name: "roberta-base"
     config: 
-      batch_size: 8
-      sequence_length: 128
       mask_length: 18
       
   transport:
@@ -30,9 +31,11 @@ basic_stream:
     type: "masking"
     name: "bert-base-cased"
     config: 
-      batch_size: 8
-      sequence_length: 128
       mask_length: 18
+  batch:
+    batch_size: 8
+    sequence_length: 128
+      
       
   transport:
     transport: !test
@@ -72,7 +75,7 @@ git_python:
     name: "bert-base-uncased"
     mode: "python"
     config: 
-      batch_size: 32768
+      batch_size: 8192
       sequence_length: 512
       mask_length: 80
   #transport:

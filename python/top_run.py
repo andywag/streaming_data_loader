@@ -17,61 +17,78 @@ os.environ['WANDB_DISABLED'] = 'true'
 """
 
 def run_loader(args):
-    subprocess.run(["cargo", "run", "--release", "--", "--path", args.file, "--config", args.config], cwd="../rust")
+    subprocess.run(["cargo", "run", "--release", "--", "--task", args.task], cwd="../rust")
 
 
-def run_model(input_config):
+def run_model(args):
     # Get the Common Configuration
-    tokenizer_name = input_config['tokenizer']['name']
-    sequence_length = input_config['tokenizer']['config']['sequence_length']
-    batch_size = input_config['tokenizer']['config']['batch_size']
+    tokenizer_name = "bert-base-uncased"
+    sequence_length = 128
+    batch_size = 32768
+    if args.task == 'mlm':
+        tokenizer_name = "bert-base-uncased"
+    elif args.task == 'clm':
+        tokenizer_name = "gpt2"
+    elif args.task == 't5':
+        tokenizer_name = "t5-small"
+
+    fields = ["input_ids", "attention_mask", "labels"]
+    if args.task == 'squad':
+        fields = ["input_ids", "attention_mask", "token_type_ids", "start_positions", "end_positions"]
+    elif args.task == 'single':
+        fields = ["input_ids", "attention_mask", "token_type_ids", "label"]
+    elif args.task == 'multi':
+        fields = ["input_ids", "attention_mask", "token_type_ids", "labels"]
 
     def tokenize_function(examples):
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
         data = tokenizer(examples['text'], padding="max_length", truncation=True, max_length=sequence_length)
         return data
 
-    fields = ["input_ids", "attention_mask", "labels"]
-    if input_config['model'] == 'squad':
-        fields = ["input_ids", "attention_mask", "token_type_ids", "start_positions", "end_positions"]
-    elif input_config['model'] == 'single-class':
-        fields = ["input_ids", "attention_mask", "token_type_ids", "label"]
-    elif input_config['model'] == 'multi-label':
-        fields = ["input_ids", "attention_mask", "token_type_ids", "labels"]
 
-    tokenized_dataset = ExternalDataset(input_config['transport']['transport'].address,
+
+    tokenized_dataset = ExternalDataset("ipc:///tmp/masking_train",
                                         batch_size, fields=fields)
 
-    if input_config['model'] == 'masking':
+    learning_rate = 1e-5
+    if args.task == 'mlm' or args.task == 'python':
         config = AutoConfig.from_pretrained(tokenizer_name)
+        if args.small:
+            config.num_hidden_layers = 12
+            config.hidden_size = 768
+            config.intermediate_size = 3072
+            config.vocab_size = 16384+250
+            config.num_attention_heads = 12
+            learning_rate = 1e-5
         model = AutoModelForMaskedLM.from_config(config=config).train()
-    elif input_config['model'] == 'causal':
+    elif args.task == 'clm':
         config = GPT2Config.from_pretrained(tokenizer_name)
         model = AutoModelForCausalLM.from_config(config=config).train()
-    elif input_config['model'] == 'squad':
+    elif args.task == 'squad':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         model = AutoModelForQuestionAnswering.from_pretrained("bert-base-uncased",config=config).train()
-    elif input_config['model'] == 'single-class':
+        sequence_length = 384
+    elif args.task == 'single':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "single_label_classification"
         config.num_labels = 2
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
-    elif input_config['model'] == 'multi-label':
+    elif args.task == 'multi':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "multi_label_classification"
         config.num_labels = 9
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
-    elif input_config['model'] == 't5':
+    elif args.task == 't5':
         config = AutoConfig.from_pretrained(tokenizer_name)
         model = T5ForConditionalGeneration.from_pretrained(tokenizer_name, config=config).train()
 
     training_args = TrainingArguments(output_dir="local",
-                                      lr_scheduler_type="constant",
-                                      learning_rate=1e-5,
+                                      #lr_scheduler_type="constant",
+                                      learning_rate=learning_rate,
                                       warmup_steps=0.0,
-                                      per_device_train_batch_size=8,
+                                      per_device_train_batch_size=4,
                                       logging_steps=8,
-                                      num_train_epochs=6,
+                                      num_train_epochs=1,
                                       save_steps=1000000,
                                       gradient_accumulation_steps=8
                                       )
@@ -86,34 +103,20 @@ def run_model(input_config):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["gpt2", "mlm", "squad", "imdb", "emot", "t5"], default="mlm")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="mlm")
 parser.add_argument('--config', type=str, default='git_python')
 parser.add_argument('--all', action='store_true', default=True)
+parser.add_argument('--small', action='store_true',default=False )
 
 
 def main():
     args = parser.parse_args()
 
-    if args.task == 'gpt2':
-        args.file = "../rust/tests/gpt.yaml"
-    elif args.task == 'mlm':
-        args.file = "../rust/tests/masking.yaml"
-    elif args.task == 'squad':
-        args.file = "../rust/tests/squad.yaml"
-    elif args.task == 'imdb':
-        args.file = "../rust/tests/single_class.yaml"
-    elif args.task == 'emot':
-        args.file = "../rust/tests/multi_label.yaml"
-    elif args.task == 't5':
-        args.file = "../rust/tests/t5.yaml"
-
     if args.all:
         pr = mp.Process(target=run_loader, args=(args,))
         pr.start()
 
-    config_file = config_loader.load(args.file)
-    config = config_file[args.config]
-    run_model(config)
+    run_model(args)
 
 
 if __name__ == '__main__':

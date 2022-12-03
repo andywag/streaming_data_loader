@@ -1,15 +1,14 @@
 
 use std::collections::VecDeque;
 
-use crate::batcher::Batcher;
+use crate::batcher::{Batcher, BatchConfig};
 use crate::datasets::DataSet;
 use crate::tokenizer::tokenizer_wrapper::{TokenizerWrapper};
 
 
 
 pub struct GenTokenizer {
-    pub batch_size:usize,
-    pub sequence_length:usize,
+    batch_config:BatchConfig,
     tokenizer:TokenizerWrapper,
     store:VecDeque<DataSet>, 
     template:DataSet, 
@@ -18,16 +17,14 @@ pub struct GenTokenizer {
  
 impl GenTokenizer {
     pub fn new(dataset:DataSet,
-        batch_size:usize, 
-        sequence_length:usize, 
+        batch_config:BatchConfig, 
         tokenizer:TokenizerWrapper,
         chunk:bool
     ) -> Self {
         
         let first_set = dataset.clone().create_data();
         Self {
-            batch_size: batch_size,
-            sequence_length: sequence_length,
+            batch_config:batch_config,
             tokenizer: tokenizer,
             store:VecDeque::from(vec!(first_set)),
             template:dataset, 
@@ -59,12 +56,14 @@ impl Batcher for GenTokenizer {
     fn create_sync_batch(&mut self, data:Self::S) -> Option<Self::T> {
         // Tokenize the Data    
         let mut ids = self.tokenizer.encode_mask(data);
+        
+        // Don't create the data if there isn't enough data
         if ids.len() < 64 {
             return None;
         }
         // Break the tokenized data into chunks
         if self.chunk {
-            let chunks = ids.chunks_mut(self.sequence_length as usize);
+            let chunks = ids.chunks_mut(self.batch_config.sequence_length as usize);
             chunks.into_iter().for_each(|e|self.handle_internal_batch(e));
         }
         else {

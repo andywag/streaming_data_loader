@@ -1,34 +1,11 @@
-use std::sync::Arc;
 
-use serde_yaml::Value;
-
-enum TestType {
-    MASK,
-    T5,
-    SQUAD,
-    MULTI,
-    SINGLE
-}
+use loader::{config::TrainingConfig, tasks::cases::BasicCases};
 
 #[tokio::main]
 
-async fn basic_test(test_type:TestType, config:String) {
-    loader::create_logger();
-    
-    let path = match test_type {
-        TestType::MASK =>  "tests/masking.yaml",
-        TestType::SQUAD => "tests/squad.yaml",
-        TestType::MULTI => "tests/multi_label.yaml",
-        TestType::SINGLE => "tests/single_class.yaml",
-        TestType::T5 => "tests/t5.yaml"
-    };
-    
-    let f = std::fs::File::open(path).unwrap();
-    let config_file:Value = serde_yaml::from_reader(f).unwrap();
-    let config_ptr = Arc::new(config_file.get(config).unwrap().to_owned());
-    let result = loader::tasks::run(config_ptr["model"].as_str(), config_ptr.clone(), None).await;
-
-
+async fn test_case(config:TrainingConfig) {
+    loader::logger::create_logger();
+    let result = loader::tasks::run(config, None).await;
     log::info!("Result {}", result);
     assert!(result);
    
@@ -36,42 +13,39 @@ async fn basic_test(test_type:TestType, config:String) {
 
 
 #[test]
-fn test_masking() {
-    basic_test(TestType::MASK,"basic".to_string());
+fn test_bert() {
+    test_case(BasicCases::Bert.get_config(true));
 } 
-
 #[test]
-fn test_masking_stream() {
-    basic_test(TestType::MASK,"basic_stream".to_string());
+fn test_roberta() {
+    test_case(BasicCases::Roberta.get_config(true));
 } 
-
+/* 
+#[test]
+fn test_gpt() {
+    test_case(BasicCases::Gpt.get_config());
+} 
+*/
 #[test]
 fn test_t5() {
-    basic_test(TestType::T5,"basic".to_string());
+    test_case(BasicCases::T5.get_config(true));
 } 
-
 
 #[test]
 fn test_squad() {
-    basic_test(TestType::SQUAD,"basic".to_string());
+    test_case(BasicCases::Squad.get_config(true));
 } 
+
 
 #[test]
 fn test_multi_label() {
-    basic_test(TestType::MULTI,"basic".to_string());
+    test_case(BasicCases::Multi.get_config(true));
 }
 
-//#[test]
-//fn test_multi_match() {
-//    basic_test(TestType::MULTI, "python_match".to_string());
-//}
 
 #[test]
 fn test_single_class() {
-    basic_test(TestType::SINGLE,"basic".to_string());
+    test_case(BasicCases::Single.get_config(true));
 }
 
-//#[test]
-//fn test_single_match() {
-//    basic_test(TestType::SINGLE, "python_match".to_string());
-//}
+
