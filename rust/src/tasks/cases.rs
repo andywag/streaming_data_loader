@@ -18,6 +18,8 @@ use super::masking::t5_data::T5Data;
 use super::masking::{MaskingConfig, T5Config};
 use super::masking::gpt_data::GptData;
 use super::masking::masked_data::MaskedData;
+use super::python::config::PythonConfig;
+use super::python::python_data::PythonData;
 
 
 
@@ -54,6 +56,8 @@ pub enum BasicCases {
     Multi,
     Single,
     Python,
+    PythonNew,
+    PythonContext
 }
 
 impl BasicCases {
@@ -155,19 +159,49 @@ impl BasicCases {
                     batch_config,
                     DataSet::Single(data),
                     transport_config)
-            },
+            },/* 
             BasicCases::Python => {
-                let batch_config = BatchConfig { batch_size: 32768, sequence_length: 512};
+                let batch_config = if test {BatchConfig{batch_size:1,sequence_length:128}} else {BatchConfig{batch_size:32768,sequence_length:512}};
+                let batch_config = batch_config;
                 let mask_config = MaskingConfig{ mask_length: (0.15*(batch_config.sequence_length as f32)) as usize };
-                let data = MaskedData::new(mask_config, batch_config.clone(), 103);
+                let data = MaskedData::new(mask_config, batch_config.clone(), 5);
 
-                get_basic_config(crate::config::TaskType::Mlm,
+                get_basic_config(crate::config::TaskType::Python,
                     provider_config::Examples::Python.get_config(test),
                     TokenizerTask::Bert, 
                     TokenizerType::Python,
                     batch_config,
                     DataSet::Mask(data),
                     transport_config)
+            },*/
+            BasicCases::Python | BasicCases::PythonNew => {
+                let batch_config = if test {BatchConfig{batch_size:1,sequence_length:512}} else {BatchConfig{batch_size:32768,sequence_length:512}};
+                let batch_config = batch_config;
+                let mask_config = PythonConfig{ mask_length: (0.15*(batch_config.sequence_length as f32)) as usize,
+                    context_shape: vec![2,2,4,4]
+                };
+                let data = PythonData::new(mask_config, batch_config.clone(), 5);
+
+                get_basic_config(crate::config::TaskType::Python,
+                    provider_config::Examples::Python.get_config(test),
+                    TokenizerTask::Bert, 
+                    TokenizerType::Python,
+                    batch_config,
+                    DataSet::Python(data),
+                    transport_config)
+            },
+            BasicCases::PythonContext => {
+                let batch_config = BatchConfig { batch_size: 4096, sequence_length: 512};
+                let mask_config = MaskingConfig{ mask_length: (0.15*(batch_config.sequence_length as f32)) as usize };
+                let data = MaskedData::new(mask_config, batch_config.clone(), 5);
+
+                get_basic_config(crate::config::TaskType::Mlm,
+                    provider_config::Examples::Python.get_config(test),
+                    TokenizerTask::Bert, 
+                    TokenizerType::PythonContext,
+                    batch_config,
+                    DataSet::Mask(data),
+                    TransportConfig{ transport: TransportEnum::Test })
             },
 
         }

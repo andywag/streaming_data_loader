@@ -76,16 +76,18 @@ pub async fn load_data_sets(datasets:Vec<Dataset>,
     loop {
 
         for dataset in &datasets {
-
+            log::info!("Sending Dataset {:?}", dataset);
             // Download Type
             let typ = get_download_type(&dataset.location);
-
+            
             let location = if !is_network(&dataset.location) { // Local Path
                  (typ, Some(PathBuf::from_str(&dataset.location.as_str()).unwrap()), None)
             }
             else {
+
                 match cache.to_owned() {
                     Some(path) => {
+
                         let cache_path = PathBuf::from_str(&path).unwrap();
                         if !cache_path.exists() {
                             log::error!("Cache Location : {:?} Doesn't Exist", cache_path);
@@ -94,6 +96,7 @@ pub async fn load_data_sets(datasets:Vec<Dataset>,
                         let zstd_location = cache_writer::existing_cache_file(&base_file_path);
 
                         if zstd_location.is_some() {
+                            log::info!("Found Local Path {:?} ", zstd_location);
                             (DownloadType::Zstd, zstd_location, None) // Local Cache File -- No Writer
                         }
                         else {
@@ -104,7 +107,6 @@ pub async fn load_data_sets(datasets:Vec<Dataset>,
                     },
                     None => (typ, None, None),
                 }
-                //get_cached_file("../../blob2/data".to_string(), &dataset.location, true)
             };
 
 

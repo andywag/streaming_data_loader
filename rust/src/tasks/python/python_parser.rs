@@ -66,9 +66,11 @@ impl <'a>StateMachine<'a> {
             }
             _ => {
                 //log::info!("Popping {} {} {}", level, self.level, self.context.len());
-                for _ in level..self.context.len()-2 {
-                    self.context.pop_context();
-                    self.state.pop();
+                if self.context.len() != 0 { // 0 _ Case where context is generated
+                    for _ in level..self.context.len()-2 {
+                        self.context.pop_context();
+                        self.state.pop();
+                    }
                 }
             }
         }
@@ -123,7 +125,8 @@ impl <'a>StateMachine<'a> {
                 }
                 else {
                     let split = text.split("_");
-                    let positions:Vec<(u32,u32)> = split.map(|s| self.get_position(s.to_lowercase().as_str())).collect();
+                    let split2 = split.filter(|s| s.len() >= 3);
+                    let positions:Vec<(u32,u32)> = split2.map(|s| self.get_position(s.to_lowercase().as_str())).collect();
                     
                     TokenResult { token: token.clone(), level: level, position: Some(positions), text: Some(text.to_string()) }
                 }
@@ -176,9 +179,10 @@ impl <'a>StateMachine<'a> {
         }
         self.level = level;
         
+        
         //log::info!("S {:?} {:?}", self.state, self.ident_state);
         //if result.token == Token::Ident {
-        //log::info!("T {:?}", result);
+        log::info!("T {:?}", result);
         //}
         
 

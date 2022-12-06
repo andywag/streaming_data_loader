@@ -51,6 +51,7 @@ impl CacheWriter {
 
 pub fn existing_cache_file(cached_path:&PathBuf) -> Option<PathBuf> {
     let zstd_file = cached_path.with_extension("json.zst");
+    
     if zstd_file.exists() {
         Some(zstd_file)
     }

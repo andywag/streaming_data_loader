@@ -50,7 +50,8 @@ pub enum TokenizerTask {
 
 pub enum TokenizerType {
     HuggingFace(String),
-    Python
+    Python,
+    PythonContext
 }
 
 
@@ -60,30 +61,6 @@ pub struct TokenizerInternalConfig {
     pub typ:TokenizerType
 }
 
-pub fn from_config(config:TokenizerConfig) -> TokenizerInternalConfig{
-    let task =
-        if config.name.contains("roberta") {TokenizerTask::Roberta}
-        else if config.name.contains("bert") {TokenizerTask::Bert}
-        else if config.name.contains("t5") {TokenizerTask::T5}
-        else if config.name.contains("gpt") {TokenizerTask::Gpt}
-        else {
-            log::error!("Can't Find Tokenizer Task {:?}", config.name);
-            std::process::exit(1);
-        };
-        
-        let typ = match config.mode {
-            Some(x) => {
-                if x == "python" {TokenizerType::Python} 
-                else {TokenizerType::HuggingFace(config.name)}
-            }
-            None => TokenizerType::HuggingFace(config.name)
-        };
-
-    TokenizerInternalConfig {
-        task: task,
-        typ: typ,
-    }
-}
 
 pub enum Examples {
     Basic

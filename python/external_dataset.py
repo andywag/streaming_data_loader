@@ -57,7 +57,10 @@ class ExternalDataset(torch.utils.data.IterableDataset):
                 if self.fields is not None:
                     keys = self.fields
                 for key in keys:
-                    result[key] = data[key][x]
+                    try:
+                        result[key] = data[key][x]
+                    except:
+                        print("Errr")
                 yield result
 
     def __getitem__(self, idx):

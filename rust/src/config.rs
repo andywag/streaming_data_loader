@@ -21,6 +21,7 @@ pub enum TaskType {
     SingleClass,
     #[serde(rename="t5")]
     T5,
+    Python,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

@@ -63,7 +63,9 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<Prov
                         let result = serde_pickle::to_vec(&x, Default::default());
                         let _ = socket.send(result.unwrap(), 0);
                         packet_count += 1;
-                        log::info!("Sent Packet {:?}", packet_count);
+                        if packet_count % 32 == 1 {
+                            log::info!("Sent Packet {:?}", packet_count);
+                        }
                     },
                 }
             }

@@ -3,7 +3,6 @@ use serde::{Serialize,Deserialize};
 
 use crate::config::{TrainingConfig, TaskType};
 
-use self::masking::masking_runner::MaskType;
 
 pub mod masking;
 pub mod multi_label;
@@ -35,12 +34,10 @@ pub async fn run(config:TrainingConfig,  cache:Option<String>) -> bool{
         TaskType::Squad => squad::runner::run(config).await,
         TaskType::MultiLabel => multi_label::runner::run(config).await,
         TaskType::SingleClass => single_class::runner::run(config).await,
-        TaskType::Mlm => masking::masking_runner::run(config, cache, MaskType::Mlm).await,
-        TaskType::Causal => masking::masking_runner::run(config,  cache, MaskType::Causal).await,
-        TaskType::T5 => masking::masking_runner::run(config,  cache, MaskType::Span).await,
-
-        //Some(x) => {log::error!("Model {x} Not Found"); false}
-        //None => {log::error!("Model Not Found"); false}
-
+        TaskType::Mlm => masking::masking_runner::run(config, cache).await,
+        TaskType::Causal => masking::masking_runner::run(config,  cache).await,
+        TaskType::T5 => masking::masking_runner::run(config,  cache).await,
+        TaskType::Python => python::python_runner::run(config, cache).await
+        
     }    
 }

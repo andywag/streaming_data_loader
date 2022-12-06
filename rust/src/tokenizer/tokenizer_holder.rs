@@ -1,18 +1,19 @@
 
 
-use serde::{Deserialize, Serialize};
 use tokenizers::{Tokenizer};
 
-use crate::tasks::python::python_tokenizer::PythonTokenizer;
+use crate::tasks::python::{python_top::{PythonParserTop, PythonContextCreator}, python_top_new::PythonParserNew};
 
-use super::tokenizer_config::{TokenizerType};
+use super::{tokenizer_config::{TokenizerType}, tokenizer_data::TokenizedData};
 use std::thread;
 
-#[derive(Deserialize, Serialize, Debug)]
+//#[derive(Deserialize, Serialize, Debug)]
 
 pub enum TokenizerHolder {
     HuggingFace(Tokenizer),
-    Python(PythonTokenizer)
+    PythonNew(PythonParserNew),
+    Python(PythonParserTop),
+    PythonContext(PythonContextCreator)
 }
 
 impl TokenizerHolder {
@@ -25,6 +26,13 @@ impl TokenizerHolder {
             TokenizerHolder::Python(x) => {
                 x.encode(data)
             },
+            TokenizerHolder::PythonContext(x) => {
+                let result = x.encode(data);
+                result
+            }
+            TokenizerHolder::PythonNew(_x) => {
+                vec![]
+            },
         }
     }
 
@@ -33,9 +41,18 @@ impl TokenizerHolder {
             TokenizerHolder::HuggingFace(x) => {
                 Some(x.encode(data, true).unwrap()) 
             }
-            TokenizerHolder::Python(_) => {
-                None
+            _ => None
+            
+        }
+    }
+
+    pub fn encode_split(&self, data:String) -> Option<TokenizedData> {
+        match self {
+            TokenizerHolder::PythonNew(x) => {
+                x.encode(data) 
             }
+            _ => None
+            
         }
     }
 
@@ -45,15 +62,14 @@ impl TokenizerHolder {
                 x.token_to_id(token) 
             }
             // TODO : Need to add extra ids
-            TokenizerHolder::Python(_) => {
+            TokenizerHolder::Python(_) | TokenizerHolder::PythonContext(_) | TokenizerHolder::PythonNew(_) => {
                 match token {
-                    "<mask>" | "[MASK]" => Some(5),
                     "<pad>" | "[PAD]" => Some(0),
                     "<s>" | "[CLS]" => Some(1),
                     "</s>" | "[SEP]" => Some(2),
                     "<|endoftext|>" => Some(3),
                     "<unk" => Some(4),
-
+                    "<mask>" | "[MASK]" => Some(5),
                     _ => None
                 }
             }
@@ -88,8 +104,12 @@ pub fn create_tokenizer_holder(config:TokenizerType) -> TokenizerHolder {
             TokenizerHolder::HuggingFace(tokenizer)
         }
         TokenizerType::Python => {
-            let tokenizer = PythonTokenizer::new(2048);
+            let tokenizer = PythonParserTop::new();
             TokenizerHolder::Python(tokenizer)
+        },
+        TokenizerType::PythonContext => {
+            let tokenizer = PythonContextCreator::new(2048);
+            TokenizerHolder::PythonContext(tokenizer)
         }
     }
 }

@@ -7,7 +7,7 @@ use std::fs;
 
 
 
-pub struct ContextLookup {
+pub struct ContextLookupNew {
     pub to_key:HashMap<String, usize>,
     pub from_key:HashMap<usize, String>,
     size:usize,
@@ -15,7 +15,7 @@ pub struct ContextLookup {
 }
 
 
-impl ContextLookup {
+impl ContextLookupNew {
     pub fn new(s:usize) -> Self {
         Self {
             to_key: HashMap::<String,usize>::with_capacity(s),
@@ -65,7 +65,7 @@ impl ContextLookup {
         }
     }
 
-    pub fn get_data(&mut self, data:&str) -> Option<u32> {
+    pub fn get_data(&self, data:&str) -> Option<u32> {
         let result = self.to_key.get(data).map(|s|s.to_owned() as u32);
         result
     }
@@ -75,22 +75,34 @@ impl ContextLookup {
 
 
 
-pub struct ContextStore<'a> {
-    global_store:&'a mut ContextLookup,
-    local_store:&'a mut ContextLookup,
-    context:Vec<ContextLookup>,
+pub struct ContextStoreNew<'a> {
+    global_store:&'a ContextLookupNew,
+    project_store:&'a ContextLookupNew,
+    context:Vec<ContextLookupNew>,
+    local_size:usize,
+    offset:usize, 
 }
 
-impl <'a>ContextStore<'a> {
-    pub fn new(global_store:&'a mut ContextLookup, local_store:&'a mut ContextLookup) -> Self{
-        
+impl <'a>ContextStoreNew<'a> {
+    pub fn new(global_store:&'a ContextLookupNew, project_store:&'a ContextLookupNew, local_size:usize, offset:usize) -> Self{
         Self {
             global_store:global_store,
-            local_store:local_store,
-            context:Vec::<ContextLookup>::with_capacity(8),
+            project_store:project_store,
+            context:vec![ContextLookupNew::new(local_size)],
+            local_size:local_size,
+            offset:offset
         }
     }
 
+    pub fn get_id(&self, location:&(u32,u32)) -> u32 {
+        if location.0 == 0 {
+            (self.offset as u32 + location.1) as u32
+        }
+        else {
+            ((location.0 - 2)*self.local_size as u32 + location.1 + self.offset as u32) as u32
+        }
+
+    }
 
     pub fn len(&self) -> usize {
         return self.context.len() + 2;
@@ -101,11 +113,12 @@ impl <'a>ContextStore<'a> {
     }
 
     pub fn push_context(&mut self) {
-        let lut = ContextLookup::new(2048);
+        let lut = ContextLookupNew::new(self.local_size);
         self.context.push(lut);
     }
 
 
+    /// Returns the level and index of the input data
     fn get_data(&mut self, text:&str) -> Option<(u32,u32)> {
         let l = self.context.len();
         for x in 0..l { // Search All of the Context Levels
@@ -115,7 +128,7 @@ impl <'a>ContextStore<'a> {
             }
         }
         // Search over local context
-        let local =  self.local_store.get_data(text);
+        let local =  self.project_store.get_data(text);
         if local.is_some() {
             return Some((1, local.unwrap()));
         }
@@ -129,26 +142,15 @@ impl <'a>ContextStore<'a> {
 
     // Put identifier onto the global context of file context if doesn't fit
     pub fn put_local(&mut self, text:&str) -> (u32, u32) {
-        if self.context.len() > 0 {
-            let l = self.context.len();
-            let put_index = self.context[l-1].put_data(text);
-            match put_index {
-                Some(x) => (l as u32 +1, x),
-                None => {
-                    log::info!("Breaking {} {}", text, self.context[l-1].current);
-                    (0,0)
-                }
+        if self.context.len() >= 1 {
+            let result = self.context[0].put_data(text);
+            match result {
+                Some(x) => (self.context.len() as u32 +1, x),
+                None => (0,0),
             }
         }
         else {
-            let put_index = self.local_store.put_data(text);
-            match put_index {
-                Some(x) => (1, x),
-                None => {
-                    log::info!("Breaking {} {}", text, self.local_store.current);
-                    (1,0)
-                }
-            }
+            (0,0)
         }
     }
 
@@ -164,15 +166,7 @@ impl <'a>ContextStore<'a> {
 
 
 
-    pub fn get_or_global(&mut self, text:&str) -> (u32, u32) {
-        match self.get_data(text) {
-            Some(x) => x,
-            None => {
-                self.local_store.put_data(text).map(|s|(1,s)).unwrap_or((1,0))
-                
-            }
-        }
-    }
+
 
 
 }

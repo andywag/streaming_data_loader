@@ -1,7 +1,7 @@
 
 
-use crate::{tasks::masking::{ masked_data::MaskedData}, transport::test_endpoint::EndPoint, datasets::DataSet, config::TrainingConfig};
-
+use crate::{transport::test_endpoint::EndPoint, datasets::DataSet, config::TrainingConfig};
+use std::fmt::Debug;
 pub struct MaskingEndpoint {
     //pub tokenizer:Tokenizer
 }
@@ -16,10 +16,12 @@ impl MaskingEndpoint {
 
     // TODO : Put in a valid check for the data. Disabled due to use of file match which was inconvenient
     // TODO : Make data input mutable to allow checks
-    pub fn check_batch(&self, data:MaskedData) -> bool {
-        let _real_data = data.input_ids.clone();
+    pub fn check_batch<T:Debug>(&self, data:T) -> bool {
+        log::info!("Data {:?}", data);
+        //let _real_data = data.input_ids.clone();
+        
         // Compare only the first batch of data based on a known dataset
-        //log::info!("Data {:?}", real_data);
+        //log::info!("Data {} {:?}", _real_data[0].len(), _real_data[0]);
         //log::info!("Labels {:?}", data.labels);
 
         /*for x in 0..data.input_ids.len() as usize {
@@ -40,6 +42,8 @@ impl EndPoint<DataSet> for MaskingEndpoint {
         // TODO : Fixe the masked testing
         match data {
             DataSet::Mask(x) => self.check_batch(x),
+            DataSet::Python(x) => self.check_batch(x),
+
             _ => false
         }
         

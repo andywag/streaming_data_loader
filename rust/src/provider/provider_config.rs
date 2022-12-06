@@ -72,7 +72,7 @@ pub enum Examples {
     Squad,
     Emot,
     Imdb,
-    Python
+    Python,
 }
 
 impl Examples {
@@ -119,11 +119,12 @@ impl Examples {
                     ProviderConfig {
                         shuffle: Some(true),
                         flatten: Some(true),
-                        length: ProviderLength::Epochs { epochs:3 },
-                        source: SourceDescription::Pile { typ:PileDatasetType::Total },
+                        length: ProviderLength::Iterations { iterations:32 },
+                        source: SourceDescription::Pile { typ:PileDatasetType::GithubDataset },
                         filter: Some(SourceFilter::PythonText),
                     }
                 },
+                
             }
         }
         else {
@@ -168,11 +169,12 @@ impl Examples {
                     ProviderConfig {
                         shuffle: Some(true),
                         flatten: Some(true),
-                        length: ProviderLength::Epochs { epochs:3 },
-                        source: SourceDescription::Pile { typ:PileDatasetType::Total },
+                        length: ProviderLength::Epochs { epochs:1 },
+                        source: SourceDescription::Pile { typ:PileDatasetType::GithubDataset },
                         filter: Some(SourceFilter::PythonText),
                     }
                 },
+               
             }
         }
     }

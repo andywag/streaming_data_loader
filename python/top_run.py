@@ -1,4 +1,7 @@
+import os
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['WANDB_DISABLED'] = 'true'
 from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments, GPT2Config
 from transformers import AutoModelForMaskedLM, AutoModelForQuestionAnswering, AutoModelForSequenceClassification
 from transformers import AutoConfig
@@ -7,17 +10,20 @@ from transformers import T5ForConditionalGeneration
 from external_dataset import ExternalDataset
 import argparse
 import subprocess
-import os
 import multiprocessing as mp
 import config_loader
 
-os.environ['WANDB_DISABLED'] = 'true'
 
 """ Basic 
 """
 
 def run_loader(args):
-    subprocess.run(["cargo", "run", "--release", "--", "--task", args.task], cwd="../rust")
+    if len(args.cache) == 0:
+        subprocess.run(["cargo", "run", "--release", "--", "--task", args.task], cwd="../rust")
+    else:
+        print("Running with Cache", args.cache)
+        subprocess.run(["cargo", "run", "--release", "--", "--task", args.task, '--cache', args.cache], cwd="../rust")
+
 
 
 def run_model(args):
@@ -47,17 +53,15 @@ def run_model(args):
 
 
 
-    tokenized_dataset = ExternalDataset("ipc:///tmp/masking_train",
-                                        batch_size, fields=fields)
 
     learning_rate = 1e-5
     if args.task == 'mlm' or args.task == 'python':
         config = AutoConfig.from_pretrained(tokenizer_name)
-        if args.small:
+        if args.small or args.task == 'python':
             config.num_hidden_layers = 12
             config.hidden_size = 768
             config.intermediate_size = 3072
-            config.vocab_size = 16384+250
+            config.vocab_size = 4096
             config.num_attention_heads = 12
             learning_rate = 1e-5
         model = AutoModelForMaskedLM.from_config(config=config).train()
@@ -82,6 +86,11 @@ def run_model(args):
         config = AutoConfig.from_pretrained(tokenizer_name)
         model = T5ForConditionalGeneration.from_pretrained(tokenizer_name, config=config).train()
 
+
+
+    tokenized_dataset = ExternalDataset("ipc:///tmp/masking_train",
+                                        batch_size, fields=fields)
+
     training_args = TrainingArguments(output_dir="local",
                                       #lr_scheduler_type="constant",
                                       learning_rate=learning_rate,
@@ -103,14 +112,17 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="mlm")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="python")
 parser.add_argument('--config', type=str, default='git_python')
 parser.add_argument('--all', action='store_true', default=True)
-parser.add_argument('--small', action='store_true',default=False )
+parser.add_argument('--small', action='store_true',default=True )
+parser.add_argument('--cache', type=str, default='../../../storage')
+
 
 
 def main():
     args = parser.parse_args()
+    print(args)
 
     if args.all:
         pr = mp.Process(target=run_loader, args=(args,))

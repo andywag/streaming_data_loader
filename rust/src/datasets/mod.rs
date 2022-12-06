@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::tasks::{masking::{masked_data::MaskedData, gpt_data::GptData, t5_data::T5Data}, multi_label::multi_data::MultiData, squad::squad_data::SquadData, single_class::single_data::SingleClassData};
+use crate::tasks::{masking::{masked_data::MaskedData, gpt_data::GptData, t5_data::T5Data}, multi_label::multi_data::MultiData, squad::squad_data::SquadData, single_class::single_data::SingleClassData, python::python_data::PythonData};
 pub mod data_generator;
 
 
@@ -11,7 +11,8 @@ pub enum DataSet {
     T5(T5Data),
     Multi(MultiData),
     Squad(SquadData),
-    Single(SingleClassData)
+    Single(SingleClassData),
+    Python(PythonData)
 }
 
 
@@ -24,6 +25,7 @@ impl DataSet {
             DataSet::Multi(x) => DataSet::Multi(x.new_data()),
             DataSet::Squad(x) => DataSet::Squad(x.new_data()),
             DataSet::Single(x) => DataSet::Single(x.new_data()),
+            DataSet::Python(x) => DataSet::Python(x.new_data()),
         }
     }
 
@@ -34,7 +36,8 @@ impl DataSet {
             DataSet::T5(x) => x.put_data(ids),
             DataSet::Multi(_x) => {true}//x.put_data(ids),
             DataSet::Squad(_x) => {true}//x.put_data(ids),
-            DataSet::Single(_x) => {true}//x.put_data(ids),
+            DataSet::Single(_x) => {true}
+            DataSet::Python(_) => {true}, //x.put_data(ids),
         }
     }
 
@@ -46,6 +49,7 @@ impl DataSet {
             DataSet::Multi(x) => x.done(),
             DataSet::Squad(x) => x.done(),
             DataSet::Single(x) => x.done(),
+            DataSet::Python(x) => x.done(),
         }
     }
 
@@ -68,6 +72,7 @@ impl Serialize for DataSet {
                 DataSet::Multi(x) => x.serialize(serializer),
                 DataSet::Squad(x) => x.serialize(serializer),
                 DataSet::Single(x) => x.serialize(serializer),
+                DataSet::Python(x) => x.serialize(serializer),
             }
     }
 }

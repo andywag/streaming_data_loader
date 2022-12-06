@@ -78,6 +78,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     endpoint:Box<dyn Fn(TrainingConfig) -> Box<dyn EndPoint<D> + Send>>,
     cache:Option<String>) -> bool {
 
+
     let config_copy = config.clone();
     // Create the Channel from Input to Tokenizer
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);
