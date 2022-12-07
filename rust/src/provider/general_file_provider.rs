@@ -71,12 +71,12 @@ pub async fn load_data_sets(datasets:Vec<Dataset>,
 
     let mut counter = Counter::new(length);
 
+    log::info!("Sending Dataset Info");
     let _result = tx.send(ProviderChannel::Info(crate::tasks::DatasetInfo { name: "wiki".to_string(), length: 1000000000 })).await;
 
     loop {
 
         for dataset in &datasets {
-            log::info!("Sending Dataset {:?}", dataset);
             // Download Type
             let typ = get_download_type(&dataset.location);
             

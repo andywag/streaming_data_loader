@@ -1,12 +1,12 @@
 use std::cmp::min;
 
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, ser::SerializeStruct};
 
 use crate::batcher::BatchConfig;
 
 use super::SingleClassConfig;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SingleClassData {
     pub input_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<u32>>,
@@ -61,3 +61,15 @@ pub struct SingleClassTransport {
     pub label:u32,
 }
 
+impl Serialize for SingleClassData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            let mut state = serializer.serialize_struct("SingleClassData", 4)?;
+            state.serialize_field("input_ids", &self.input_ids)?;
+            state.serialize_field("attention_mask", &self.attention_mask)?;
+            state.serialize_field("token_type_ids", &self.token_type_ids)?;
+            state.serialize_field("label", &self.label)?;
+            state.end()
+    }
+}

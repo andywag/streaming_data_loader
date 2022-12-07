@@ -4,14 +4,17 @@
 use serde::{Serialize};
 use tokio::sync::mpsc::Receiver;
 
-use crate::provider::ProviderChannel;
+use crate::{provider::ProviderChannel, config::TrainingConfig};
 
 
 
 
 
 // Generic ZMQ Transfer to Send Data to Device
-pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<ProviderChannel<T>>) -> bool {
+pub async fn receive_transport<T:Serialize>(address:String, 
+    mut rx:Receiver<ProviderChannel<T>>,
+    training_config:TrainingConfig) -> bool {
+
     let ctx = zmq::Context::new();
     
     let result:Vec<&str> = address.split(":").collect();
@@ -23,11 +26,13 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<Prov
     };
     
 
-    println!("Starting Server at {}", host_name);
+    log::info!("Starting Server on Connection :  {}", host_name);
     let socket = ctx.socket(zmq::REP).unwrap();
     socket.bind(host_name.as_str()).unwrap();
 
+
     let data = rx.recv().await;
+
     let dataset_info = if let ProviderChannel::Info(x) = data.unwrap() {
         println!("Info {:?}", x);
         Some(x)
@@ -43,6 +48,10 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<Prov
         let _ = socket.recv(&mut msg, 0);
         
         match msg.as_str() {
+            Some("Config") => {
+                let result = serde_pickle::to_vec(&training_config, Default::default());
+                let _ = socket.send(result.unwrap(), 0);
+            }
             Some("Info") => {
                 let result = serde_pickle::to_vec(&dataset_info, Default::default());
                 let _ = socket.send(result.unwrap(), 0);
@@ -63,14 +72,14 @@ pub async fn receive_transport<T:Serialize>(address:String, mut rx:Receiver<Prov
                         let result = serde_pickle::to_vec(&x, Default::default());
                         let _ = socket.send(result.unwrap(), 0);
                         packet_count += 1;
-                        if packet_count % 32 == 1 {
+                        if packet_count % 64 == 1 {
                             log::info!("Sent Packet {:?}", packet_count);
                         }
                     },
                 }
             }
             _ => {
-                println!("Message Error");
+                log::error!("ZMQ Connection Error {:?}", msg);
             }
         }
 

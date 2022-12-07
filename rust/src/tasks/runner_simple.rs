@@ -80,6 +80,8 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
 
 
     let config_copy = config.clone();
+    let training_config = config.clone();
+
     // Create the Channel from Input to Tokenizer
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);
     // Create the Channel from Tokenizer to Output
@@ -99,6 +101,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     // Create One of 2 Options 
     // 1. "test" : Create an internal test endpoint
     // 2. ""     : Create a zmq endpoint which talks to external process
+
     let join_rx = match config.transport.transport{
         transport::TransportEnum::Test => {
             let endpoint = endpoint(config_copy);
@@ -111,7 +114,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
         },
         transport::TransportEnum::Zmq{address} => {
             task::spawn(async move {
-                let result = transport::zmq_transmit::receive_transport(address, rx_trans);
+                let result = transport::zmq_transmit::receive_transport(address, rx_trans, training_config);
                 result.await
             })
         },

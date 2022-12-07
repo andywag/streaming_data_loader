@@ -1,4 +1,5 @@
 
+use serde::ser::SerializeStruct;
 use serde::{Serialize, Deserialize};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -7,7 +8,7 @@ use crate::batcher::BatchConfig;
 
 use super::MaskingConfig;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct MaskedData {
     pub input_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<u32>>,
@@ -79,4 +80,16 @@ impl MaskedData {
     }
 
 
+}
+
+impl Serialize for MaskedData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            let mut state = serializer.serialize_struct("MaskedData", 3)?;
+            state.serialize_field("input_ids", &self.input_ids)?;
+            state.serialize_field("attention_mask", &self.attention_mask)?;
+            state.serialize_field("labels", &self.labels)?;
+            state.end()
+    }
 }

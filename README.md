@@ -47,7 +47,6 @@ This example will run pretraining using a wiki dataset which is streamed from ht
 1. Run **python3 top_run.py --task mlm --all** from python folder
 
 Configuration and Source Code for this Example can be found
-* https://github.com/andywag/streaming_data_loader/blob/master/rust/tests/masking.yaml
 * https://github.com/andywag/streaming_data_loader/tree/master/rust/src/tasks/masking
 
 ### Multi Label Classification
@@ -58,7 +57,6 @@ This example will run multilabel classification using an emotions dataset downlo
 
 
 Configuration and Source Code for this Example can be found
-* https://github.com/andywag/streaming_data_loader/blob/master/rust/tests/multi_label.yaml
 * https://github.com/andywag/streaming_data_loader/tree/master/rust/src/tasks/multi_label
 
 

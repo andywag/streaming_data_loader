@@ -1,12 +1,12 @@
 
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, ser::SerializeStruct};
 use std::cmp::min;
 
 use crate::batcher::BatchConfig;
 
 use super::MultiConfig;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct MultiData {
     pub input_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<u32>>,
@@ -62,3 +62,15 @@ pub struct MultiTransport {
     pub labels:Vec<u32>,
 }
 
+impl Serialize for MultiData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            let mut state = serializer.serialize_struct("MultiData", 4)?;
+            state.serialize_field("input_ids", &self.input_ids)?;
+            state.serialize_field("attention_mask", &self.attention_mask)?;
+            state.serialize_field("token_type_ids", &self.token_type_ids)?;
+            state.serialize_field("labels", &self.labels)?;
+            state.end()
+    }
+}

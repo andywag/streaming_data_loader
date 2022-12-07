@@ -1,9 +1,9 @@
 
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, ser::SerializeStruct};
 
 use crate::batcher::BatchConfig;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct GptData {
     pub input_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<u32>>,
@@ -55,4 +55,16 @@ impl GptData {
         self.index == self.input_ids.len()
     }
 
+}
+
+impl Serialize for GptData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            let mut state = serializer.serialize_struct("GptData", 3)?;
+            state.serialize_field("input_ids", &self.input_ids)?;
+            state.serialize_field("attention_mask", &self.attention_mask)?;
+            state.serialize_field("labels", &self.labels)?;
+            state.end()
+    }
 }

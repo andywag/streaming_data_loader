@@ -85,7 +85,7 @@ pub async fn load_url(dataset:&Dataset,
                 let text = filter.get_text(line);
                 match text {
                     Some(x) => {
-                        if count % 1024 == 1 {
+                        if count % 65536 == 1 {
                             log::info!("Processed {:?} Lines out of {:?}", count, total_count);
                         }
                         cache_writer.as_mut().map(|s| s.write_line(x.to_owned()));

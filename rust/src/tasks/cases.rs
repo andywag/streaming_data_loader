@@ -4,22 +4,19 @@ use crate::batcher::BatchConfig;
 use crate::config::{TrainingConfig, TaskType};
 use crate::datasets::DataSet;
 use crate::provider::provider_config::{self, ProviderConfig};
-use crate::tasks::multi_label::MultiConfig;
-use crate::tasks::multi_label::multi_data::MultiData;
-use crate::tasks::single_class::SingleClassConfig;
-use crate::tasks::single_class::single_data::SingleClassData;
-use crate::tasks::squad::SquadConfig;
-use crate::tasks::squad::squad_data::SquadData;
 use crate::tokenizer::tokenizer_config::{TokenizerTask, TokenizerType, TokenizerInternalConfig};
 use crate::transport::{TransportConfig, TransportEnum};
 use crate::transport::zmq_receive::NodeConfig;
 
+use super::masking::masking_cases::MaskingCases;
 use super::masking::t5_data::T5Data;
-use super::masking::{MaskingConfig, T5Config};
+use super::masking::{MaskingConfig, T5Config, masking_cases};
 use super::masking::gpt_data::GptData;
 use super::masking::masked_data::MaskedData;
-use super::python::config::PythonConfig;
-use super::python::python_data::PythonData;
+use super::multi_label::multi_cases;
+use super::python::python_cases;
+use super::single_class::single_cases;
+use super::squad::squad_cases;
 
 
 
@@ -77,16 +74,12 @@ impl BasicCases {
 
         match self {
             BasicCases::Bert => {
-                let mask_config = MaskingConfig{ mask_length: (0.15*(batch_config.sequence_length as f32)) as usize };
-                let data = MaskedData::new(mask_config, batch_config.clone(), 103);
-
-                get_basic_config(crate::config::TaskType::Mlm,
-                    provider_config::Examples::Mask.get_config(test),
-                    TokenizerTask::Bert, 
-                    TokenizerType::HuggingFace("bert-base-uncased".to_string()),
-                    batch_config,
-                    DataSet::Mask(data),
-                    transport_config)
+                if test {
+                    masking_cases::get_case(MaskingCases::Test) 
+                }
+                else {
+                    masking_cases::get_case(MaskingCases::Basic)
+                }
             },
             BasicCases::Roberta => {
                 let mask_config = MaskingConfig{ mask_length: (0.15*(batch_config.sequence_length as f32)) as usize };
@@ -123,43 +116,10 @@ impl BasicCases {
                     DataSet::T5(data),
                     transport_config)
             },
-            BasicCases::Squad => {
-                let config = SquadConfig{};
-                let batch_config = BatchConfig { batch_size: 8192, sequence_length: 384};
-                // TODO : Fix the extra data for t5
-                let data = SquadData::new(&config, batch_config.clone()); 
-                get_basic_config(crate::config::TaskType::Squad,
-                    provider_config::Examples::Squad.get_config(test),
-                    TokenizerTask::Bert, 
-                    TokenizerType::HuggingFace("bert-base-uncased".to_string()),
-                    batch_config,
-                    DataSet::Squad(data),
-                    transport_config)
-            },
-            BasicCases::Multi => {
-                let config = MultiConfig{number_labels:9};
-                // TODO : Fix the extra data for t5
-                let data = MultiData::new(&config, batch_config.clone()); 
-                get_basic_config(crate::config::TaskType::MultiLabel,
-                    provider_config::Examples::Emot.get_config(test),
-                    TokenizerTask::Bert, 
-                    TokenizerType::HuggingFace("bert-base-uncased".to_string()),
-                    batch_config,
-                    DataSet::Multi(data),
-                    transport_config)
-            },
-            BasicCases::Single => {
-                let config = SingleClassConfig{};
-                // TODO : Fix the extra data for t5
-                let data = SingleClassData::new(&config, batch_config.clone()); 
-                get_basic_config(crate::config::TaskType::SingleClass,
-                    provider_config::Examples::Imdb.get_config(test),
-                    TokenizerTask::Bert, 
-                    TokenizerType::HuggingFace("bert-base-uncased".to_string()),
-                    batch_config,
-                    DataSet::Single(data),
-                    transport_config)
-            },/* 
+            BasicCases::Squad => squad_cases::get_case(test),
+            BasicCases::Multi => multi_cases::get_case(test),
+            BasicCases::Single => single_cases::get_case(single_cases::Cases::Imdb, test),
+            /* 
             BasicCases::Python => {
                 let batch_config = if test {BatchConfig{batch_size:1,sequence_length:128}} else {BatchConfig{batch_size:32768,sequence_length:512}};
                 let batch_config = batch_config;
@@ -174,24 +134,9 @@ impl BasicCases {
                     DataSet::Mask(data),
                     transport_config)
             },*/
-            BasicCases::Python | BasicCases::PythonNew => {
-                let batch_config = if test {BatchConfig{batch_size:1,sequence_length:512}} else {BatchConfig{batch_size:32768,sequence_length:512}};
-                let batch_config = batch_config;
-                let mask_config = PythonConfig{ mask_length: (0.15*(batch_config.sequence_length as f32)) as usize,
-                    context_shape: vec![2,2,4,4]
-                };
-                let data = PythonData::new(mask_config, batch_config.clone(), 5);
-
-                get_basic_config(crate::config::TaskType::Python,
-                    provider_config::Examples::Python.get_config(test),
-                    TokenizerTask::Bert, 
-                    TokenizerType::Python,
-                    batch_config,
-                    DataSet::Python(data),
-                    transport_config)
-            },
+            BasicCases::Python | BasicCases::PythonNew => python_cases::get_case(test),
             BasicCases::PythonContext => {
-                let batch_config = BatchConfig { batch_size: 4096, sequence_length: 512};
+                let batch_config = BatchConfig { batch_size: 8192, sequence_length: 512};
                 let mask_config = MaskingConfig{ mask_length: (0.15*(batch_config.sequence_length as f32)) as usize };
                 let data = MaskedData::new(mask_config, batch_config.clone(), 5);
 

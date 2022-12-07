@@ -43,7 +43,7 @@ impl Batcher for PythonBatch {
                 self.store.push_back(self.dataset.create_data());
             },
             None => {
-                log::info!("Error");
+                //log::info!("Adding Data to Queue");
                 self.store.push_back(self.dataset.create_data());
             }
         }

@@ -2,17 +2,16 @@
 
 use tokenizers::{Tokenizer};
 
-use crate::tasks::python::{python_top::{PythonParserTop, PythonContextCreator}, python_top_new::PythonParserNew};
+use crate::tasks::python::{ context_creator::PythonContextCreator};
 
-use super::{tokenizer_config::{TokenizerType}, tokenizer_data::TokenizedData};
+use super::{tokenizer_config::{TokenizerType}};
 use std::thread;
 
 //#[derive(Deserialize, Serialize, Debug)]
 
 pub enum TokenizerHolder {
     HuggingFace(Tokenizer),
-    PythonNew(PythonParserNew),
-    Python(PythonParserTop),
+    PythonNew,
     PythonContext(PythonContextCreator)
 }
 
@@ -23,16 +22,12 @@ impl TokenizerHolder {
                 let result = x.encode(data, true);
                 result.unwrap().get_ids().to_vec()    
             }
-            TokenizerHolder::Python(x) => {
-                x.encode(data)
-            },
             TokenizerHolder::PythonContext(x) => {
                 let result = x.encode(data);
                 result
             }
-            TokenizerHolder::PythonNew(_x) => {
-                vec![]
-            },
+            _ => {vec![]},
+            
         }
     }
 
@@ -46,15 +41,7 @@ impl TokenizerHolder {
         }
     }
 
-    pub fn encode_split(&self, data:String) -> Option<TokenizedData> {
-        match self {
-            TokenizerHolder::PythonNew(x) => {
-                x.encode(data) 
-            }
-            _ => None
-            
-        }
-    }
+
 
     pub fn token_to_id(&self, token:&str) -> Option<u32> {
         match self {
@@ -62,7 +49,7 @@ impl TokenizerHolder {
                 x.token_to_id(token) 
             }
             // TODO : Need to add extra ids
-            TokenizerHolder::Python(_) | TokenizerHolder::PythonContext(_) | TokenizerHolder::PythonNew(_) => {
+            TokenizerHolder::PythonContext(_) | TokenizerHolder::PythonNew => {
                 match token {
                     "<pad>" | "[PAD]" => Some(0),
                     "<s>" | "[CLS]" => Some(1),
@@ -104,8 +91,9 @@ pub fn create_tokenizer_holder(config:TokenizerType) -> TokenizerHolder {
             TokenizerHolder::HuggingFace(tokenizer)
         }
         TokenizerType::Python => {
-            let tokenizer = PythonParserTop::new();
-            TokenizerHolder::Python(tokenizer)
+            //let tokenizer = PythonParserNew::new();
+            //TokenizerHolder::Python(tokenizer)
+            TokenizerHolder::PythonNew
         },
         TokenizerType::PythonContext => {
             let tokenizer = PythonContextCreator::new(2048);

@@ -15,6 +15,7 @@ pub mod gen_tokenizer;
 pub mod python;
 pub mod task_config;
 pub mod cases;
+pub mod arrow_cases;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetInfo {

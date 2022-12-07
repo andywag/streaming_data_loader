@@ -31,7 +31,7 @@ pub struct T5Tokenizer {
 pub enum TokenizerWrapper {
     Bert(BertTokenizer),
     Gpt(GptTokenizer),
-    T5(T5Tokenizer),
+    T5(T5Tokenizer)
 }
 
 impl TokenizerWrapper {
@@ -68,8 +68,7 @@ impl TokenizerWrapper {
                 ids.insert(ids.len(), t.eos);
                 return ids;
             },
-            
-            
+           
         }
     }
 

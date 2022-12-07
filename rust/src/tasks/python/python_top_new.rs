@@ -222,6 +222,10 @@ fn parse_lines(lines:&mut Vec<Line>, split:&mut Split, level:Option<usize>, line
 
     while index < lines.len() {
         if level.is_some() && lines[index].indent <= level.unwrap() { // Finish Condition on a Dedent
+            if current_child.sp < index {
+                current_child.ep = index;
+                split.children.push(current_child);
+            }
             split.ep = index;
             return;
         }
@@ -359,9 +363,16 @@ impl PythonParserNew {
             let attn = body.create_mask(&context, &s_length, 0, x);
             attn_ids.insert(0,attn.0);
         }
+        if attn_ids[0].len() != id_position.1.len() {
+            log::info!("Parser Failed {} {}", attn_ids.len(), id_position.1.len());
+            use std::fs;
+            let _ = fs::write(format!("temp{}.py",1), data.clone());
+        }
+
+
         // Update the Positions to the Smallest Group Size
-        //log::info!("Size {} {}", id_position.1.len(), attn_ids[attention_size-1].len());
-        //log::info!("Size {:?} {:?}", id_position, attn_ids[attention_size-1]);
+        //log::info!("Size {} {} {} {}", id_position.1.len(), attn_ids[0].len(), attn_ids[1].len(), attn_ids[3].len());
+        //log::info!("Size {:?} {:?}", id_position, attn_ids[0]);
 
         let positions = PythonParserNew::create_positions(id_position.1, &attn_ids[0]); 
         
@@ -369,6 +380,7 @@ impl PythonParserNew {
         Some(TokenizedData{ ids: id_position.0, positions: positions, attention_mask: attn_ids }) 
     }
 }
+ 
 /* 
 #[test]
 pub fn test_full() {
@@ -379,59 +391,13 @@ pub fn test_full() {
     let config = PythonConfig{ mask_length: 32, context_shape: vec![2,2,4,4] };
     let parser = PythonParserNew::new(config);
 
-    let mut file = File::open("../python/temp2.py").unwrap();
+    let mut file = File::open("temp1.py").unwrap();
     let mut contents = String::new();
     let _= file.read_to_string(&mut contents);
-    log::info!("Data {}", contents);
+    //log::info!("Data {}", contents);
 
     let result = parser.encode(contents);
-    log::info!("R {:?}", result);
+    //log::info!("R {:?}", result);
 
 }
-
-
-///
-#[test]
-pub fn test_file() {
-    use std::fs::File;
-    use std::io::Read;
-
-    crate::logger::create_logger();
-    
-    let mut global_store= ContextLookupNew::from_file("../data/python_ident.txt");
-    let mut project_store = ContextLookupNew::new(1024);
-
-    let mut file = File::open("../python/temp2.py").unwrap();
-    let mut contents = String::new();
-    let _= file.read_to_string(&mut contents);
-   
-    let mut lexer = Token::lexer(contents.as_str());
-    let mut lines = split_lines(&mut lexer);
-
-    let mut context_store = ContextStoreNew::new(&mut global_store, &mut project_store, 128, 1024);
-    let mut body = Split::new(Holder::Body, 0);
-
-     
-
-
-    parse_lines(&mut lines, &mut body, None, 0, &mut context_store);
-
-    //let _tokens = lex_simple(contents.as_str(), &mut global_store);
-    for line in lines.as_mut_slice() {
-        println!("Line: {:?}", line);
-        println!("Ids: {:?}\n", line.create_ids(&context_store));
-    }
-    let s_length = create_lengths(&mut lines);
-
-    
-    println!("Body {:?}", body);
-    println!("Slength {:?}", s_length);
-    for x in 0..4 {
-        let attn = body.create_mask(&context_store, &s_length, 0, x);
-        println!("Attention {:?}", attn);
-    }
-
-    
-}
-
 */

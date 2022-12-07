@@ -1,12 +1,12 @@
 
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, ser::SerializeStruct};
 use std::cmp::min;
 
 use crate::batcher::BatchConfig;
 
 use super::SquadConfig;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SquadData {
     pub input_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<u32>>,
@@ -85,7 +85,7 @@ impl SquadData {
         match (start_token, end_token) {
             (Some(_), Some(_)) => {},
             _ => {
-                log::info!("Error with Data");
+                //log::info!("Error with Data");
                 return false
             }
         }
@@ -115,3 +115,17 @@ pub struct SquadGeneral {
     pub answer:Option<String>
 }
 
+
+impl Serialize for SquadData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            let mut state = serializer.serialize_struct("SquadData", 5)?;
+            state.serialize_field("input_ids", &self.input_ids)?;
+            state.serialize_field("attention_mask", &self.attention_mask)?;
+            state.serialize_field("token_type_ids", &self.token_type_ids)?;
+            state.serialize_field("start_positions", &self.start_positions)?;
+            state.serialize_field("end_positions", &self.end_positions)?;
+            state.end()
+    }
+}

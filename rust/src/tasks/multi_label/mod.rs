@@ -1,6 +1,7 @@
 pub mod multi_data;
 pub mod multi_tokenizer;
 pub mod multi_arrow;
+pub mod multi_cases;
 pub mod runner;
 
 use serde::{Serialize, Deserialize};

@@ -1,5 +1,9 @@
 import os
 
+import models.bert_hier
+from models.bert_hier import BertLocalEncoder
+from rust_config import ExternalConfig
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['WANDB_DISABLED'] = 'true'
 from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments, GPT2Config
@@ -27,79 +31,78 @@ def run_loader(args):
 
 
 def run_model(args):
+
+    tokenized_dataset = ExternalDataset("ipc:///tmp/masking_train")
+    batch_size = tokenized_dataset.batch_size
+    sequence_length = tokenized_dataset.context['batch']['sequence_length']
+    config = ExternalConfig(tokenized_dataset.context)
+
+    train_batch_size = 32
+    gradient_accumulation = 32
+    num_train_epochs = 1
     # Get the Common Configuration
-    tokenizer_name = "bert-base-uncased"
-    sequence_length = 128
-    batch_size = 32768
+    model_name = "bert-base-uncased"
     if args.task == 'mlm':
-        tokenizer_name = "bert-base-uncased"
+        model_name = "bert-base-uncased"
     elif args.task == 'clm':
-        tokenizer_name = "gpt2"
+        model_name = "gpt2"
     elif args.task == 't5':
-        tokenizer_name = "t5-small"
-
-    fields = ["input_ids", "attention_mask", "labels"]
-    if args.task == 'squad':
-        fields = ["input_ids", "attention_mask", "token_type_ids", "start_positions", "end_positions"]
-    elif args.task == 'single':
-        fields = ["input_ids", "attention_mask", "token_type_ids", "label"]
-    elif args.task == 'multi':
-        fields = ["input_ids", "attention_mask", "token_type_ids", "labels"]
-
-    def tokenize_function(examples):
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        data = tokenizer(examples['text'], padding="max_length", truncation=True, max_length=sequence_length)
-        return data
-
-
+        model_name = "t5-small"
 
 
     learning_rate = 1e-5
-    if args.task == 'mlm' or args.task == 'python':
-        config = AutoConfig.from_pretrained(tokenizer_name)
-        if args.small or args.task == 'python':
-            config.num_hidden_layers = 12
-            config.hidden_size = 768
-            config.intermediate_size = 3072
-            config.vocab_size = 4096
-            config.num_attention_heads = 12
-            learning_rate = 1e-5
+    if args.task == 'mlm':
+        config = AutoConfig.from_pretrained(model_name)
         model = AutoModelForMaskedLM.from_config(config=config).train()
+    elif args.task == 'python':
+        config = AutoConfig.from_pretrained(model_name)
+        config.num_hidden_layers = 12
+        config.vocab_size = 8192
+        config.max_position_embeddings = 4096
+        train_batch_size = 4
+        model = AutoModelForMaskedLM.from_config(config=config).train()
+        model.bert.encoder = BertLocalEncoder(config)
+        model.bert.get_extended_attention_mask = models.bert_hier.get_extended_attention_mask
+        gradient_accumulation = 8
     elif args.task == 'clm':
-        config = GPT2Config.from_pretrained(tokenizer_name)
+        config = GPT2Config.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_config(config=config).train()
+        train_batch_size = 8
     elif args.task == 'squad':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         model = AutoModelForQuestionAnswering.from_pretrained("bert-base-uncased",config=config).train()
-        sequence_length = 384
+        train_batch_size = 8
+        learning_rate = 1e-5
+        gradient_accumulation = 32
     elif args.task == 'single':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "single_label_classification"
         config.num_labels = 2
+        gradient_accumulation = 1
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
     elif args.task == 'multi':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "multi_label_classification"
         config.num_labels = 9
+        learning_rate = 1e-5
+        num_train_epochs = 3
+        gradient_accumulation = 2
+
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
     elif args.task == 't5':
-        config = AutoConfig.from_pretrained(tokenizer_name)
-        model = T5ForConditionalGeneration.from_pretrained(tokenizer_name, config=config).train()
-
-
-
-    tokenized_dataset = ExternalDataset("ipc:///tmp/masking_train",
-                                        batch_size, fields=fields)
+        config = AutoConfig.from_pretrained(model_name)
+        model = T5ForConditionalGeneration.from_pretrained(model_name, config=config).train()
 
     training_args = TrainingArguments(output_dir="local",
-                                      #lr_scheduler_type="constant",
+                                      lr_scheduler_type="constant",
                                       learning_rate=learning_rate,
                                       warmup_steps=0.0,
-                                      per_device_train_batch_size=4,
+                                      per_device_train_batch_size=train_batch_size,
                                       logging_steps=8,
-                                      num_train_epochs=1,
+                                      num_train_epochs=num_train_epochs,
                                       save_steps=1000000,
-                                      gradient_accumulation_steps=8
+                                      gradient_accumulation_steps=gradient_accumulation,
+                                      weight_decay=.01
                                       )
 
     trainer = Trainer(
@@ -113,9 +116,7 @@ def run_model(args):
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
 parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="python")
-parser.add_argument('--config', type=str, default='git_python')
 parser.add_argument('--all', action='store_true', default=True)
-parser.add_argument('--small', action='store_true',default=True )
 parser.add_argument('--cache', type=str, default='../../../storage')
 
 

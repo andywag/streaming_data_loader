@@ -17,6 +17,15 @@ pub struct HuggingDescription {
     pub args:Option<String>,
     pub operations:Vec<String>
 }
+impl HuggingDescription {
+    pub fn new(d:&str, a:Option<&str>, o:Vec<&str>) -> Self {
+        Self {
+            dataset: d.to_string(),
+            args: a.map(|s|s.to_string()),
+            operations: o.into_iter().map(|s|s.to_string()).collect(),
+        }
+    }
+}
 
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

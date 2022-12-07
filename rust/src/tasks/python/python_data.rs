@@ -1,6 +1,6 @@
 
 
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, ser::SerializeStruct};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
@@ -8,7 +8,7 @@ use crate::{batcher::BatchConfig, tokenizer::tokenizer_data::TokenizedData};
 
 use super::{config::PythonConfig};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct PythonData {
     pub input_ids:Vec<Vec<u32>>,
     pub position_ids:Vec<Vec<u32>>,
@@ -16,7 +16,7 @@ pub struct PythonData {
     pub labels:Vec<Vec<i32>>,
     index:usize,
 
-    position_base:Vec<u32>,
+    _position_base:Vec<u32>,
     pub config:PythonConfig,
     batch_config:BatchConfig,
 
@@ -33,14 +33,14 @@ impl PythonData {
         Self {
             input_ids: batch_config.create_vector(0),
             position_ids: batch_config.create_vector(0),
-            attention_mask: vec![vec![vec![1000;batch_config.sequence_length];number_context_layers]; batch_config.batch_size],
+            attention_mask: vec![vec![vec![255;batch_config.sequence_length];number_context_layers]; batch_config.batch_size],
             labels:vec![vec![-100;batch_config.sequence_length]; batch_config.batch_size],
             index:0, 
 
             config:config,
             batch_config:batch_config,
             masked_length:mask_length,
-            position_base:position_base,
+            _position_base:position_base,
             mask:mask
         }
     }
@@ -66,9 +66,9 @@ impl PythonData {
 
     pub fn put_data(&mut self, data:TokenizedData) -> bool{
         // TODO : Fix this condition by limiting data size
-        //if data.ids.len() > self.input_ids.len() {
-        //    return false;
-        //}
+        if data.ids.len() < 64 {
+            return false;
+        }
         let l = std::cmp::min(self.batch_config.sequence_length, data.ids.len());
         //log::info!("Data {} {} {} {}", data.ids.len(), l, &data.ids[0..l].len(), self.input_ids[self.index][0..l as usize].len());
         let ids = &data.ids[0..l];
@@ -101,4 +101,17 @@ impl PythonData {
     }
 
 
+}
+
+impl Serialize for PythonData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            let mut state = serializer.serialize_struct("PythonData", 3)?;
+            state.serialize_field("input_ids", &self.input_ids)?;
+            state.serialize_field("position_ids", &self.position_ids)?;
+            state.serialize_field("attention_mask", &self.attention_mask)?;
+            state.serialize_field("labels", &self.labels)?;
+            state.end()
+    }
 }

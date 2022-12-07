@@ -8,6 +8,7 @@ pub mod gpt_data;
 pub mod t5_data;
 pub mod t5_test_endpoint;
 
+pub mod masking_cases;
 
 use serde::{Serialize, Deserialize};
 
