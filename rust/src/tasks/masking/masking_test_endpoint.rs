@@ -16,8 +16,8 @@ impl MaskingEndpoint {
 
     // TODO : Put in a valid check for the data. Disabled due to use of file match which was inconvenient
     // TODO : Make data input mutable to allow checks
-    pub fn check_batch<T:Debug>(&self, data:T) -> bool {
-        log::info!("Data {:?}", data);
+    pub fn check_batch<T:Debug>(&self, _data:T) -> bool {
+        //log::info!("Data {:?}", data);
         //let _real_data = data.input_ids.clone();
         
         // Compare only the first batch of data based on a known dataset

@@ -4,21 +4,21 @@ use crate::batcher::{Batcher, BatchConfig};
 use crate::datasets::DataSet;
 
 
-use super::python_top_new::PythonParserNew;
+use super::python_runner::PythonTokenizer;
 
 
 
 pub struct PythonBatch {
     dataset:DataSet,
     _batch_config:BatchConfig,
-    tokenizer:PythonParserNew,
+    tokenizer:PythonTokenizer,
     store:VecDeque<DataSet>
 }
  
 impl PythonBatch {
     pub fn new(dataset:DataSet,
         batch_config:BatchConfig, 
-        tokenizer:PythonParserNew,
+        tokenizer:PythonTokenizer,
     ) -> Self {
         
         let first_set = dataset.clone().create_data();//PythonData::new(config, batch_config, 5);

@@ -38,7 +38,8 @@ pub async fn run(config:TrainingConfig,  cache:Option<String>) -> bool{
         TaskType::Mlm => masking::masking_runner::run(config, cache).await,
         TaskType::Causal => masking::masking_runner::run(config,  cache).await,
         TaskType::T5 => masking::masking_runner::run(config,  cache).await,
-        TaskType::Python => python::python_runner::run(config, cache).await
+        TaskType::Python => python::python_runner::run(config, cache).await,
+        TaskType::Context => true
         
     }    
 }

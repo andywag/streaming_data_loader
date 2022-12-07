@@ -22,6 +22,7 @@ pub enum TaskType {
     #[serde(rename="t5")]
     T5,
     Python,
+    Context
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

@@ -21,11 +21,7 @@ impl TokenizerHolder {
             TokenizerHolder::HuggingFace(x) => {
                 let result = x.encode(data, true);
                 result.unwrap().get_ids().to_vec()    
-            }
-            TokenizerHolder::PythonContext(x) => {
-                let result = x.encode(data);
-                result
-            }
+            },
             _ => {vec![]},
             
         }

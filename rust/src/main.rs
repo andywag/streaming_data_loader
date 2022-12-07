@@ -1,12 +1,13 @@
 
 use clap::{Parser, ValueEnum};
-use loader::{tasks::cases::BasicCases};
+use loader::{tasks::{cases::BasicCases, python::{python_cases, python_runner}}};
 
 #[derive(ValueEnum, Clone, Debug)]
 
 enum Mode {
     Run,
-    Filter
+    Filter,
+    Context
 }
  
 
@@ -19,8 +20,7 @@ enum Task {
     Squad,
     Single,
     Multi,
-    Python,
-    PythonContext
+    Python
 }
 
 
@@ -28,7 +28,7 @@ enum Task {
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[clap(long, value_enum, default_value_t=Task::Mlm)]
+    #[clap(long, value_enum, default_value_t=Task::Python)]
     task: Task,
     
     #[clap(long, value_enum, default_value_t=Mode::Run)]
@@ -57,7 +57,6 @@ async fn main()  {
         Task::Single => BasicCases::Single,
         Task::Multi => BasicCases::Multi,
         Task::Python => BasicCases::Python,
-        Task::PythonContext => BasicCases::PythonContext
 
     };
     
@@ -69,6 +68,11 @@ async fn main()  {
         },
         Mode::Filter => {
 
+        },
+        Mode::Context => {
+            let example = python_cases::get_case(python_cases::Cases::Context, true);
+            let result = python_runner::run(example, args.cache).await;
+            log::info!("Final Result {}", result);
         }
     }
     

@@ -1,6 +1,8 @@
 use counter::Counter;
 use logos::Logos;
 
+use crate::tokenizer::tokenizer_data::TokenizedData;
+
 use super::python_tokenizer::Token;
 
 //#[derive(Serialize, Deserialize)]
@@ -32,7 +34,7 @@ impl PythonContextCreator {
         let _ = f.flush();
     }
 
-    pub fn encode(&mut self, text:String) -> Vec<u32> {
+    pub fn encode(&mut self, text:String) -> Option<TokenizedData> {
         let mut lexer = Token::lexer(&text);
         let mut idents = Vec::<String>::with_capacity(1024);
         while let Some(token) = lexer.next() {
@@ -40,7 +42,7 @@ impl PythonContextCreator {
                 let slice = lexer.slice();
                 let split = slice.split("_");
                 for s in split {
-                    if s.len() >= 3 {
+                    if s.len() >= 2 {
                         idents.push(s.to_lowercase().to_string());            
                     }
                 }
@@ -50,9 +52,10 @@ impl PythonContextCreator {
         self.count += 1;
         if self.count % 1024 == 1023 {
             self.write_contents();
+            log::info!("Writing Contents");
         }
         
-        vec![0;8]
+        None
 
     }
 }

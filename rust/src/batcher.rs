@@ -45,7 +45,7 @@ pub async fn create_batch<S,T>(mut rx:Receiver<ProviderChannel<S>>,
         // Match the input to check if the stream is complete and send the complete command forward
         match data_option.unwrap() {
             ProviderChannel::Info(x) => {
-                println!("Sending Dataset Info");
+                log::info!("Sending Dataset Info");
                 let _ = tx_transport.send(ProviderChannel::Info(x)).await;
             }
             ProviderChannel::Complete => {
