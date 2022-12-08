@@ -2,32 +2,36 @@
 use std::collections::VecDeque;
 
 use crate::batcher::{Batcher, BatchConfig};
-use crate::datasets::DataSet;
+use crate::datasets::dataset::DataSet;
+use crate::datasets::dataset_config::DataSetConfig;
 use crate::tokenizer::tokenizer_wrapper::{TokenizerWrapper};
 
 
 
 pub struct GenTokenizer {
     batch_config:BatchConfig,
+    dataset_config:DataSetConfig,
     tokenizer:TokenizerWrapper,
     store:VecDeque<DataSet>, 
-    template:DataSet, 
+    //template:DataSet, 
     chunk:bool
 }
  
 impl GenTokenizer {
-    pub fn new(dataset:DataSet,
+    pub fn new(
         batch_config:BatchConfig, 
+        dataset_config:DataSetConfig,
         tokenizer:TokenizerWrapper,
         chunk:bool
     ) -> Self {
         
-        let first_set = dataset.clone().create_data();
+        let first_set = dataset_config.create_dataset(batch_config.clone());
         Self {
-            batch_config:batch_config,
+            batch_config,
+            dataset_config,
             tokenizer: tokenizer,
             store:VecDeque::from(vec!(first_set)),
-            template:dataset, 
+            //template:dataset, 
             chunk:chunk
         }
     }
@@ -38,7 +42,8 @@ impl GenTokenizer {
         //log::info!("Here {} {}", result, self.store.back().unwrap().done());
         if self.store.back().unwrap().done() {
             let remaining = self.store.back().unwrap().remaining();
-            self.store.push_back(self.template.create_data());
+            //self.store.push_back(self.template.create_data());
+            self.store.push_back(self.dataset_config.create_dataset(self.batch_config.clone()));
             if remaining.is_some() {
                 let mut r = remaining.unwrap();
                 let l = r.len();

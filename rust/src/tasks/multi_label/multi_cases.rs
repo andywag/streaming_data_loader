@@ -1,4 +1,4 @@
-use crate::{config::TrainingConfig, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::DataSet, tasks::arrow_cases, provider::provider_config::{ProviderConfig, HuggingDescription}, transport::zmq_receive::NodeConfig};
+use crate::{config::TrainingConfig, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, tasks::arrow_cases, provider::provider_config::{ProviderConfig, HuggingDescription}, transport::zmq_receive::NodeConfig};
 
 use super::{MultiConfig, multi_data::MultiData};
 
@@ -35,7 +35,8 @@ pub fn get_case(test:bool) -> TrainingConfig {
         batch, 
         transport:arrow_cases::get_transport_config(test), 
         node: NodeConfig::None, 
-        dataset:DataSet::Multi(dataset)
+        dataset:DataSet::Multi(dataset),
+        dataset_config: DataSetConfig::MultiLabel{number_labels: 9}
     }
         
 }

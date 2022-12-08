@@ -32,6 +32,11 @@ impl GptData {
         }
     }
 
+    pub fn create(batch_config:BatchConfig) -> Self{
+        Self::new(batch_config)
+    }
+
+
     pub fn new_data(&mut self) -> Self {
         GptData::new(self.batch_config.clone())
     }

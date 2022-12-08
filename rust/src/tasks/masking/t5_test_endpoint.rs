@@ -1,6 +1,6 @@
 
 
-use crate::{ transport::test_endpoint::EndPoint, datasets::DataSet, config::TrainingConfig};
+use crate::{ transport::test_endpoint::EndPoint, datasets::dataset::DataSet, config::TrainingConfig};
 
 use super::t5_data::T5Data;
 

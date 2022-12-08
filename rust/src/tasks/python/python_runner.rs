@@ -1,9 +1,11 @@
 use crate::config::TaskType;
+use crate::datasets::dataset_config::DataSetConfig;
 use crate::tasks::runner_simple;
 use crate::tokenizer::tokenizer_data::TokenizedData;
-use crate::{config::TrainingConfig, batcher::BatchConfig, datasets::DataSet, tokenizer::tokenizer_wrapper::TokenizerWrapper};
+use crate::{config::TrainingConfig, batcher::BatchConfig, datasets::dataset::DataSet, tokenizer::tokenizer_wrapper::TokenizerWrapper};
 use crate::tasks::masking::masking_runner::{create_endpoint, create_provider};
 
+use super::config::PythonConfig;
 use super::context_creator::PythonContextCreator;
 use super::python_batcher::PythonBatch;
 use super::python_top_new::PythonParserNew;
@@ -22,22 +24,22 @@ impl PythonTokenizer {
     }
 }
 
-fn create_generator(batch_config:BatchConfig, dataset:DataSet, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
-    let config = match dataset.clone() {
-        DataSet::Python(x) => x.config,
+fn create_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+    let config = match dataset_config.clone() {
+        DataSetConfig::Python{mask_length,context_shape} => PythonConfig{mask_length, context_shape},
         _ => {
             log::error!("Python Dataset Required");
             std::process::exit(1);
         }
     };
     let tokenizer = PythonParserNew::new(config);
-    let batch = PythonBatch::new(dataset, batch_config, PythonTokenizer::Run(tokenizer));
+    let batch = PythonBatch::new( dataset_config, batch_config, PythonTokenizer::Run(tokenizer));
     Box::new(batch)
 }
 
-fn create_context_generator(batch_config:BatchConfig, dataset:DataSet, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_context_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     let tokenizer = PythonContextCreator::new(2048);
-    let batch = PythonBatch::new(dataset, batch_config, PythonTokenizer::Context(tokenizer));
+    let batch = PythonBatch::new( dataset_config, batch_config, PythonTokenizer::Context(tokenizer));
     Box::new(batch)
 }
 

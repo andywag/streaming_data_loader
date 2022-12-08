@@ -4,7 +4,6 @@ use std::cmp::min;
 
 use crate::batcher::BatchConfig;
 
-use super::SquadConfig;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SquadData {
@@ -15,7 +14,6 @@ pub struct SquadData {
     pub end_positions:Vec<u32>,
     pub answers:Vec<Option<String>>,
 
-    config:SquadConfig,
     batch_config:BatchConfig,
 
     index:usize,
@@ -23,7 +21,7 @@ pub struct SquadData {
 
 
 impl SquadData {
-    pub fn new(config:&SquadConfig, batch_config:BatchConfig) -> Self{
+    pub fn new(batch_config:BatchConfig) -> Self{
         let batch_size = batch_config.batch_size as usize;
 
         Self {
@@ -34,7 +32,6 @@ impl SquadData {
             start_positions: batch_config.create_vector_1d(0),
             end_positions: batch_config.create_vector_1d(0),
             answers:vec![None;batch_size as usize],
-            config:config.clone(),
             batch_config:batch_config,
 
             index:0
@@ -43,7 +40,7 @@ impl SquadData {
     }
 
     pub fn new_data(&self) -> Self {
-        SquadData::new(&self.config, self.batch_config.clone())
+        SquadData::new(self.batch_config.clone())
     }
 
     pub fn put_data(&mut self, result:&tokenizers::Encoding, data:SquadGeneral) -> bool {

@@ -1,5 +1,5 @@
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, provider_config::{SourceDescription, ProviderConfig}}, tasks::{ runner_simple}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}, config::TrainingConfig, batcher::BatchConfig, datasets::DataSet};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, provider_config::{SourceDescription, ProviderConfig}}, tasks::{ runner_simple}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}, config::TrainingConfig, batcher::BatchConfig, datasets::{dataset::DataSet, dataset_config::DataSetConfig}};
 
 use super::{single_data::{SingleClassTransport, SingleClassData}, single_arrow::SingleClassArrowGenerator};
 
@@ -24,7 +24,7 @@ fn create_provider(config:&ProviderConfig) -> ArrowTransfer<SingleClassTransport
 }
 
 // Create the Tokenizer for Squad
-fn create_generator(_batch_config:BatchConfig, dataset:DataSet,  tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=SingleClassTransport,T=SingleClassData> + Send> {
+fn create_generator(_batch_config:BatchConfig, dataset:DataSet, _dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=SingleClassTransport,T=SingleClassData> + Send> {
     match dataset {
         DataSet::Single(x) => Box::new(super::tokenizer::SingleTokenizer::new(x, tokenizer)),
         _ => {

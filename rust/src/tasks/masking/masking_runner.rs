@@ -1,11 +1,11 @@
 
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, general_file_provider, pile_datasets, source_filter::SourceFilter, provider_config::{ProviderConfig, SourceDescription}}, tasks::{runner_simple}, datasets::DataSet, tokenizer::tokenizer_wrapper::TokenizerWrapper, config::{TrainingConfig, TaskType}, batcher::BatchConfig};
+use crate::{provider::{ProviderChannel, general_file_provider, pile_datasets, source_filter::SourceFilter, provider_config::{ProviderConfig, SourceDescription}}, tasks::{runner_simple}, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, tokenizer::tokenizer_wrapper::TokenizerWrapper, config::{TrainingConfig, TaskType}, batcher::BatchConfig};
 use tokio::sync::mpsc::Sender;
 
 use super::{ gpt2_test_endpoint::Gpt2Endpoint, masking_test_endpoint::MaskingEndpoint,t5_test_endpoint::T5Endpoint};
-use crate::tasks::gen_tokenizer::GenTokenizer;
+use crate::tasks::gen_batcher::GenTokenizer;
 
 
 
@@ -50,21 +50,21 @@ pub fn create_provider(provider_config:ProviderConfig, tx:Sender<ProviderChannel
 
 
 
-fn create_generator(batch_config:BatchConfig, dataset:DataSet, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     
-    let wrap = GenTokenizer::new(dataset, batch_config, tokenizer, true);
+    let wrap = GenTokenizer::new( batch_config, dataset_config,  tokenizer, true);
     Box::new(wrap)
 }
 
-fn create_causal_generator(batch_config:BatchConfig, dataset:DataSet, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_causal_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     
-    let wrap = GenTokenizer::new(dataset, batch_config, tokenizer, true);
+    let wrap = GenTokenizer::new(batch_config, dataset_config,  tokenizer, true);
     Box::new(wrap)
 }
  
-fn create_t5_generator(batch_config:BatchConfig, dataset:DataSet, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_t5_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
 
-    let wrap = GenTokenizer::new(dataset, batch_config, tokenizer, false);
+    let wrap = GenTokenizer::new( batch_config, dataset_config,  tokenizer, false);
     Box::new(wrap)
 }
 

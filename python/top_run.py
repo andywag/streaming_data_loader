@@ -15,6 +15,7 @@ from external_dataset import ExternalDataset
 import argparse
 import subprocess
 import multiprocessing as mp
+import torch
 import config_loader
 
 
@@ -57,13 +58,20 @@ def run_model(args):
     elif args.task == 'python':
         config = AutoConfig.from_pretrained(model_name)
         config.num_hidden_layers = 12
-        config.vocab_size = 8192
-        config.max_position_embeddings = 4096
+        config.vocab_size = 4096+2048
+        config.max_position_embeddings = 2048 + 1024
         train_batch_size = 4
         model = AutoModelForMaskedLM.from_config(config=config).train()
         model.bert.encoder = BertLocalEncoder(config)
         model.bert.get_extended_attention_mask = models.bert_hier.get_extended_attention_mask
+        model.load_state_dict(torch.load("local/checkpoint-4000/pytorch_model.bin"))
+        #cp = "local/checkpoint-500"
+        #model.from_pretrained(cp)
+
+
         gradient_accumulation = 8
+        learning_rate = 2.0e-5
+
     elif args.task == 'clm':
         config = GPT2Config.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_config(config=config).train()
@@ -89,6 +97,8 @@ def run_model(args):
         gradient_accumulation = 2
 
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
+
+
     elif args.task == 't5':
         config = AutoConfig.from_pretrained(model_name)
         model = T5ForConditionalGeneration.from_pretrained(model_name, config=config).train()
@@ -100,7 +110,7 @@ def run_model(args):
                                       per_device_train_batch_size=train_batch_size,
                                       logging_steps=8,
                                       num_train_epochs=num_train_epochs,
-                                      save_steps=1000000,
+                                      save_steps=500,
                                       gradient_accumulation_steps=gradient_accumulation,
                                       weight_decay=.01
                                       )

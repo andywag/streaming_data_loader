@@ -4,34 +4,34 @@ use serde::{Serialize, Deserialize, ser::SerializeStruct};
 
 use crate::batcher::BatchConfig;
 
+use super::single_data::SingleClassData;
+use core::fmt::Debug;
+
+trait Takes<T> {
+    fn take(&mut self, _:T) -> bool;
+}
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct SingleClassData {
+pub struct BertData<T:Serialize + Debug + Clone> {
     pub input_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<u32>>,
     pub token_type_ids:Vec<Vec<u32>>,
-    pub label:Vec<u32>,
-    batch_config:BatchConfig,
+    pub label:Option<Vec<T>>,
 
     index:usize
 }
 
-impl SingleClassData {
-    pub fn new( batch_config:BatchConfig) -> Self{
+impl <T:Serialize + Debug + Clone>BertData<T> {
+    pub fn new(batch_config:BatchConfig) -> Self{
         Self {
             input_ids: batch_config.create_vector(0),
             attention_mask: batch_config.create_vector(0),
             token_type_ids: batch_config.create_vector(0),
-            label: batch_config.create_vector_1d(0),
-            batch_config:batch_config,
+            label: None,
 
             index:0
         }
-    }
-
-    pub fn new_data(&mut self) -> Self {
-        Self::new( self.batch_config.clone())
-    }
+    } 
 
     pub fn put_data(&mut self, result:&tokenizers::Encoding, label:u32) -> bool {
 
@@ -52,13 +52,19 @@ impl SingleClassData {
 
 }
 
+impl Takes<SingleClassTransport> for SingleClassData {
+    fn take(&mut self, transport: SingleClassTransport, tokenizer:TokenizerWrapper) -> bool {
+        true
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SingleClassTransport {
     pub text:String,
     pub label:u32,
 }
 
-impl Serialize for SingleClassData {
+impl <T:Serialize+Clone+Debug>Serialize for BertData<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer {

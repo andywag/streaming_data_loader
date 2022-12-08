@@ -11,11 +11,12 @@ pub mod single_class;
 
 pub mod runner_simple;
 
-pub mod gen_tokenizer;
+pub mod gen_batcher;
 pub mod python;
 pub mod task_config;
 pub mod cases;
 pub mod arrow_cases;
+//pub mod simple_batcher;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatasetInfo {

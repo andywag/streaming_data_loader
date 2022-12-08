@@ -12,7 +12,8 @@ use tokio::task::{self, JoinHandle};
 use crate::batcher::BatchConfig;
 use crate::batcher::{self, Batcher};
 use crate::config::TrainingConfig;
-use crate::datasets::DataSet;
+use crate::datasets::dataset::DataSet;
+use crate::datasets::dataset_config::DataSetConfig;
 use crate::tokenizer::tokenizer_config::TokenizerInternalConfig;
 use crate::tokenizer::tokenizer_wrapper;
 use crate::tokenizer::tokenizer_wrapper::TokenizerWrapper;
@@ -43,14 +44,15 @@ pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(
     tokenizer_config:TokenizerInternalConfig,
     config_batch:BatchConfig,
     dataset:DataSet,
-    generator:Box<dyn Fn(BatchConfig, DataSet, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+    dataset_config:DataSetConfig,
+    generator:Box<dyn Fn(BatchConfig, DataSet, DataSetConfig, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     rx:Receiver<ProviderChannel<P>>, 
     tx:Sender<ProviderChannel<D>>) -> JoinHandle<()> {
     // Create the Data Provider
     
     
     let tokenizer = tokenizer_wrapper::get_tokenizer(tokenizer_config).unwrap();
-    let generator = generator(config_batch, dataset, tokenizer);
+    let generator = generator(config_batch, dataset, dataset_config, tokenizer);
 
     let join_tokenizer = task::spawn(async move {
         let result = batcher::create_batch(rx, tx, generator);
@@ -74,7 +76,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     config:TrainingConfig,
     dataset:DataSet,
     base_provider:ProviderType<DataProviderAsync<P>,DataProviderSync<P>>,
-    generator:Box<dyn Fn(BatchConfig, DataSet, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+    generator:Box<dyn Fn(BatchConfig, DataSet, DataSetConfig, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     endpoint:Box<dyn Fn(TrainingConfig) -> Box<dyn EndPoint<D> + Send>>,
     cache:Option<String>) -> bool {
 
@@ -96,7 +98,7 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     };
 
     // Create the batcher
-    let join_tokenizer = create_tokenizer(config.tokenizer, config.batch, dataset, generator, rx, tx_trans);
+    let join_tokenizer = create_tokenizer(config.tokenizer, config.batch, dataset, config.dataset_config, generator, rx, tx_trans);
 
     // Create One of 2 Options 
     // 1. "test" : Create an internal test endpoint

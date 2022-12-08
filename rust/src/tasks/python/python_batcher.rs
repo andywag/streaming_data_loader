@@ -1,7 +1,8 @@
 use std::collections::VecDeque;
 
 use crate::batcher::{Batcher, BatchConfig};
-use crate::datasets::DataSet;
+use crate::datasets::dataset::DataSet;
+use crate::datasets::dataset_config::DataSetConfig;
 
 
 use super::python_runner::PythonTokenizer;
@@ -9,22 +10,22 @@ use super::python_runner::PythonTokenizer;
 
 
 pub struct PythonBatch {
-    dataset:DataSet,
-    _batch_config:BatchConfig,
+    dataset_config:DataSetConfig,
+    batch_config:BatchConfig,
     tokenizer:PythonTokenizer,
     store:VecDeque<DataSet>
 }
  
 impl PythonBatch {
-    pub fn new(dataset:DataSet,
+    pub fn new(dataset_config:DataSetConfig,
         batch_config:BatchConfig, 
         tokenizer:PythonTokenizer,
     ) -> Self {
         
-        let first_set = dataset.clone().create_data();//PythonData::new(config, batch_config, 5);
+        let first_set = dataset_config.create_dataset(batch_config.clone());//dataset.clone().create_data();//PythonData::new(config, batch_config, 5);
         Self {
-            dataset:dataset,
-            _batch_config:batch_config,
+            dataset_config,
+            batch_config:batch_config,
             tokenizer: tokenizer,
             store:VecDeque::from(vec!(first_set))
         }
@@ -40,11 +41,11 @@ impl Batcher for PythonBatch {
         let ids = self.tokenizer.encode(data);
         match self.store.back() {
             Some(x) => if x.done() {
-                self.store.push_back(self.dataset.create_data());
+                self.store.push_back(self.dataset_config.create_dataset(self.batch_config.clone()));
             },
             None => {
                 //log::info!("Adding Data to Queue");
-                self.store.push_back(self.dataset.create_data());
+                self.store.push_back(self.dataset_config.create_dataset(self.batch_config.clone()));
             }
         }
         

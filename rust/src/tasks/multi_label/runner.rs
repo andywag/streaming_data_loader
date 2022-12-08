@@ -1,6 +1,6 @@
 
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, provider_config::{SourceDescription, ProviderConfig}}, tasks::{multi_label::multi_arrow::MultiArrowGenerator, runner_simple}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}, config::TrainingConfig, batcher::BatchConfig, datasets::DataSet};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, provider_config::{SourceDescription, ProviderConfig}}, tasks::{multi_label::multi_arrow::MultiArrowGenerator, runner_simple}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}, config::TrainingConfig, batcher::BatchConfig, datasets::{dataset::DataSet, dataset_config::DataSetConfig}};
 
 use super::{multi_data::{MultiTransport, MultiData}, multi_tokenizer::{self}};
 
@@ -25,7 +25,7 @@ fn create_provider(config:&ProviderConfig) -> ArrowTransfer<MultiTransport>{
 }
 
 // Create the Tokenizer for Multi Label Data
-fn create_generator(_batch_config:BatchConfig, dataset:DataSet, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=MultiTransport,T=MultiData> + Send> {
+fn create_generator(_batch_config:BatchConfig, dataset:DataSet, _dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=MultiTransport,T=MultiData> + Send> {
     match dataset {
         DataSet::Multi(x) => Box::new(multi_tokenizer::MultiTokenizer::new(x, tokenizer)),
         _ => {

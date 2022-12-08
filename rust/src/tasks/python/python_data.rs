@@ -16,7 +16,6 @@ pub struct PythonData {
     pub labels:Vec<Vec<i32>>,
     index:usize,
 
-    _position_base:Vec<u32>,
     pub config:PythonConfig,
     batch_config:BatchConfig,
 
@@ -28,7 +27,6 @@ impl PythonData {
     pub fn new(config:PythonConfig, batch_config:BatchConfig, mask:u32) -> Self{
         let mask_length = config.mask_length;
         let number_context_layers = config.context_shape.len();
-        let position_base:Vec<u32> = (0..batch_config.sequence_length as u32).collect();
 
         Self {
             input_ids: batch_config.create_vector(0),
@@ -40,7 +38,6 @@ impl PythonData {
             config:config,
             batch_config:batch_config,
             masked_length:mask_length,
-            _position_base:position_base,
             mask:mask
         }
     }

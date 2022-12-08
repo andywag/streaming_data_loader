@@ -1,6 +1,6 @@
 
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider, provider_config::ProviderConfig}, tasks::{runner_simple}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}, config::TrainingConfig, batcher::BatchConfig, datasets::DataSet};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider, provider_config::ProviderConfig}, tasks::{runner_simple}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}, config::TrainingConfig, batcher::BatchConfig, datasets::{dataset::DataSet, dataset_config::DataSetConfig}};
 
 use super::{squad_data::{SquadGeneral, SquadData}, squad_arrow::SquadArrowGenerator,squad_endpoint::SquadEnpoint};
 
@@ -22,7 +22,7 @@ fn create_provider(_config:&ProviderConfig) -> ArrowTransfer<SquadGeneral>{
 }
 
 // Create the Tokenizer for Squad
-fn create_generator(_batch_config:BatchConfig, dataset:DataSet, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=SquadGeneral,T=SquadData> + Send> {
+fn create_generator(_batch_config:BatchConfig, dataset:DataSet, _config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=SquadGeneral,T=SquadData> + Send> {
     match dataset {
         DataSet::Squad(x) => Box::new(super::squad_tokenizer::SquadTokenizer::new(x, tokenizer)),
         _ => {

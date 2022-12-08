@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::datasets::DataSet;
+use crate::datasets::dataset::DataSet;
+use crate::datasets::dataset_config::DataSetConfig;
 use crate::provider::provider_config::ProviderConfig;
 use crate::tokenizer::tokenizer_config::{TokenizerInternalConfig};
 use crate::batcher::BatchConfig;
@@ -34,5 +35,6 @@ pub struct TrainingConfig {
     pub batch:BatchConfig,
     pub transport:TransportConfig,
     pub node:NodeConfig,
-    pub dataset:DataSet
+    pub dataset:DataSet,
+    pub dataset_config:DataSetConfig
 }
