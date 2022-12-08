@@ -1,4 +1,4 @@
-use crate::config::TaskType;
+use crate::config::{TaskType, ModelType};
 use crate::datasets::dataset_config::DataSetConfig;
 use crate::tasks::runner_simple;
 use crate::tokenizer::tokenizer_data::TokenizedData;
@@ -24,7 +24,7 @@ impl PythonTokenizer {
     }
 }
 
-fn create_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_generator(_model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     let config = match dataset_config.clone() {
         DataSetConfig::Python{mask_length,context_shape} => PythonConfig{mask_length, context_shape},
         _ => {
@@ -37,7 +37,7 @@ fn create_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:D
     Box::new(batch)
 }
 
-fn create_context_generator(batch_config:BatchConfig, _dataset:DataSet, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_context_generator(_model_type:ModelType, batch_config:BatchConfig,  dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     let tokenizer = PythonContextCreator::new(2048);
     let batch = PythonBatch::new( dataset_config, batch_config, PythonTokenizer::Context(tokenizer));
     Box::new(batch)
@@ -53,11 +53,9 @@ pub enum MaskType {
 pub async fn run(config:TrainingConfig, cache:Option<String>) -> bool{
 
     
-    let dataset = config.dataset.clone();
     match config.model.clone() {
         TaskType::Python => {
             runner_simple::run_main(config,
-                dataset, 
                 runner_simple::ProviderType::Sync(Box::new(create_provider)), 
                 Box::new(create_generator), 
                 Box::new(create_endpoint),
@@ -66,7 +64,6 @@ pub async fn run(config:TrainingConfig, cache:Option<String>) -> bool{
         },
         TaskType::Context => {
             runner_simple::run_main(config,
-                dataset, 
                 runner_simple::ProviderType::Sync(Box::new(create_provider)), 
                 Box::new(create_context_generator), 
                 Box::new(create_endpoint),

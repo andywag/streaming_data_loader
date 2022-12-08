@@ -33,8 +33,8 @@ pub enum Task {
 
 pub async fn run(config:TrainingConfig,  cache:Option<String>) -> bool{
     match config.model {
-        TaskType::Squad => squad::runner::run(config).await,
-        TaskType::MultiLabel => multi_label::runner::run(config).await,
+        TaskType::Squad => single_class::runner::run(config).await,
+        TaskType::MultiLabel => single_class::runner::run(config).await,
         TaskType::SingleClass => single_class::runner::run(config).await,
         TaskType::Mlm => masking::masking_runner::run(config, cache).await,
         TaskType::Causal => masking::masking_runner::run(config,  cache).await,

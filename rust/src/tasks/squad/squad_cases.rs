@@ -1,6 +1,5 @@
-use crate::{config::TrainingConfig, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, tasks::arrow_cases, provider::provider_config::{ProviderConfig, HuggingDescription}, transport::zmq_receive::NodeConfig};
+use crate::{config::{TrainingConfig, ModelType}, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::{dataset_config::DataSetConfig}, tasks::arrow_cases, provider::provider_config::{ProviderConfig, HuggingDescription}, transport::zmq_receive::NodeConfig};
 
-use super::{squad_data::SquadData};
 
 
 
@@ -17,25 +16,23 @@ pub fn get_case(test:bool) -> TrainingConfig {
     let tokenizer = TokenizerInternalConfig{ task:TokenizerTask::Bert, 
         typ:TokenizerType::HuggingFace("bert-base-uncased".to_string()) };
 
-    let (batch, dataset) = if test {
+    let batch = if test {
         let batch_config = BatchConfig{batch_size:1,sequence_length:128};
-        let data = SquadData::new(batch_config.clone());
-        (batch_config, data)
+        batch_config
     }
     else {
         let batch_config = BatchConfig{batch_size:2048,sequence_length:128};
-        let data = SquadData::new(batch_config.clone());
-        (batch_config, data)
+        batch_config
     };
             
-    TrainingConfig { 
+    TrainingConfig {
+        model_config:ModelType::Bert, 
         model, 
         source: get_provider(test), 
         tokenizer,
         batch, 
         transport:arrow_cases::get_transport_config(test), 
         node: NodeConfig::None, 
-        dataset:DataSet::Squad(dataset),
         dataset_config:DataSetConfig::Squad
     }
         

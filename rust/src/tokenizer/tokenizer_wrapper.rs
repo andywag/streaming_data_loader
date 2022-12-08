@@ -1,6 +1,8 @@
 
 
 
+use crate::models::simple_transport::SimpleData;
+
 use super::{tokenizer_holder::TokenizerHolder, tokenizer_config::{ TokenizerTask, TokenizerInternalConfig}};
 
 
@@ -41,6 +43,12 @@ impl TokenizerWrapper {
             TokenizerWrapper::T5(x) => x.extra.clone(),
             _ => todo!(),
         }
+    }
+
+    pub fn encode_simple(&mut self, data:SimpleData) -> (Vec<u32>, Option<Vec<u32>>) {
+        let result = self.encode_mask(data.text);
+        let alt_result:Option<Vec<u32>> = data.alt_text.map(|s|self.encode_mask(s));
+        (result,alt_result)
     }
 
     pub fn encode_mask(&mut self, data:String) -> Vec<u32> {

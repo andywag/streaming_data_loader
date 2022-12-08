@@ -1,5 +1,4 @@
-use crate::{config::TrainingConfig, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, transport::{zmq_receive::NodeConfig}, provider::{provider_config::{ProviderConfig,HuggingDescription}}, tasks::arrow_cases};
-use super::{single_data::SingleClassData};
+use crate::{config::{TrainingConfig, ModelType}, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::{dataset_config::DataSetConfig}, transport::{zmq_receive::NodeConfig}, provider::{provider_config::{ProviderConfig,HuggingDescription}}, tasks::arrow_cases};
 
 
 pub enum Cases {
@@ -21,26 +20,24 @@ pub fn get_case(typ:Cases, test:bool) -> TrainingConfig {
 
     match typ {
         Cases::Imdb => {
-            let (batch, dataset) = if test {
+            let batch = if test {
                 let batch_config = BatchConfig{batch_size:1,sequence_length:128};
-                let data = SingleClassData::new(batch_config.clone());
-                (batch_config, data)
+                batch_config
             }
             else {
                 let batch_config = BatchConfig{batch_size:2048,sequence_length:128};
-                let data = SingleClassData::new(batch_config.clone());
-                (batch_config, data)
+                batch_config
             };
             
 
             TrainingConfig { 
+                model_config:ModelType::Bert,
                 model, 
                 source: get_provider(test), 
                 tokenizer,
                 batch, 
                 transport:arrow_cases::get_transport_config(test), 
                 node: NodeConfig::None, 
-                dataset:DataSet::Single(dataset),
                 dataset_config:DataSetConfig::SingleClass
             }
         }

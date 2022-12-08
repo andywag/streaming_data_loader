@@ -2,6 +2,8 @@
 use clap::{Parser, ValueEnum};
 use loader::{tasks::{cases::BasicCases, python::{python_cases, python_runner}}};
 
+
+
 #[derive(ValueEnum, Clone, Debug)]
 
 enum Mode {
@@ -10,6 +12,15 @@ enum Mode {
     Context
 }
  
+
+#[derive(ValueEnum, Clone, Debug)]
+
+enum Model {
+    Bert,
+    Roberta,
+    Gpt2,
+    T5,
+}
 
 #[derive(ValueEnum, Clone, Debug)]
 
@@ -28,7 +39,11 @@ enum Task {
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[clap(long, value_enum, default_value_t=Task::Python)]
+    
+    #[clap(long, value_enum, default_value_t=Model::Bert)]
+    model: Model,
+
+    #[clap(long, value_enum, default_value_t=Task::Multi)]
     task: Task,
     
     #[clap(long, value_enum, default_value_t=Mode::Run)]

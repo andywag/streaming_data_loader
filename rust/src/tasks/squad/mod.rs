@@ -4,7 +4,6 @@ pub mod squad_tokenizer;
 pub mod squad_endpoint;
 pub mod squad_cases;
 
-pub mod runner;
 
 use serde::{Serialize, Deserialize};
 

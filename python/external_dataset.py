@@ -70,9 +70,12 @@ class ExternalDataset(torch.utils.data.IterableDataset):
             keys = list(data.keys())
             for x in range(len(data[keys[0]])):
                 result = dict()
-                for key in keys:
-                    result[key] = data[key][x]
-                yield result
+                try :
+                    for key in keys:
+                        result[key] = data[key][x]
+                    yield result
+                except:
+                    pass
 
     def __getitem__(self, idx):
         return next(self.internal_iter)

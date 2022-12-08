@@ -3,9 +3,8 @@
 use std::{sync::Arc};
 use arrow::{array::{StringArray, ListArray, Int64Array}, datatypes::Schema};
 
-use crate::provider::arrow_transfer::ArrowGenerator;
+use crate::{provider::arrow_transfer::ArrowGenerator, models::simple_transport::SimpleTransport};
 
-use super::{multi_data::MultiTransport};
 
 
 pub struct MultiArrowGenerator {
@@ -14,7 +13,7 @@ pub struct MultiArrowGenerator {
 }
 
 impl ArrowGenerator for MultiArrowGenerator {
-    type T = MultiTransport;
+    type T = SimpleTransport;
     fn get_data(&self, data:&arrow::record_batch::RecordBatch) -> Self::T {
         let text = StringArray::from(data.slice(0,1).column(self.t).data().to_owned()).value(0).to_string();
         
@@ -25,8 +24,10 @@ impl ArrowGenerator for MultiArrowGenerator {
         let labels1:Vec<Option<i64>> = labels2.into_iter().collect();
         let labels:Vec<u32> = labels1.into_iter().map(|e| e.unwrap() as u32).collect();
 
-        let squad_data = Self::T{text:text, labels:labels};
-        return squad_data;
+        //let squad_data = Self::T{text:text, labels:labels};
+        let data = SimpleTransport{ data: (text,None).into(), label: Some(labels.into()) };
+
+        return data;
     }
 }
 

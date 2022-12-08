@@ -3,9 +3,8 @@
 use std::{sync::Arc};
 use arrow::{array::{StringArray,Int64Array}, datatypes::{Schema}};
 
-use crate::provider::arrow_transfer::ArrowGenerator;
+use crate::{provider::arrow_transfer::ArrowGenerator, models::simple_transport::SimpleTransport};
 
-use super::single_data::SingleClassTransport;
 
 
 
@@ -15,13 +14,15 @@ pub struct SingleClassArrowGenerator {
 }
 
 impl ArrowGenerator for SingleClassArrowGenerator {
-    type T = SingleClassTransport;
+    type T = SimpleTransport;
     fn get_data(&self, data:&arrow::record_batch::RecordBatch) -> Self::T {
         let text = StringArray::from(data.slice(0,1).column(self.t).data().to_owned()).value(0).to_string();
         let label3 = data.slice(0,1).column(self.l).data().to_owned();
-        let label2 = Int64Array::from(label3).value(0);
+        let label2 = Int64Array::from(label3).value(0) as u32;
         
-        let data = Self::T{text:text, label:label2 as u32};
+        //let data = Self::T{text:text, label:label2 as u32};
+        let data = Self::T{data:(text,None).into(), label:Some(label2.into())};
+
         return data;
     }
 }

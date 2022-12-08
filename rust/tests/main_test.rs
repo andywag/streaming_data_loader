@@ -31,10 +31,12 @@ fn test_t5() {
     test_case(BasicCases::T5.get_config(true));
 } 
 
+/* 
 #[test]
 fn test_squad() {
     test_case(BasicCases::Squad.get_config(true));
 } 
+*/
 
 
 #[test]

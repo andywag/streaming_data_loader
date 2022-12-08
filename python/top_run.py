@@ -110,7 +110,7 @@ def run_model(args):
                                       per_device_train_batch_size=train_batch_size,
                                       logging_steps=8,
                                       num_train_epochs=num_train_epochs,
-                                      save_steps=500,
+                                      save_steps=5000,
                                       gradient_accumulation_steps=gradient_accumulation,
                                       weight_decay=.01
                                       )
@@ -125,7 +125,7 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="python")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="multi")
 parser.add_argument('--all', action='store_true', default=True)
 parser.add_argument('--cache', type=str, default='../../../storage')
 
