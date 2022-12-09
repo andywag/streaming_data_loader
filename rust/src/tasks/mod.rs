@@ -24,23 +24,17 @@ pub struct DatasetInfo {
     pub length:u32
 }
 
-pub enum Task {
-    Masking,
-    SingleClass,
-    MultiLabel,
-    Squad
-}
 
-pub async fn run(config:TrainingConfig,  cache:Option<String>) -> bool{
-    match config.model {
+pub async fn run(config:TrainingConfig, task:TaskType, cache:Option<String>) -> bool{
+    match task {
         TaskType::Squad => single_class::runner::run(config).await,
         TaskType::MultiLabel => single_class::runner::run(config).await,
         TaskType::SingleClass => single_class::runner::run(config).await,
         TaskType::Mlm => masking::masking_runner::run(config, cache).await,
-        TaskType::Causal => masking::masking_runner::run(config,  cache).await,
-        TaskType::T5 => masking::masking_runner::run(config,  cache).await,
+        TaskType::Clm => masking::masking_runner::run(config,  cache).await,
+        TaskType::Span => masking::masking_runner::run(config,  cache).await,
         TaskType::Python => python::python_runner::run(config, cache).await,
-        TaskType::Context => true
-        
-    }    
+        TaskType::Context => true 
+    } 
+    
 }

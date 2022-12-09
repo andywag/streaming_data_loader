@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::batcher::{Batcher, BatchConfig};
+use crate::config::ModelType;
 use crate::datasets::dataset::DataSet;
 use crate::datasets::dataset_config::DataSetConfig;
 
@@ -10,6 +11,7 @@ use super::python_runner::PythonTokenizer;
 
 
 pub struct PythonBatch {
+    model_type:ModelType,
     dataset_config:DataSetConfig,
     batch_config:BatchConfig,
     tokenizer:PythonTokenizer,
@@ -17,13 +19,15 @@ pub struct PythonBatch {
 }
  
 impl PythonBatch {
-    pub fn new(dataset_config:DataSetConfig,
+    pub fn new(model_type:ModelType,
+        dataset_config:DataSetConfig,
         batch_config:BatchConfig, 
         tokenizer:PythonTokenizer,
     ) -> Self {
         
-        let first_set = dataset_config.create_dataset(batch_config.clone());//dataset.clone().create_data();//PythonData::new(config, batch_config, 5);
+        let first_set = model_type.create_dataset(dataset_config.clone(), batch_config.clone());//dataset.clone().create_data();//PythonData::new(config, batch_config, 5);
         Self {
+            model_type,
             dataset_config,
             batch_config:batch_config,
             tokenizer: tokenizer,
@@ -41,11 +45,11 @@ impl Batcher for PythonBatch {
         let ids = self.tokenizer.encode(data);
         match self.store.back() {
             Some(x) => if x.done() {
-                self.store.push_back(self.dataset_config.create_dataset(self.batch_config.clone()));
+                self.store.push_back(self.model_type.create_dataset(self.dataset_config.clone(), self.batch_config.clone()));
             },
             None => {
                 //log::info!("Adding Data to Queue");
-                self.store.push_back(self.dataset_config.create_dataset(self.batch_config.clone()));
+                self.store.push_back(self.model_type.create_dataset(self.dataset_config.clone(), self.batch_config.clone()));
             }
         }
         
@@ -54,7 +58,7 @@ impl Batcher for PythonBatch {
             return None;
         }
         match self.store.back_mut().unwrap() {
-            DataSet::Python(x) => x.put_data(ids.unwrap()),
+            DataSet::BertHier(x) => x.put_data(ids.unwrap(), None),
             _ => {
                 log::error!("Only Python Data Set Supported");
                 std::process::exit(1);

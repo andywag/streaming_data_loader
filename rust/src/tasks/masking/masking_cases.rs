@@ -1,4 +1,4 @@
-use crate::{config::TrainingConfig, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::{dataset_config::DataSetConfig}, transport::{zmq_receive::NodeConfig}, provider::{provider_config::{ProviderConfig, ProviderLength, SourceDescription, Dataset}, pile_datasets::PileDatasetType}, tasks::arrow_cases};
+use crate::{config::TrainingConfig, tokenizer::tokenizer_config::{TokenizerTask, TokenizerInternalConfig, TokenizerType}, batcher::BatchConfig, datasets::{dataset_config::DataSetConfig}, transport::{zmq_receive::NodeConfig}, provider::{provider_config::{ProviderConfig, ProviderLength, SourceDescription, Dataset}}, tasks::arrow_cases};
 
 pub enum MaskingCases {
     Bert, 
@@ -6,6 +6,8 @@ pub enum MaskingCases {
     Gpt,
     T5
 }
+
+//https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz
 
 pub fn get_provider(test:bool) -> ProviderConfig {
     if test {
@@ -22,7 +24,7 @@ pub fn get_provider(test:bool) -> ProviderConfig {
             shuffle: None,
             flatten: None,
             length: ProviderLength::Epochs { epochs : 1 },
-            source: SourceDescription::Pile { typ:PileDatasetType::Wiki },
+            source: SourceDescription::DataList(vec!["https://dumps.wikimedia.org/other/cirrussearch/20221021/enwiki-20221021-cirrussearch-content.json.gz".into()]),
             filter: None,
         }
     }
@@ -43,13 +45,13 @@ pub fn get_case(typ:MaskingCases, test:bool) -> TrainingConfig {
     match typ {
         MaskingCases::Bert => {
             let mask_length = get_mask_length(batch.sequence_length);
-            let tokenizer = TokenizerInternalConfig{ task:TokenizerTask::Bert, 
+            let tokenizer = TokenizerInternalConfig{ 
+                task:TokenizerTask::Bert, 
                 typ:TokenizerType::HuggingFace("bert-base-uncased".to_string()) 
             }; 
             TrainingConfig { 
                 model_config:crate::config::ModelType::Bert,
-                model: crate::config::TaskType::Mlm, 
-                source: get_provider(true), 
+                source: get_provider(test), 
                 tokenizer,
                 batch, 
                 transport: arrow_cases::get_transport_config(test), 
@@ -64,8 +66,7 @@ pub fn get_case(typ:MaskingCases, test:bool) -> TrainingConfig {
             }; 
             TrainingConfig { 
                 model_config:crate::config::ModelType::Gpt2,
-                model: crate::config::TaskType::Causal, 
-                source: get_provider(true), 
+                source: get_provider(test), 
                 tokenizer,
                 batch, 
                 transport: arrow_cases::get_transport_config(test), 
@@ -80,8 +81,7 @@ pub fn get_case(typ:MaskingCases, test:bool) -> TrainingConfig {
             }; 
             TrainingConfig { 
                 model_config:crate::config::ModelType::T5,
-                model: crate::config::TaskType::T5, 
-                source: get_provider(true), 
+                source: get_provider(test), 
                 tokenizer,
                 batch, 
                 transport: arrow_cases::get_transport_config(test), 

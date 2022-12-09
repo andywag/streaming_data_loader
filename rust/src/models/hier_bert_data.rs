@@ -4,29 +4,31 @@ use serde::{Serialize, Deserialize, ser::SerializeStruct};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
-use crate::{batcher::BatchConfig, tokenizer::tokenizer_data::TokenizedData};
+use crate::{batcher::BatchConfig, tokenizer::tokenizer_data::TokenizedData, models::simple_label::Label, datasets::dataset_config::DataSetConfig};
 
-use super::{config::PythonConfig};
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct PythonData {
+pub struct BertHierData {
     pub input_ids:Vec<Vec<u32>>,
     pub position_ids:Vec<Vec<u32>>,
     pub attention_mask:Vec<Vec<Vec<u32>>>,
     pub labels:Vec<Vec<i32>>,
     index:usize,
 
-    pub config:PythonConfig,
     batch_config:BatchConfig,
-
     masked_length:usize,
+    context_shape:Vec<usize>,
     mask:u32
 }
 
-impl PythonData {
-    pub fn new(config:PythonConfig, batch_config:BatchConfig, mask:u32) -> Self{
-        let mask_length = config.mask_length;
-        let number_context_layers = config.context_shape.len();
+impl BertHierData {
+    pub fn new(batch_config:BatchConfig, dataset_config:DataSetConfig, mask:u32) -> Self{
+        let (mask_length, context_shape) = match dataset_config {
+            DataSetConfig::Python { mask_length, context_shape } => (mask_length, context_shape),
+            _ => panic!("Data Hierarchichal Task Required"),
+        };
+        let mask_length = mask_length;
+        let number_context_layers = context_shape.len();
 
         Self {
             input_ids: batch_config.create_vector(0),
@@ -35,15 +37,11 @@ impl PythonData {
             labels:vec![vec![-100;batch_config.sequence_length]; batch_config.batch_size],
             index:0, 
 
-            config:config,
             batch_config:batch_config,
             masked_length:mask_length,
+            context_shape:context_shape,
             mask:mask
         }
-    }
-
-    pub fn new_data(&mut self) -> Self {
-        PythonData::new(self.config.clone(), self.batch_config.clone(), self.mask)
     }
 
     pub fn mask_batch(&mut self) {
@@ -61,7 +59,7 @@ impl PythonData {
         
     }
 
-    pub fn put_data(&mut self, data:TokenizedData) -> bool{
+    pub fn put_data(&mut self, data:TokenizedData, _label:Option<Label>) -> bool{
         // TODO : Fix this condition by limiting data size
         if data.ids.len() < 64 {
             return false;
@@ -75,7 +73,7 @@ impl PythonData {
         self.position_ids[self.index][0..l as usize].clone_from_slice(positions);
         
         //log::info!("Attention {:?}", data.attention_mask);
-        for x in 0..self.config.context_shape.len() {
+        for x in 0..self.context_shape.len() {
             let attention = &data.attention_mask[x];
             let attention = &attention[0..l];
             //log::info!("Size {:?}", attention[0..l].len());
@@ -83,9 +81,6 @@ impl PythonData {
         }
 
 
-        //log::info!("Data {:?}", self.input_ids);
-        //log::info!("Positions {:?}", self.position_ids);
-        //log::info!("Attention {:?}", self.attention_mask);
 
         self.mask_batch();
         self.index += 1;
@@ -100,11 +95,12 @@ impl PythonData {
 
 }
 
-impl Serialize for PythonData {
+impl Serialize for BertHierData {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer {
-            let mut state = serializer.serialize_struct("PythonData", 3)?;
+            let mut state = serializer.serialize_struct("BertHierData
+        ", 3)?;
             state.serialize_field("input_ids", &self.input_ids)?;
             state.serialize_field("position_ids", &self.position_ids)?;
             state.serialize_field("attention_mask", &self.attention_mask)?;

@@ -1,6 +1,6 @@
 
 use clap::{Parser, ValueEnum};
-use loader::{tasks::{cases::BasicCases, python::{python_cases, python_runner}}};
+use loader::{tasks::{cases::BasicCases, python::{python_cases, python_runner}}, config::{TaskType, ModelType}};
 
 
 
@@ -13,38 +13,16 @@ enum Mode {
 }
  
 
-#[derive(ValueEnum, Clone, Debug)]
-
-enum Model {
-    Bert,
-    Roberta,
-    Gpt2,
-    T5,
-}
-
-#[derive(ValueEnum, Clone, Debug)]
-
-enum Task {
-    Mlm,
-    Clm,
-    T5,
-    Squad,
-    Single,
-    Multi,
-    Python
-}
-
-
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
     
-    #[clap(long, value_enum, default_value_t=Model::Bert)]
-    model: Model,
+    #[clap(long, value_enum, default_value_t=ModelType::Bert)]
+    model: ModelType,
 
-    #[clap(long, value_enum, default_value_t=Task::Multi)]
-    task: Task,
+    #[clap(long, value_enum, default_value_t=TaskType::Mlm)]
+    task: TaskType,
     
     #[clap(long, value_enum, default_value_t=Mode::Run)]
     mode: Mode,
@@ -65,20 +43,20 @@ async fn main()  {
     let args = Args::parse();
 
     let config = match args.task {
-        Task::Mlm => BasicCases::Bert,
-        Task::Clm => BasicCases::Gpt,
-        Task::T5 => BasicCases::T5,
-        Task::Squad => BasicCases::Squad,
-        Task::Single => BasicCases::Single,
-        Task::Multi => BasicCases::Multi,
-        Task::Python => BasicCases::Python,
-
+        TaskType::Mlm => BasicCases::Bert,
+        TaskType::Clm => BasicCases::Gpt,
+        TaskType::Span => BasicCases::T5,
+        TaskType::Squad => BasicCases::Squad,
+        TaskType::SingleClass => BasicCases::Single,
+        TaskType::MultiLabel => BasicCases::Multi,
+        TaskType::Python => BasicCases::Python,
+        TaskType::Context => BasicCases::Python
     };
     
     match args.mode {
         Mode::Run => {
             let example = config.get_config(args.test);
-            let result = loader::tasks::run(example, args.cache).await;
+            let result = loader::tasks::run(example, args.task, args.cache).await;
             log::info!("Final Result {}", result);
         },
         Mode::Filter => {
@@ -86,7 +64,7 @@ async fn main()  {
         },
         Mode::Context => {
             let example = python_cases::get_case(python_cases::Cases::Context, true);
-            let result = python_runner::run(example, args.cache).await;
+            let result = python_runner::run_context(example, args.cache).await;
             log::info!("Final Result {}", result);
         }
     }

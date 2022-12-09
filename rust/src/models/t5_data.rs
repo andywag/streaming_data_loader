@@ -1,8 +1,7 @@
 
 use serde::{Serialize, Deserialize, ser::SerializeStruct};
-use crate::batcher::BatchConfig;
+use crate::{batcher::BatchConfig, datasets::dataset_config::{DataSetConfig}, models::simple_label::Label};
 
-use super::T5Config;
 use rand::prelude::*;
 use rand_distr::StandardNormal;
 
@@ -15,7 +14,6 @@ pub struct T5Data {
     index:usize,
     pub remaining:Option<Vec<u32>>,
 
-    config:T5Config,
     batch_config:BatchConfig, 
     attention_base:Vec<u32>,
     extra_ids:Vec<u32>,
@@ -26,12 +24,16 @@ pub struct T5Data {
 }
 
 impl T5Data {
-    pub fn new(config:T5Config, batch_config:BatchConfig, extra_ids:Vec<u32>) -> Self{
+    pub fn new(batch_config:BatchConfig, dataset_config:DataSetConfig) -> Self{
         let sequence_length = batch_config.sequence_length;
         
-        
-        let avg_span_gap:f64 = (batch_config.sequence_length as f64/config.number_spans as f64)*(1.0-config.mask_probability);
-        let avg_span_size:f64 = (batch_config.sequence_length as f64/config.number_spans as f64)*config.mask_probability;
+        let (number_spans, mask_probability) = match dataset_config {
+            DataSetConfig::T5 { number_spans, mask_probability } => (number_spans, mask_probability),
+            _ => panic!("Operation Not Supported for T5!")
+        };
+
+        let avg_span_gap:f64 = (batch_config.sequence_length as f64/number_spans as f64)*(1.0-mask_probability);
+        let avg_span_size:f64 = (batch_config.sequence_length as f64/number_spans as f64)*mask_probability;
 
 
         Self {
@@ -41,19 +43,15 @@ impl T5Data {
             index:0, 
             remaining:None,
 
-            config:config,
             batch_config:batch_config, 
 
             attention_base:vec![0;sequence_length as usize],
-            extra_ids:extra_ids,
+            extra_ids:vec![30000;100], // TODO : Fixme lazily put here
             avg_span_gap:avg_span_gap,
             avg_span_size:avg_span_size
         }
     }
 
-    pub fn new_data(&mut self) -> Self {
-        T5Data::new(self.config.clone(), self.batch_config.clone(), self.extra_ids.clone())
-    }
 
     // TODO : Add Round and Proper Std scaling
     pub fn random_data_gap(&mut self) -> usize {
@@ -69,7 +67,7 @@ impl T5Data {
         std::cmp::max(distance as usize,1)
     }
 
-    pub fn put_data(&mut self, ids:&[u32]) -> bool{
+    pub fn put_data(&mut self, ids:Vec<u32>, _label:Option<Label>) -> bool{
 
         //log::info!("Putting Data");
         let mut ip:usize = 0;

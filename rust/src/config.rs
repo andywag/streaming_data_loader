@@ -1,39 +1,39 @@
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 
 use crate::datasets::dataset::DataSet;
 use crate::datasets::dataset_config::DataSetConfig;
-use crate::models::bert::data::BertData;
+use crate::models::bert_data::BertData;
+use crate::models::gpt_data::GptData;
+use crate::models::hier_bert_data::BertHierData;
+use crate::models::t5_data::T5Data;
 use crate::provider::provider_config::ProviderConfig;
 use crate::tokenizer::tokenizer_config::{TokenizerInternalConfig};
 use crate::batcher::BatchConfig;
 use crate::transport::TransportConfig;
 use crate::transport::zmq_receive::NodeConfig;
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+
+#[derive(Deserialize, Serialize, Debug, Clone, ValueEnum)]
 pub enum TaskType {
-    #[serde(rename="masking")]
     Mlm,
-    #[serde(rename="causal")]
-    Causal,
-    #[serde(rename="squad")]
+    Clm,
     Squad,
-    #[serde(rename="multi-label")]
     MultiLabel,
-    #[serde(rename="single-class")]
     SingleClass,
-    #[serde(rename="t5")]
-    T5,
+    Span,
     Python,
     Context
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, ValueEnum)]
 
 pub enum ModelType {
     Bert,
     Roberta,
     Gpt2,
-    T5
+    T5,
+    BertHier,
 }
 
 impl ModelType {
@@ -41,6 +41,15 @@ impl ModelType {
         match self {
             ModelType::Bert =>  {
                 BertData::new(batch_config, dataset_config).into()
+            }
+            ModelType::Gpt2 =>  {
+                GptData::new(batch_config, dataset_config).into()
+            }
+            ModelType::T5 =>  {
+                T5Data::new(batch_config, dataset_config).into()
+            }
+            ModelType::BertHier => {
+                BertHierData::new(batch_config, dataset_config, 5).into()
             }
             _ => todo!()
         }
@@ -51,7 +60,6 @@ impl ModelType {
 
 pub struct TrainingConfig {
     pub model_config:ModelType,
-    pub model:TaskType,
     pub source:ProviderConfig,
     pub tokenizer:TokenizerInternalConfig,
     pub batch:BatchConfig,

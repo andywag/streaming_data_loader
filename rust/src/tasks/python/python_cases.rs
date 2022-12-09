@@ -33,8 +33,7 @@ pub fn get_case(case:Cases, test:bool) -> TrainingConfig {
         Cases::Basic => {
             let tokenizer =  TokenizerInternalConfig{ task:TokenizerTask::Bert, typ:TokenizerType::Python};
             TrainingConfig { 
-                model_config:crate::config::ModelType::Bert,
-                model: crate::config::TaskType::Python, 
+                model_config:crate::config::ModelType::BertHier,
                 source: get_provider(), 
                 tokenizer,
                 batch: batch_config, 
@@ -46,8 +45,7 @@ pub fn get_case(case:Cases, test:bool) -> TrainingConfig {
         Cases::Context => {
             let tokenizer =  TokenizerInternalConfig{ task:TokenizerTask::Bert, typ:TokenizerType::Python};
             TrainingConfig { 
-                model_config:crate::config::ModelType::Bert,
-                model: crate::config::TaskType::Context, 
+                model_config:crate::config::ModelType::BertHier,
                 source: get_provider(), 
                 tokenizer,
                 batch: batch_config, 

@@ -6,7 +6,6 @@ pub mod python_top_new;
 pub mod python_runner;
 pub mod context_store_new;
 
-pub mod python_data;
 pub mod python_batcher;
 pub mod python_cases;
 

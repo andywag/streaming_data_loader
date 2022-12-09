@@ -7,7 +7,8 @@ pub enum Label {
     Single(u32),
     Multi(Vec<u32>),
     Squad((u32,u32)),
-    MultiF32(Vec<f32>)
+    MultiF32(Vec<f32>),
+    Masking(Vec<i32>)
 }
 
 impl From<u32> for Label {
@@ -21,6 +22,9 @@ impl From<(u32,u32)> for Label {
 }
 impl From<Vec<f32>> for Label {
     fn from(x: Vec<f32>) -> Self {Label::MultiF32(x)}
+}
+impl From<Vec<i32>> for Label {
+    fn from(x: Vec<i32>) -> Self {Label::Masking(x)}
 }
 
 impl Label {
@@ -53,6 +57,14 @@ impl Label {
             None
         }
     }
+    pub fn get_vec_i32(&self) -> Option<Vec<i32>> {
+        if let Label::Masking(x) = self {
+            Some(x.to_owned())
+        } else {
+            None
+        }
+    }
+
 
 }
 

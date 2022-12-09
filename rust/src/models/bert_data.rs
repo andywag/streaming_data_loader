@@ -2,6 +2,7 @@
 use serde::{Serialize, Deserialize, ser::SerializeStruct};
 
 use crate::{batcher::BatchConfig, tokenizer::tokenizer_wrapper::TokenizerWrapper, models::simple_label::{Label}, datasets::dataset_config::DataSetConfig};
+use rand::{thread_rng, seq::SliceRandom};
 
 use core::fmt::Debug;
 
@@ -25,7 +26,7 @@ impl BertData {
     pub fn new(batch_config:BatchConfig, dataset_config:DataSetConfig) -> Self{
         Self {
             input_ids: batch_config.create_vector(0),
-            attention_mask: batch_config.create_vector(0),
+            attention_mask: batch_config.create_vector(1),
             token_type_ids: batch_config.create_vector(0),
             label: Vec::with_capacity(batch_config.batch_size),
 
@@ -34,6 +35,21 @@ impl BertData {
             index:0
         }
     } 
+
+    pub fn mask_batch(&mut self, masked_length:usize, mask:u32) {
+        let mut position_base:Vec<u32> = (0..self.batch_config.sequence_length as u32).collect();
+        position_base.shuffle(&mut thread_rng());
+        let mut new_labels = vec![-100;self.batch_config.sequence_length];
+
+        for x in 0..masked_length as usize {
+            if self.input_ids[self.index][position_base[x] as usize] != 0 {
+                new_labels[position_base[x] as usize] = self.input_ids[self.index][position_base[x] as usize] as i32;
+                self.input_ids[self.index][position_base[x] as usize] = mask;       
+            }
+        }
+        self.label.push(new_labels.into());
+
+    }
 
     pub fn put_data(&mut self, ids:Vec<u32>, label:Option<Label>) -> bool{
         let l = std::cmp::min(self.batch_config.sequence_length, ids.len());
@@ -62,6 +78,9 @@ impl BertData {
             DataSetConfig::SingleClass => {
                 label.map(|s| self.label.push(s));
             },
+            DataSetConfig::Mask { mask_length, mask } => {
+                self.mask_batch(mask_length, mask);
+            }
             _ => todo!(),
         };
         self.index += 1;
@@ -113,7 +132,11 @@ impl Serialize for BertData {
                     state.serialize_field("ep", &ep)?;
 
                 },
-                _ => {}
+                DataSetConfig::Mask { mask_length:_, mask:_ } => {
+                    let data:Vec<Vec<i32>> = self.label.clone().into_iter().map(|s|s.get_vec_i32().unwrap()).collect();
+                    state.serialize_field("labels", &data)?;
+                },
+                _ => todo!()
             }
             //state.serialize_field("label", &self.label)?;
             state.end()

@@ -47,6 +47,12 @@ pub struct Dataset {
     pub location:String,    
 }
 
+impl From<&str> for Dataset {
+    fn from(x: &str) -> Self {
+        Dataset{location:x.to_string()}
+    }
+}
+
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Datasets {

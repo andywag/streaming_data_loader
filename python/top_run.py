@@ -64,9 +64,10 @@ def run_model(args):
         model = AutoModelForMaskedLM.from_config(config=config).train()
         model.bert.encoder = BertLocalEncoder(config)
         model.bert.get_extended_attention_mask = models.bert_hier.get_extended_attention_mask
-        model.load_state_dict(torch.load("local/checkpoint-4000/pytorch_model.bin"))
-        #cp = "local/checkpoint-500"
-        #model.from_pretrained(cp)
+
+        cp = "../../datasets/python_checkpoint/checkpoint-10000/pytorch_model.bin"
+        model.load_state_dict(torch.load(cp))
+        
 
 
         gradient_accumulation = 8
@@ -125,7 +126,7 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="multi")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="mlm")
 parser.add_argument('--all', action='store_true', default=True)
 parser.add_argument('--cache', type=str, default='../../../storage')
 

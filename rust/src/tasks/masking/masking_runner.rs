@@ -1,10 +1,10 @@
 
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, general_file_provider, pile_datasets, source_filter::SourceFilter, provider_config::{ProviderConfig, SourceDescription}}, tasks::{runner_simple}, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, tokenizer::tokenizer_wrapper::TokenizerWrapper, config::{TrainingConfig, TaskType, ModelType}, batcher::BatchConfig};
+use crate::{provider::{ProviderChannel, general_file_provider, pile_datasets, source_filter::SourceFilter, provider_config::{ProviderConfig, SourceDescription}}, tasks::{runner_simple}, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, tokenizer::tokenizer_wrapper::TokenizerWrapper, config::{TrainingConfig, ModelType}, batcher::BatchConfig};
 use tokio::sync::mpsc::Sender;
 
-use super::{ gpt2_test_endpoint::Gpt2Endpoint, masking_test_endpoint::MaskingEndpoint,t5_test_endpoint::T5Endpoint};
+use super::{masking_test_endpoint::MaskingEndpoint};
 use crate::tasks::gen_batcher::GenTokenizer;
 
 
@@ -50,34 +50,16 @@ pub fn create_provider(provider_config:ProviderConfig, tx:Sender<ProviderChannel
 
 
 
-fn create_generator(_model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
-    
-    let wrap = GenTokenizer::new( batch_config, dataset_config,  tokenizer, true);
-    Box::new(wrap)
-}
-
-fn create_causal_generator(_model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
-    
-    let wrap = GenTokenizer::new(batch_config, dataset_config,  tokenizer, true);
-    Box::new(wrap)
-}
- 
-fn create_t5_generator(_model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
-
-    let wrap = GenTokenizer::new( batch_config, dataset_config,  tokenizer, false);
+fn create_generator(model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+    let wrap = GenTokenizer::new(model_type, batch_config, dataset_config,  tokenizer, true);
     Box::new(wrap)
 }
 
 
-fn create_causal_endpoint(config:TrainingConfig) -> Box<dyn crate::transport::test_endpoint::EndPoint<DataSet> + Send> { 
-    Box::new(Gpt2Endpoint::new(config))
-}
 pub fn create_endpoint(config:TrainingConfig) -> Box<dyn crate::transport::test_endpoint::EndPoint<DataSet> + Send> {
     Box::new(MaskingEndpoint::new(config))
 }
-fn create_t5_endpoint(config:TrainingConfig) -> Box<dyn crate::transport::test_endpoint::EndPoint<DataSet> + Send> {
-    Box::new(T5Endpoint::new(config))
-}
+
 
 pub enum MaskType {
     Mlm,
@@ -86,37 +68,13 @@ pub enum MaskType {
 }
 
 pub async fn run(config:TrainingConfig, cache:Option<String>) -> bool{
+    runner_simple::run_main(config,
+        runner_simple::ProviderType::Sync(Box::new(create_provider)), 
+        Box::new(create_generator), 
+        Box::new(create_endpoint),
+        cache
+    ).await
 
-    match config.model.clone() {
-        TaskType::Mlm => {
-            runner_simple::run_main(config,
-                runner_simple::ProviderType::Sync(Box::new(create_provider)), 
-                Box::new(create_generator), 
-                Box::new(create_endpoint),
-                cache
-            ).await
-        },
-        TaskType::Causal => {
-            runner_simple::run_main(config,
-                runner_simple::ProviderType::Sync(Box::new(create_provider)), 
-                Box::new(create_causal_generator) , 
-                Box::new(create_causal_endpoint),
-                cache
-            ).await
-        },
-        TaskType::T5 => {
-            runner_simple::run_main(config,
-                runner_simple::ProviderType::Sync(Box::new(create_provider)), 
-                Box::new(create_t5_generator) , 
-                Box::new(create_t5_endpoint),
-                cache
-            ).await 
-        },
-        _ => {
-            log::error!("Model not Support");
-            false
-        }
-    }
     
 }
 

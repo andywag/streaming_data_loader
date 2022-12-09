@@ -14,7 +14,6 @@ pub fn get_provider(test:bool) -> ProviderConfig {
 
 
 pub fn get_case(typ:Cases, test:bool) -> TrainingConfig {
-    let model = crate::config::TaskType::SingleClass;
     let tokenizer = TokenizerInternalConfig{ task:TokenizerTask::Bert, 
         typ:TokenizerType::HuggingFace("bert-base-uncased".to_string()) };
 
@@ -32,7 +31,6 @@ pub fn get_case(typ:Cases, test:bool) -> TrainingConfig {
 
             TrainingConfig { 
                 model_config:ModelType::Bert,
-                model, 
                 source: get_provider(test), 
                 tokenizer,
                 batch, 

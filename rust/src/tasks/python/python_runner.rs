@@ -1,4 +1,4 @@
-use crate::config::{TaskType, ModelType};
+use crate::config::{ ModelType};
 use crate::datasets::dataset_config::DataSetConfig;
 use crate::tasks::runner_simple;
 use crate::tokenizer::tokenizer_data::TokenizedData;
@@ -24,7 +24,7 @@ impl PythonTokenizer {
     }
 }
 
-fn create_generator(_model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_generator(model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     let config = match dataset_config.clone() {
         DataSetConfig::Python{mask_length,context_shape} => PythonConfig{mask_length, context_shape},
         _ => {
@@ -33,13 +33,13 @@ fn create_generator(_model_type:ModelType, batch_config:BatchConfig, dataset_con
         }
     };
     let tokenizer = PythonParserNew::new(config);
-    let batch = PythonBatch::new( dataset_config, batch_config, PythonTokenizer::Run(tokenizer));
+    let batch = PythonBatch::new( model_type, dataset_config, batch_config, PythonTokenizer::Run(tokenizer));
     Box::new(batch)
 }
 
-fn create_context_generator(_model_type:ModelType, batch_config:BatchConfig,  dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+fn create_context_generator(model_type:ModelType, batch_config:BatchConfig,  dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     let tokenizer = PythonContextCreator::new(2048);
-    let batch = PythonBatch::new( dataset_config, batch_config, PythonTokenizer::Context(tokenizer));
+    let batch = PythonBatch::new( model_type, dataset_config, batch_config, PythonTokenizer::Context(tokenizer));
     Box::new(batch)
 }
 
@@ -52,31 +52,23 @@ pub enum MaskType {
 
 pub async fn run(config:TrainingConfig, cache:Option<String>) -> bool{
 
-    
-    match config.model.clone() {
-        TaskType::Python => {
-            runner_simple::run_main(config,
-                runner_simple::ProviderType::Sync(Box::new(create_provider)), 
-                Box::new(create_generator), 
-                Box::new(create_endpoint),
-                cache
-            ).await
-        },
-        TaskType::Context => {
-            runner_simple::run_main(config,
-                runner_simple::ProviderType::Sync(Box::new(create_provider)), 
-                Box::new(create_context_generator), 
-                Box::new(create_endpoint),
-                cache
-            ).await
-        }
-        _ => {
-            log::error!("Model not Support");
-            false
-        }
-    }
-    
+    runner_simple::run_main(config,
+        runner_simple::ProviderType::Sync(Box::new(create_provider)), 
+            Box::new(create_generator), 
+            Box::new(create_endpoint),
+            cache
+        ).await
+        
 }
 
 
+pub async fn run_context(config:TrainingConfig, cache:Option<String>) -> bool {
+
+    runner_simple::run_main(config,
+        runner_simple::ProviderType::Sync(Box::new(create_provider)), 
+        Box::new(create_context_generator), 
+        Box::new(create_endpoint),
+        cache).await
+            
+}
 
