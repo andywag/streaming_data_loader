@@ -63,7 +63,7 @@ async fn main()  {
 
         },
         Mode::Context => {
-            let example = python_cases::get_case(python_cases::Cases::Context, true);
+            let example = python_cases::get_case(python_cases::Cases::Context, false);
             let result = python_runner::run_context(example, args.cache).await;
             log::info!("Final Result {}", result);
         }

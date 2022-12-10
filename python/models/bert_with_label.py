@@ -12,17 +12,18 @@ class BertForMaskedLM(BertPreTrainedModel):
 
     def __init__(self, config):
         super().__init__(config)
+
         self.bert = BertModel(config, add_pooling_layer=False)
         self.cls = BertOnlyMLMHead(config)
 
         # Initialize weights and apply final processing
-        self.post_init()
 
     def get_output_embeddings(self):
         return self.cls.predictions.decoder
 
     def set_output_embeddings(self, new_embeddings):
         self.cls.predictions.decoder = new_embeddings
+
 
     def forward(
         self,
@@ -70,6 +71,17 @@ class BertForMaskedLM(BertPreTrainedModel):
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
+        data = torch.topk(prediction_scores, 5)
+        torch.set_printoptions(profile="full")
+
+        print("I",input_ids)
+        print("P",position_ids)
+        print("L",labels)
+        for x in range(1):
+            for y in range(512):
+                if labels[x][y] != -100:
+                    print(x,y,labels[x][y],input_ids[x][y],data.indices[x,y,:], data.values[x,y,:])
+
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]
             return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
@@ -96,5 +108,4 @@ class BertForMaskedLM(BertPreTrainedModel):
         input_ids = torch.cat([input_ids, dummy_token], dim=1)
 
         return {"input_ids": input_ids, "attention_mask": attention_mask}
-
 

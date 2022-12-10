@@ -25,7 +25,7 @@ impl PythonBatch {
         tokenizer:PythonTokenizer,
     ) -> Self {
         
-        let first_set = model_type.create_dataset(dataset_config.clone(), batch_config.clone());//dataset.clone().create_data();//PythonData::new(config, batch_config, 5);
+        let first_set = model_type.create_dataset(dataset_config.clone(), batch_config.clone());
         Self {
             model_type,
             dataset_config,

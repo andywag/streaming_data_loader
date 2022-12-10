@@ -4,7 +4,6 @@ use crate::tasks::python::context_store_new::ContextLookupNew;
 use crate::tasks::python::python_tokenizer::check_python;
 use crate::tokenizer::tokenizer_data::TokenizedData;
 
-use super::config::PythonConfig;
 use super::python_tokenizer::Token;
 use super::context_store_new::ContextStoreNew;
 
@@ -50,8 +49,11 @@ impl Line {
         self.tokens.push(Th::I(Ts{t: token, d: Some(data), id: vec![] }));
     }
 
-    pub fn token(&mut self) -> Token {
+    pub fn token(&self) -> Token {
         self.tokens[0].token()
+    }
+    pub fn valid_line(&self) -> bool {
+        self.tokens.len() > 0 && self.token() != Token::KeyImport && self.token() != Token::KeyFrom
     }
 
     pub fn update_context(&mut self, context:&mut ContextStoreNew) {
@@ -59,9 +61,10 @@ impl Line {
             match token {
                 Th::I(x) => {
                     let text = x.d.as_mut().unwrap().as_str();
-                    let g = text.split("_").filter(|s|s.len() >=1);
-                    let ids = g.map(|s| context.get_or_put_local(s)).collect();
-                    x.id = ids;
+                    //let g = text.split("_").filter(|s|s.len() >=1);
+                    //let ids = g.map(|s| context.get_or_put_local(s)).collect();
+                    x.id = vec![context.get_or_put_local(text)];
+                    //x.id = ids;
                 }
                 _ => {}
             };
@@ -76,14 +79,14 @@ impl Line {
             match token {
                 Th::T(y) => {
                     ids.push(y.get_token_id());
-                    positions.push(4*index);
+                    positions.push(index);
                     
                 },
                 Th::I(x) => {
                     for i in x.id.as_slice().iter().enumerate() {
                         if i.0 <= 3 {
                             ids.push(context.get_id(i.1));
-                            positions.push(4*index + i.0 as u32);
+                            positions.push(index + i.0 as u32);
                         }
                     }
                 },
@@ -92,7 +95,7 @@ impl Line {
             index += 1;
         }
         ids.push(Token::Newline.get_token_id());
-        positions.push(4*index);
+        positions.push(index);
 
         self.length = ids.len();
         (ids, positions)
@@ -103,7 +106,8 @@ impl Line {
 
 fn ignore(token:&Token) -> bool {
     match token {
-        Token::Comment | Token::AString | Token::TString | Token::String | Token::WS | Token::Newline | Token::Tab => true,
+        Token::Comment | Token::AString | Token::TString | Token::String | Token::WS | Token::Newline | Token::Tab => true ,
+        //Token::KeyImport => true,
         _ => false
     }
 }
@@ -292,18 +296,19 @@ fn create_ids(lines:&mut Vec<Line>, context:&ContextStoreNew) -> (Vec<u32>, Vec<
 pub struct PythonParserNew {
     global_store:ContextLookupNew,
     project_store:ContextLookupNew,
-    config:PythonConfig,
+    context_size:usize,
     _index:u32
 }
 
 impl PythonParserNew {
-    pub fn new(config:PythonConfig) -> Self {
+    pub fn new(context_size:usize) -> Self {
         let project_store = ContextLookupNew::new(1024);
 
         Self {
-            global_store:ContextLookupNew::from_file("../data/python_ident.txt"),
+            //global_store:ContextLookupNew::from_file("../data/python_ident.txt"),
+            global_store:ContextLookupNew::new(1),
             project_store:project_store,
-            config:config,
+            context_size,
             _index:0
         }
     }
@@ -320,8 +325,8 @@ impl PythonParserNew {
                     last_attention = current_attention[x];
                 }
                 else {
-                    position_offset += current_position[x-1] + 4;
-                    position_offset -= current_position[x-1] % 4;
+                    position_offset += current_position[x-1];
+                    position_offset -= current_position[x-1];
                 }
             }
             positions.push(current_position[x] + position_offset);
@@ -341,11 +346,11 @@ impl PythonParserNew {
         //log::info!("Project {:?}", data);
         // Create the Context which will be used to parse this file
         let mut context = ContextStoreNew::new(&self.global_store, 
-            &self.project_store, 128, 1024);
+            &self.project_store, 300, 250, 1250);
         
         let mut lexer = Token::lexer(data.as_str());
         // Convert the input file to a list of lines
-        let mut lines = split_lines(&mut lexer);
+        let mut lines = split_lines(&mut lexer).into_iter().filter(|s|s.valid_line()).collect();
         //log::info!("Lines {:?}", lines);
         // Top Level Grouping for File
         let mut body = Split::new(Holder::Body, 0);
@@ -357,9 +362,9 @@ impl PythonParserNew {
         // Create a Line to Number of Token Index
         let s_length = create_lengths(&mut lines);
         // Create the Attention Indices
-        let attention_size = self.config.context_shape.len();
+        let attention_size = self.context_size;
         let mut attn_ids = Vec::<Vec<u32>>::with_capacity(attention_size);
-        for x in 0..self.config.context_shape.len() {
+        for x in 0..self.context_size {
             let attn = body.create_mask(&context, &s_length, 0, x);
             attn_ids.insert(0,attn.0);
         }
@@ -381,23 +386,22 @@ impl PythonParserNew {
     }
 }
  
-/* 
+
 #[test]
 pub fn test_full() {
     use std::fs::File;
     use std::io::Read;
 
     crate::logger::create_logger();
-    let config = PythonConfig{ mask_length: 32, context_shape: vec![2,2,4,4] };
-    let parser = PythonParserNew::new(config);
+    let parser = PythonParserNew::new(4);
 
-    let mut file = File::open("temp1.py").unwrap();
+    let mut file = File::open("../python/temp.py").unwrap();
     let mut contents = String::new();
     let _= file.read_to_string(&mut contents);
     //log::info!("Data {}", contents);
 
     let result = parser.encode(contents);
-    //log::info!("R {:?}", result);
+    log::info!("R {:?}", result);
 
 }
-*/
+

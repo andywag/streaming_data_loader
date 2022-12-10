@@ -86,7 +86,7 @@ pub fn get_case(typ:MaskingCases, test:bool) -> TrainingConfig {
                 batch, 
                 transport: arrow_cases::get_transport_config(test), 
                 node: NodeConfig::None, 
-                dataset_config:DataSetConfig::T5{number_spans: number_spans, mask_probability: 0.15} 
+                dataset_config:DataSetConfig::Span{number_spans: number_spans, mask_probability: 0.15} 
             }
         },
     }

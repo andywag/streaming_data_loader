@@ -131,9 +131,9 @@ pub enum Token {
     KeyContinue,
     #[token("def")]
     KeyDef,
-    #[token("del")]
-    KeyFrom,
     #[token("from")]
+    KeyFrom,
+    #[token("del")]
     KeyDel,
     #[token("elif")]
     KeyElif,
@@ -220,7 +220,7 @@ pub enum Token {
     AString,
     #[regex(r#"""[^"""]""""#)]
     TString,
-    #[regex(r"[_a-zA-Z][_a-zA-Z0-9]*")]
+    #[regex(r"[_a-zA-Z][_a-zA-Z0-9.]*")]
     Ident,
     #[regex(r"(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")]
     Number,
@@ -312,7 +312,7 @@ impl Token {
             Token::HexNumber => start + 49,
     
     
-            Token::Op(x) => x.get_id(start+49),
+            Token::Op(x) => x.get_id(200),
             
         }
     

@@ -17,7 +17,7 @@ impl MaskingEndpoint {
     // TODO : Put in a valid check for the data. Disabled due to use of file match which was inconvenient
     // TODO : Make data input mutable to allow checks
     pub fn check_batch<T:Debug>(&self, _data:T) -> bool {
-        //log::info!("Data {:?}", _data);
+        log::info!("Data {:?}", _data);
         true
 
     }
@@ -30,6 +30,7 @@ impl EndPoint<DataSet> for MaskingEndpoint {
             DataSet::Mask(x) => self.check_batch(x),
             DataSet::BertHier(x) => self.check_batch(x),
             DataSet::Bert(x) => self.check_batch(x),
+            
             x => self.check_batch(x)
         }
         

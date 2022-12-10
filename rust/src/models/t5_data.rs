@@ -28,7 +28,7 @@ impl T5Data {
         let sequence_length = batch_config.sequence_length;
         
         let (number_spans, mask_probability) = match dataset_config {
-            DataSetConfig::T5 { number_spans, mask_probability } => (number_spans, mask_probability),
+            DataSetConfig::Span { number_spans, mask_probability } => (number_spans, mask_probability),
             _ => panic!("Operation Not Supported for T5!")
         };
 

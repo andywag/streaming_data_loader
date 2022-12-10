@@ -5,7 +5,6 @@ use crate::tokenizer::tokenizer_data::TokenizedData;
 use crate::{config::TrainingConfig, batcher::BatchConfig, datasets::dataset::DataSet, tokenizer::tokenizer_wrapper::TokenizerWrapper};
 use crate::tasks::masking::masking_runner::{create_endpoint, create_provider};
 
-use super::config::PythonConfig;
 use super::context_creator::PythonContextCreator;
 use super::python_batcher::PythonBatch;
 use super::python_top_new::PythonParserNew;
@@ -25,14 +24,15 @@ impl PythonTokenizer {
 }
 
 fn create_generator(model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
-    let config = match dataset_config.clone() {
-        DataSetConfig::Python{mask_length,context_shape} => PythonConfig{mask_length, context_shape},
+    let context_size = match dataset_config.clone() {
+        DataSetConfig::MaskHier{mask_length:_,context_size, front:_} => context_size,
+        DataSetConfig::SpanHier { avg_span_gap:_, avg_span_size:_, context_size, extra_ids:_ } => context_size,
         _ => {
             log::error!("Python Dataset Required");
             std::process::exit(1);
         }
     };
-    let tokenizer = PythonParserNew::new(config);
+    let tokenizer = PythonParserNew::new(context_size);
     let batch = PythonBatch::new( model_type, dataset_config, batch_config, PythonTokenizer::Run(tokenizer));
     Box::new(batch)
 }

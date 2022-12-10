@@ -79,29 +79,32 @@ pub struct ContextStoreNew<'a> {
     global_store:&'a ContextLookupNew,
     project_store:&'a ContextLookupNew,
     context:Vec<ContextLookupNew>,
+    local_offset:usize,
     local_size:usize,
     offset:usize, 
 }
 
 impl <'a>ContextStoreNew<'a> {
-    pub fn new(global_store:&'a ContextLookupNew, project_store:&'a ContextLookupNew, local_size:usize, offset:usize) -> Self{
+    pub fn new(global_store:&'a ContextLookupNew, project_store:&'a ContextLookupNew, local_offset:usize, local_size:usize, offset:usize) -> Self{
         Self {
             global_store:global_store,
             project_store:project_store,
             context:vec![ContextLookupNew::new(local_size)],
-            local_size:local_size,
-            offset:offset
+            local_offset,
+            local_size,
+            offset
         }
     }
 
     pub fn get_id(&self, location:&(u32,u32)) -> u32 {
-        if location.0 == 0 {
+
+        if location.0 == 0 { // Output Global Data at the offset region + location
             (self.offset as u32 + location.1) as u32
         }
         else {
-            ((location.0 - 2)*self.local_size as u32 + location.1 + self.offset as u32) as u32
-        }
-
+            ((location.0 - 2)*self.local_size as u32 + location.1 + self.local_offset as u32) as u32
+        };
+        return 400;
     }
 
     pub fn len(&self) -> usize {

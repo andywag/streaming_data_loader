@@ -1,6 +1,8 @@
 import os
 
 import models.bert_hier
+import models.bert_with_label
+
 from models.bert_hier import BertLocalEncoder
 from rust_config import ExternalConfig
 
@@ -58,19 +60,23 @@ def run_model(args):
     elif args.task == 'python':
         config = AutoConfig.from_pretrained(model_name)
         config.num_hidden_layers = 12
-        config.vocab_size = 4096+2048
-        config.max_position_embeddings = 2048 + 1024
-        train_batch_size = 4
+        config.vocab_size = 2048
+        config.max_position_embeddings = 512
+        train_batch_size = 8
+
         model = AutoModelForMaskedLM.from_config(config=config).train()
+        #model = models.bert_with_label.BertForMaskedLM(config).train()
+
+
         model.bert.encoder = BertLocalEncoder(config)
         model.bert.get_extended_attention_mask = models.bert_hier.get_extended_attention_mask
 
-        cp = "../../datasets/python_checkpoint/checkpoint-10000/pytorch_model.bin"
+        cp = "../../datasets/python_checkpoint/checkpoint-1000/pytorch_model.bin"
         model.load_state_dict(torch.load(cp))
-        
 
 
-        gradient_accumulation = 8
+
+        gradient_accumulation = 4
         learning_rate = 2.0e-5
 
     elif args.task == 'clm':
@@ -111,7 +117,7 @@ def run_model(args):
                                       per_device_train_batch_size=train_batch_size,
                                       logging_steps=8,
                                       num_train_epochs=num_train_epochs,
-                                      save_steps=5000,
+                                      save_steps=1000,
                                       gradient_accumulation_steps=gradient_accumulation,
                                       weight_decay=.01
                                       )
@@ -126,7 +132,7 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="mlm")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="python")
 parser.add_argument('--all', action='store_true', default=True)
 parser.add_argument('--cache', type=str, default='../../../storage')
 

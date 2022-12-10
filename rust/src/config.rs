@@ -33,7 +33,7 @@ pub enum ModelType {
     Roberta,
     Gpt2,
     T5,
-    BertHier,
+    BertHier
 }
 
 impl ModelType {
