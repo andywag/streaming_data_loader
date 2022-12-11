@@ -31,7 +31,7 @@ pub fn get_case(case:Cases, test:bool) -> TrainingConfig {
     let batch_size = if test {1} else {8192};
     let sequence_length = 512;
     let mask_length = get_mask_length(sequence_length);
-    let context_size:usize = 4;//vec![3,3,3,3];
+    let context_size:usize = 5;//vec![3,3,3,3];
     let extra_ids:Vec<u32> = (300..400).collect();
 
     let batch_config = BatchConfig{batch_size, sequence_length};
@@ -41,7 +41,7 @@ pub fn get_case(case:Cases, test:bool) -> TrainingConfig {
         Cases::Span => {
             let avg_span_gap:f64 = 16.0;
             let avg_span_size:f64 = 2.0;
-            let dataset_config = DataSetConfig::SpanHier { avg_span_gap:avg_span_gap,avg_span_size:avg_span_size, context_size: 4, extra_ids: extra_ids };
+            let dataset_config = DataSetConfig::SpanHier { avg_span_gap:avg_span_gap,avg_span_size:avg_span_size, context_size: 5, extra_ids: extra_ids };
             let tokenizer =  TokenizerInternalConfig{ task:TokenizerTask::Bert, typ:TokenizerType::Python};
             TrainingConfig { 
                 model_config:crate::config::ModelType::BertHier,

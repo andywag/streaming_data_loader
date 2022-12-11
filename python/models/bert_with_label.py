@@ -72,6 +72,7 @@ class BertForMaskedLM(BertPreTrainedModel):
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
         data = torch.topk(prediction_scores, 5)
+        probs = torch.nn.functional.softmax(data.values, -1)
         torch.set_printoptions(profile="full")
 
         print("I",input_ids)
@@ -80,7 +81,7 @@ class BertForMaskedLM(BertPreTrainedModel):
         for x in range(1):
             for y in range(512):
                 if labels[x][y] != -100:
-                    print(x,y,labels[x][y],input_ids[x][y],data.indices[x,y,:], data.values[x,y,:])
+                    print(x,y,labels[x][y],input_ids[x][y],data.indices[x,y,:], probs[x,y,:])
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]

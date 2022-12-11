@@ -325,7 +325,7 @@ pub fn check_python(text:&str) -> bool{
   let mut key_count = 0;
   while let Some(token) = lexer.next() {
       match token {
-           Token::KeyDel | Token::KeyDef | Token::KeyElif | Token::KeyExcept => {key_count += 1;}
+           Token::KeyImport | Token::KeyDel | Token::KeyDef | Token::KeyElif | Token::KeyExcept => {key_count += 1;}
           _ => {}
       }
       if key_count > 8 {

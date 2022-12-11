@@ -35,8 +35,8 @@ class BertLocalEncoder(nn.Module):
         super().__init__()
         self.config = config
         self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
-        self.l_embed =  nn.ModuleList([nn.Embedding(256, config.hidden_size) for _ in range(config.num_hidden_layers)])
-        self.l_norm =  nn.ModuleList([nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps) for _ in range(config.num_hidden_layers)])
+        self.l_embed =  nn.ModuleList([nn.Embedding(256, config.hidden_size) for _ in range(4)])
+        self.l_norm =  nn.ModuleList([nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps) for _ in range(5)])
 
         self.gradient_checkpointing = False
         #for x in range(config.num_hidden_layers):
@@ -69,10 +69,12 @@ class BertLocalEncoder(nn.Module):
                 mask = attention_mask[:,0,:,:]
             elif i < 6:
                 mask = attention_mask[:,1,:,:]
-            elif i < 9:
+            elif i < 8:
                 mask = attention_mask[:,2,:,:]
-            else:
+            elif i < 10:
                 mask = attention_mask[:,3,:,:]
+            else:
+                mask = attention_mask[:,4,:,:]
             mask = mask[:,None,:,:]
 
             if output_hidden_states:
@@ -98,12 +100,13 @@ class BertLocalEncoder(nn.Module):
                 elif i == 5:
                     hidden_states += self.l_embed[1](attention_mask_old[:,1,:])
                     hidden_states = self.l_norm[1](hidden_states)
-                elif i == 8:
+                elif i == 7:
                     hidden_states += self.l_embed[2](attention_mask_old[:,2,:])
                     hidden_states = self.l_norm[2](hidden_states)
-                elif i == 11:
+                elif i == 9:
                     hidden_states += self.l_embed[3](attention_mask_old[:,3,:])
                     hidden_states = self.l_norm[3](hidden_states)
+
 
             #hidden_states = layer_outputs[0]
             if use_cache:

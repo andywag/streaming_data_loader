@@ -7,7 +7,7 @@ use crate::tasks::masking::masking_runner::{create_endpoint, create_provider};
 
 use super::context_creator::PythonContextCreator;
 use super::python_batcher::PythonBatch;
-use super::python_top_new::PythonParserNew;
+use super::python_parser::PythonParserNew;
 
 pub enum PythonTokenizer {
     Run(PythonParserNew),

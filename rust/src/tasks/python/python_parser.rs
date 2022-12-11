@@ -1,117 +1,24 @@
 
 use logos::{Lexer, Logos};
-use crate::tasks::python::context_store_new::ContextLookupNew;
+use crate::tasks::python::python_line::create_import_context;
 use crate::tasks::python::python_tokenizer::check_python;
 use crate::tokenizer::tokenizer_data::TokenizedData;
 
 use super::python_tokenizer::Token;
-use super::context_store_new::ContextStoreNew;
-
-#[derive(Debug)]
-struct Ts {
-    pub t:Token,
-    pub d:Option<String>,
-    pub id:Vec<(u32, u32)>
-}
-
-#[derive(Debug)]
-enum Th {
-    T(Token),
-    I(Ts) 
-}
-impl Th {
-    fn token(& self) -> Token{
-        match self {
-            Th::T(x) => x.to_owned(),
-            Th::I(x) => x.t.to_owned(),
-        }
-    }
-}
+use super::context_store::{ContextStore};
+use super::python_line::Line;
 
 
-#[derive(Debug)]
 
-struct Line {
-    pub indent:usize,
-    pub tokens:Vec<Th>,
-    length:usize
-}
-
-impl Line {
-    pub fn new(indent:usize) -> Self {
-        Self { indent: indent, tokens:Vec::<Th>::with_capacity(32) , length:1}
-    }
-    pub fn push(&mut self, token:Token) {
-        self.tokens.push(Th::T(token));
-    }
-
-    pub fn push_string(&mut self, token:Token, data:String) {
-        self.tokens.push(Th::I(Ts{t: token, d: Some(data), id: vec![] }));
-    }
-
-    pub fn token(&self) -> Token {
-        self.tokens[0].token()
-    }
-    pub fn valid_line(&self) -> bool {
-        self.tokens.len() > 0 && self.token() != Token::KeyImport && self.token() != Token::KeyFrom
-    }
-
-    pub fn update_context(&mut self, context:&mut ContextStoreNew) {
-        for token in self.tokens.as_mut_slice() {
-            match token {
-                Th::I(x) => {
-                    let text = x.d.as_mut().unwrap().as_str();
-                    //let g = text.split("_").filter(|s|s.len() >=1);
-                    //let ids = g.map(|s| context.get_or_put_local(s)).collect();
-                    x.id = vec![context.get_or_put_local(text)];
-                    //x.id = ids;
-                }
-                _ => {}
-            };
-        }
-    }
-    pub fn create_ids(&mut self, context:&ContextStoreNew) -> (Vec<u32>, Vec<u32>){
-        let mut ids = Vec::<u32>::with_capacity(2*self.tokens.len());
-        let mut positions = Vec::<u32>::with_capacity(2*self.tokens.len());
-
-        let mut index = 0;
-        for token in self.tokens.as_slice() {
-            match token {
-                Th::T(y) => {
-                    ids.push(y.get_token_id());
-                    positions.push(index);
-                    
-                },
-                Th::I(x) => {
-                    for i in x.id.as_slice().iter().enumerate() {
-                        if i.0 <= 3 {
-                            ids.push(context.get_id(i.1));
-                            positions.push(index + i.0 as u32);
-                        }
-                    }
-                },
-            }
-            
-            index += 1;
-        }
-        ids.push(Token::Newline.get_token_id());
-        positions.push(index);
-
-        self.length = ids.len();
-        (ids, positions)
-    }
-
-}
-
-
+/// List of Tokens to ignore on a new line
 fn ignore(token:&Token) -> bool {
     match token {
         Token::Comment | Token::AString | Token::TString | Token::String | Token::WS | Token::Newline | Token::Tab => true ,
-        //Token::KeyImport => true,
         _ => false
     }
 }
 
+/// Splits the tokens into a set of lines
 fn split_lines(lexer:&mut Lexer<Token>) -> Vec<Line> {
     let mut lines = Vec::<Line>::with_capacity(256);
     let mut line = Line::new(0);
@@ -145,7 +52,7 @@ fn split_lines(lexer:&mut Lexer<Token>) -> Vec<Line> {
                 line.push_string(token, lexer.slice().to_string());
             }
             Token::Number => {
-                line.push_string(token, lexer.slice().to_string());
+                line.push_number(token, lexer.slice().to_string());
             }
             Token::WS | Token::Tab => {
 
@@ -166,10 +73,10 @@ enum Holder {
     Body,
     Def,
     Class,
-    //Try
 }
 
  
+// Struct which contains information about the python hierarchy derived from indents
 #[derive(Debug)]
 struct Split {
     _typ:Holder,
@@ -184,7 +91,7 @@ impl Split {
         Self{ _typ, sp, ep:sp, children: Vec::with_capacity(4) }
     }
 
-    pub fn create_mask(&self, context:&ContextStoreNew, s_length:&Vec<usize>, offset:u32, level:usize) -> (Vec<u32>, u32) {
+    pub fn create_mask(&self, context:&ContextStore, s_length:&Vec<usize>, offset:u32, level:usize) -> (Vec<u32>, u32) {
         let l = s_length[self.ep] - s_length[self.sp];
  
         let mut result = Vec::with_capacity(level);
@@ -218,8 +125,8 @@ impl Split {
 }
  
 
-
-fn parse_lines(lines:&mut Vec<Line>, split:&mut Split, level:Option<usize>, line:usize, context:&mut ContextStoreNew)  {
+/// Parse the lines in the file to create the context of the file
+fn parse_lines(lines:&mut Vec<Line>, split:&mut Split, level:Option<usize>, line:usize, context:&mut ContextStore)  {
     
     let mut index = line;
     let mut current_child = Split::new(Holder::Body, split.sp);
@@ -280,58 +187,35 @@ fn create_lengths(lines:&mut Vec<Line>) -> Vec<usize> {
     s_length
 }
 /// Create a set of ids for each of the lines
-fn create_ids(lines:&mut Vec<Line>, context:&ContextStoreNew) -> (Vec<u32>, Vec<u32>){
+fn create_ids(lines:&mut Vec<Line>, context:&ContextStore) -> (Vec<u32>, Vec<u32>, Vec<u32>){
     let mut ids = Vec::<u32>::with_capacity(512);
     let mut positions = Vec::<u32>::with_capacity(512);
+    let mut attentions = Vec::<u32>::with_capacity(512);
 
+    let mut index = 0;
     for line in lines.as_mut_slice() {
         let data = line.create_ids(&context);
-        ids.extend(data.0);
-        positions.extend(data.1);
+        ids.extend(data);
+        let p:Vec<u32> = (0..line.length as u32).collect();
+        positions.extend(p);
+        attentions.extend(vec![index;line.length]);
+        index += 1;
     }
-    (ids,positions)
+    (ids, positions, attentions)
 }
+
+
 
 #[derive(Debug)]
 pub struct PythonParserNew {
-    global_store:ContextLookupNew,
-    project_store:ContextLookupNew,
     context_size:usize,
-    _index:u32
 }
 
 impl PythonParserNew {
     pub fn new(context_size:usize) -> Self {
-        let project_store = ContextLookupNew::new(1024);
-
         Self {
-            //global_store:ContextLookupNew::from_file("../data/python_ident.txt"),
-            global_store:ContextLookupNew::new(1),
-            project_store:project_store,
-            context_size,
-            _index:0
+            context_size:context_size-1, // Decremented One to Exclue Line Postions
         }
-    }
-
-    fn create_positions(current_position:Vec<u32>, current_attention:&Vec<u32>) -> Vec<u32> {
-        let mut positions = Vec::<u32>::with_capacity(current_position.len());
-        
-        let mut last_attention = 5000;
-        let mut position_offset = 0;
-        for x in 0..current_position.len() {
-            if current_position[x] == 0 {
-                if current_attention[x] != last_attention {
-                    position_offset = 0;
-                    last_attention = current_attention[x];
-                }
-                else {
-                    position_offset += current_position[x-1];
-                    position_offset -= current_position[x-1];
-                }
-            }
-            positions.push(current_position[x] + position_offset);
-        }
-        positions
     }
 
     pub fn encode(&self, data:String) -> Option<TokenizedData> {
@@ -339,18 +223,17 @@ impl PythonParserNew {
         if !check_python(&data) {
             return None;
         }
-        //log::info!("Parser Failed");
-        //use std::fs;
-        //fs::write(format!("temp{}.py",1), data.clone());
-
-        //log::info!("Project {:?}", data);
-        // Create the Context which will be used to parse this file
-        let mut context = ContextStoreNew::new(&self.global_store, 
-            &self.project_store, 300, 250, 1250);
         
         let mut lexer = Token::lexer(data.as_str());
         // Convert the input file to a list of lines
-        let mut lines = split_lines(&mut lexer).into_iter().filter(|s|s.valid_line()).collect();
+        let base_lines = split_lines(&mut lexer).into_iter().collect();
+        let import_context = create_import_context(&base_lines, 299);
+        //log::info!("Import Context {:?}", import_context);
+
+        let mut context = ContextStore::new(import_context, 300, 300);
+
+        // Remove the import lines
+        let mut lines = base_lines.into_iter().filter(|s|s.valid_line()).collect();
         //log::info!("Lines {:?}", lines);
         // Top Level Grouping for File
         let mut body = Split::new(Holder::Body, 0);
@@ -358,7 +241,7 @@ impl PythonParserNew {
         parse_lines(&mut lines, &mut body, None, 0, &mut context);
         //log::info!("Body {:?}", body);
         // Create the ids and positions
-        let id_position = create_ids(&mut lines, &context);
+        let (ids, pos, attn) = create_ids(&mut lines, &context);
         // Create a Line to Number of Token Index
         let s_length = create_lengths(&mut lines);
         // Create the Attention Indices
@@ -368,8 +251,9 @@ impl PythonParserNew {
             let attn = body.create_mask(&context, &s_length, 0, x);
             attn_ids.insert(0,attn.0);
         }
-        if attn_ids[0].len() != id_position.1.len() {
-            log::info!("Parser Failed {} {}", attn_ids.len(), id_position.1.len());
+        attn_ids.insert(0, attn);
+        if attn_ids[0].len() != pos.len() {
+            log::info!("Parser Failed {} {}", attn_ids.len(), pos.len());
             use std::fs;
             let _ = fs::write(format!("temp{}.py",1), data.clone());
         }
@@ -379,10 +263,10 @@ impl PythonParserNew {
         //log::info!("Size {} {} {} {}", id_position.1.len(), attn_ids[0].len(), attn_ids[1].len(), attn_ids[3].len());
         //log::info!("Size {:?} {:?}", id_position, attn_ids[0]);
 
-        let positions = PythonParserNew::create_positions(id_position.1, &attn_ids[0]); 
+        //let positions = PythonParserNew::create_positions(id_position.1, &attn_ids[0]); 
         
         
-        Some(TokenizedData{ ids: id_position.0, positions: positions, attention_mask: attn_ids }) 
+        Some(TokenizedData{ ids: ids, positions: pos, attention_mask: attn_ids }) 
     }
 }
  

@@ -1,13 +1,11 @@
 
-from alpha import beta
+import t; import attr; import bbbb; import cccc; import dddd; import eeee; import ffff; import ggg;
 
-import alpha
-import beta
 
-a.b.c = d.e.f
-class alpha:
-    def beta_round_live(self,b,c,d):
-        alpha.beta = 10
-
-    def gamm(self,c,d,e):
+delta = 5
+class beta(gamma):
+    pass
+    def __int__(self):
         pass
+
+alpha = temp
