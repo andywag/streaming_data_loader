@@ -25,7 +25,7 @@ impl PythonBatch {
         tokenizer:PythonTokenizer,
     ) -> Self {
         
-        let first_set = model_type.create_dataset(dataset_config.clone(), batch_config.clone());
+        let first_set = model_type.create_dataset(dataset_config.clone(), batch_config.clone(), tokenizer.get_tokenizer_info());
         Self {
             model_type,
             dataset_config,
@@ -45,11 +45,14 @@ impl Batcher for PythonBatch {
         let ids = self.tokenizer.encode(data);
         match self.store.back() {
             Some(x) => if x.done() {
-                self.store.push_back(self.model_type.create_dataset(self.dataset_config.clone(), self.batch_config.clone()));
+                self.store.push_back(self.model_type.create_dataset(self.dataset_config.clone(), 
+                self.batch_config.clone(),
+                self.tokenizer.get_tokenizer_info()));
             },
             None => {
-                //log::info!("Adding Data to Queue");
-                self.store.push_back(self.model_type.create_dataset(self.dataset_config.clone(), self.batch_config.clone()));
+                self.store.push_back(self.model_type.create_dataset(self.dataset_config.clone(), 
+                self.batch_config.clone(),
+                self.tokenizer.get_tokenizer_info()));
             }
         }
         
@@ -59,6 +62,8 @@ impl Batcher for PythonBatch {
         }
         match self.store.back_mut().unwrap() {
             DataSet::BertHier(x) => x.put_data(ids.unwrap(), None),
+            DataSet::T5(x) => x.put_tokenized_data(ids.unwrap(), None),
+
             _ => {
                 log::error!("Only Python Data Set Supported");
                 std::process::exit(1);

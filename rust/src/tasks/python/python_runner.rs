@@ -2,6 +2,7 @@ use crate::config::{ ModelType};
 use crate::datasets::dataset_config::DataSetConfig;
 use crate::tasks::runner_simple;
 use crate::tokenizer::tokenizer_data::TokenizedData;
+use crate::tokenizer::tokenizer_wrapper::TokenizerInfo;
 use crate::{config::TrainingConfig, batcher::BatchConfig, datasets::dataset::DataSet, tokenizer::tokenizer_wrapper::TokenizerWrapper};
 use crate::tasks::masking::masking_runner::{create_endpoint, create_provider};
 
@@ -21,12 +22,26 @@ impl PythonTokenizer {
             PythonTokenizer::Context(x) => x.encode(data),
         }
     }
+
+
+    pub fn get_tokenizer_info(&self) -> TokenizerInfo {
+        TokenizerInfo {
+            cls: 1,
+            sep: 1,
+            pad: 0,
+            mask: 5,
+            unk: 4,
+            extra: (2500..2600).collect(),
+            eos: 2,
+        }
+    }
+
 }
 
 fn create_generator(model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, _tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
     let context_size = match dataset_config.clone() {
         DataSetConfig::MaskHier{mask_length:_,context_size, front:_} => context_size,
-        DataSetConfig::SpanHier { avg_span_gap:_, avg_span_size:_, context_size, extra_ids:_ } => context_size,
+        DataSetConfig::SpanHier { avg_span_prob:_, context_size, extra_ids:_ } => context_size,
         _ => {
             log::error!("Python Dataset Required");
             std::process::exit(1);

@@ -2,6 +2,7 @@ import os
 
 import models.bert_hier
 import models.bert_with_label
+import models.t5_hier
 
 from models.bert_hier import BertLocalEncoder
 from rust_config import ExternalConfig
@@ -19,6 +20,7 @@ import subprocess
 import multiprocessing as mp
 import torch
 import config_loader
+from functools import partial
 
 
 """ Basic 
@@ -49,7 +51,9 @@ def run_model(args):
         model_name = "bert-base-uncased"
     elif args.task == 'clm':
         model_name = "gpt2"
-    elif args.task == 't5':
+    elif args.task == 'span':
+        model_name = "t5-small"
+    elif args.task == 'span-python':
         model_name = "t5-small"
 
 
@@ -64,9 +68,9 @@ def run_model(args):
         config.max_position_embeddings = 512
         train_batch_size = 6
 
-
-        #model = AutoModelForMaskedLM.from_config(config=config).train()
-        model = models.bert_with_label.BertForMaskedLM(config).train()
+        config.context_layers = [2, 5, 7, 9, 11]
+        model = AutoModelForMaskedLM.from_config(config=config).train()
+        #model = models.bert_with_label.BertForMaskedLM(config).train()
 
 
         model.bert.encoder = BertLocalEncoder(config)
@@ -108,9 +112,24 @@ def run_model(args):
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
 
 
-    elif args.task == 't5':
+    elif args.task == 'span':
         config = AutoConfig.from_pretrained(model_name)
         model = T5ForConditionalGeneration.from_pretrained(model_name, config=config).train()
+
+    elif args.task == 'span-python':
+        config = AutoConfig.from_pretrained(model_name)
+        model = T5ForConditionalGeneration.from_pretrained(model_name, config=config).train()
+        for x in range(6):
+            block = model.encoder.block[x]
+            block.layer[0] = models.t5_hier.T5LayerSelfAttention(config)
+            dblock = model.decoder.block[x]
+            dblock.layer[0] = models.t5_hier.T5LayerSelfAttention(config)
+            dblock.layer[1] = models.t5_hier.T5LayerCrossAttention(config)
+
+        model.encoder.get_head_mask = partial(models.t5_hier.get_head_mask, [2,1,1,1,1], False)
+        model.decoder.get_head_mask = partial(models.t5_hier.get_head_mask, [1,1,1,1,2], False)
+        train_batch_size = 6
+        learning_rate = 2e-5
 
     training_args = TrainingArguments(output_dir="local",
                                       lr_scheduler_type="constant",
@@ -134,7 +153,7 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "t5", "squad", "single", "multi", "python"], default="python")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "span", "squad", "single", "multi", "python", "span-python"], default="span-python")
 parser.add_argument('--all', action='store_true', default=True)
 parser.add_argument('--cache', type=str, default='../../../storage')
 

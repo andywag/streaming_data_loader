@@ -87,8 +87,6 @@ pub fn create_tokenizer_holder(config:TokenizerType) -> TokenizerHolder {
             TokenizerHolder::HuggingFace(tokenizer)
         }
         TokenizerType::Python => {
-            //let tokenizer = PythonParserNew::new();
-            //TokenizerHolder::Python(tokenizer)
             TokenizerHolder::PythonNew
         },
         TokenizerType::PythonContext => {

@@ -10,6 +10,7 @@ use crate::models::t5_data::T5Data;
 use crate::provider::provider_config::ProviderConfig;
 use crate::tokenizer::tokenizer_config::{TokenizerInternalConfig};
 use crate::batcher::BatchConfig;
+use crate::tokenizer::tokenizer_wrapper::{TokenizerInfo};
 use crate::transport::TransportConfig;
 use crate::transport::zmq_receive::NodeConfig;
 
@@ -23,7 +24,8 @@ pub enum TaskType {
     SingleClass,
     Span,
     Python,
-    Context
+    Context,
+    SpanPython
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, ValueEnum)]
@@ -37,7 +39,7 @@ pub enum ModelType {
 }
 
 impl ModelType {
-    pub fn create_dataset(&self, dataset_config:DataSetConfig, batch_config:BatchConfig) -> DataSet{
+    pub fn create_dataset(&self, dataset_config:DataSetConfig, batch_config:BatchConfig, tokenizer_info:TokenizerInfo) -> DataSet{
         match self {
             ModelType::Bert =>  {
                 BertData::new(batch_config, dataset_config).into()
@@ -46,7 +48,7 @@ impl ModelType {
                 GptData::new(batch_config, dataset_config).into()
             }
             ModelType::T5 =>  {
-                T5Data::new(batch_config, dataset_config).into()
+                T5Data::new(batch_config, dataset_config, tokenizer_info).into()
             }
             ModelType::BertHier => {
                 BertHierData::new(batch_config, dataset_config, 5).into()

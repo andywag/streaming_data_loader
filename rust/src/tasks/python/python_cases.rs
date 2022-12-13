@@ -39,12 +39,10 @@ pub fn get_case(case:Cases, test:bool) -> TrainingConfig {
     let dataset_config = DataSetConfig::MaskHier { mask_length, context_size, front:false };
     match case {
         Cases::Span => {
-            let avg_span_gap:f64 = 16.0;
-            let avg_span_size:f64 = 2.0;
-            let dataset_config = DataSetConfig::SpanHier { avg_span_gap:avg_span_gap,avg_span_size:avg_span_size, context_size: 5, extra_ids: extra_ids };
-            let tokenizer =  TokenizerInternalConfig{ task:TokenizerTask::Bert, typ:TokenizerType::Python};
+            let dataset_config = DataSetConfig::SpanHier { avg_span_prob:0.15, context_size: 5, extra_ids: extra_ids };
+            let tokenizer =  TokenizerInternalConfig{ task:TokenizerTask::T5, typ:TokenizerType::Python};
             TrainingConfig { 
-                model_config:crate::config::ModelType::BertHier,
+                model_config:crate::config::ModelType::T5,
                 source: get_provider(test), 
                 tokenizer,
                 batch: batch_config, 

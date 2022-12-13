@@ -17,7 +17,7 @@ pub struct SimpleBatcher {
 impl SimpleBatcher {
     pub fn new(model_type:ModelType, dataset_config:DataSetConfig,  batch_config:BatchConfig, tokenizer:TokenizerWrapper) -> Self {
         Self {
-            batch: model_type.create_dataset(dataset_config.clone(), batch_config.clone()),
+            batch: model_type.create_dataset(dataset_config.clone(), batch_config.clone(), tokenizer.get_tokenizer_info()),
             model_type,
             dataset_config,
             batch_config,
@@ -44,7 +44,9 @@ impl Batcher for SimpleBatcher {
 
     fn get_working_batch(&mut self) -> Option<Self::T> {
         
-        let mut old_batch = self.model_type.create_dataset(self.dataset_config.clone(), self.batch_config.clone()); 
+        let mut old_batch = self.model_type.create_dataset(self.dataset_config.clone(), 
+            self.batch_config.clone(),
+            self.tokenizer.get_tokenizer_info()); 
         std::mem::swap(&mut self.batch, &mut old_batch);
         return Some(old_batch);
     }

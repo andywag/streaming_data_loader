@@ -28,7 +28,7 @@ impl GenTokenizer {
         chunk:bool
     ) -> Self {
         
-        let first_set = model_type.create_dataset(dataset_config.clone(), batch_config.clone());
+        let first_set = model_type.create_dataset(dataset_config.clone(), batch_config.clone(), tokenizer.get_tokenizer_info());
         Self {
             model_type,
             batch_config,
@@ -47,7 +47,10 @@ impl GenTokenizer {
         if self.store.back().unwrap().done() {
             let remaining = self.store.back().unwrap().remaining();
             //self.store.push_back(self.template.create_data());
-            let new_data = self.model_type.create_dataset(self.dataset_config.clone(), self.batch_config.clone());
+            let new_data = self.model_type.create_dataset(self.dataset_config.clone(), 
+                self.batch_config.clone(),
+                self.tokenizer.get_tokenizer_info()
+            );
             self.store.push_back(new_data);
             if remaining.is_some() {
                 let mut r = remaining.unwrap();

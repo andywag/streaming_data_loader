@@ -64,17 +64,17 @@ class BertLocalEncoder(nn.Module):
         attention_mask_old = attention_mask
         attention_mask = expand_mask(attention_mask, None, attention_mask.device)
 
+        context_layers = self.config.context_layers
+        attn_index = []
+        for x in range(self.config.num_hidden_layers):
+            for y in range(len(context_layers)):
+                if x <= context_layers[y]:
+                    attn_index.append(y)
+                    break
+
+
         for i, layer_module in enumerate(self.layer):
-            if i < 3:
-                mask = attention_mask[:,0,:,:]
-            elif i < 6:
-                mask = attention_mask[:,1,:,:]
-            elif i < 8:
-                mask = attention_mask[:,2,:,:]
-            elif i < 10:
-                mask = attention_mask[:,3,:,:]
-            else:
-                mask = attention_mask[:,4,:,:]
+            mask = attention_mask[:,attn_index[i],:,:]
             mask = mask[:,None,:,:]
 
             if output_hidden_states:
@@ -93,19 +93,23 @@ class BertLocalEncoder(nn.Module):
                 output_attentions,
             )
             hidden_states = layer_outputs[0]
-            if True:
-                if i == 2:
-                    hidden_states += self.l_embed[0](attention_mask_old[:,0,:])
-                    hidden_states = self.l_norm[0](hidden_states)
-                elif i == 5:
-                    hidden_states += self.l_embed[1](attention_mask_old[:,1,:])
-                    hidden_states = self.l_norm[1](hidden_states)
-                elif i == 7:
-                    hidden_states += self.l_embed[2](attention_mask_old[:,2,:])
-                    hidden_states = self.l_norm[2](hidden_states)
-                elif i == 9:
-                    hidden_states += self.l_embed[3](attention_mask_old[:,3,:])
-                    hidden_states = self.l_norm[3](hidden_states)
+            if i in context_layers[:-1]:
+                sp = context_layers.index(i)
+                hidden_states += self.l_embed[sp](attention_mask_old[:, sp, :])
+                hidden_states = self.l_norm[sp](hidden_states)
+            #if True:
+            #    if i == 2:
+            #        hidden_states += self.l_embed[0](attention_mask_old[:,0,:])
+            #        hidden_states = self.l_norm[0](hidden_states)
+            #    elif i == 5:
+            #        hidden_states += self.l_embed[1](attention_mask_old[:,1,:])
+            #        hidden_states = self.l_norm[1](hidden_states)
+            #    elif i == 7:
+            #        hidden_states += self.l_embed[2](attention_mask_old[:,2,:])
+            #        hidden_states = self.l_norm[2](hidden_states)
+            #    elif i == 9:
+            #        hidden_states += self.l_embed[3](attention_mask_old[:,3,:])
+            #        hidden_states = self.l_norm[3](hidden_states)
 
 
             #hidden_states = layer_outputs[0]

@@ -1,11 +1,8 @@
 
-import t; import attr; import bbbb; import cccc; import dddd; import eeee; import ffff; import ggg;
+import torch
 
+device = 'cuda';
 
-delta = 5
-class beta(gamma):
-    pass
-    def __int__(self):
-        pass
-
-alpha = temp
+data = torch.tensor([[4],[5],[6]])
+d = data.expand(3,4)
+pass

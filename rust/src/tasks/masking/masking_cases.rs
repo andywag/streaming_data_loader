@@ -75,7 +75,6 @@ pub fn get_case(typ:MaskingCases, test:bool) -> TrainingConfig {
             }
         },
         MaskingCases::T5 => {
-            let number_spans = batch.sequence_length/8;
             let tokenizer = TokenizerInternalConfig{ task:TokenizerTask::T5, 
                 typ:TokenizerType::HuggingFace("t5-small".to_string()) 
             }; 
@@ -86,7 +85,7 @@ pub fn get_case(typ:MaskingCases, test:bool) -> TrainingConfig {
                 batch, 
                 transport: arrow_cases::get_transport_config(test), 
                 node: NodeConfig::None, 
-                dataset_config:DataSetConfig::Span{number_spans: number_spans, mask_probability: 0.15} 
+                dataset_config:DataSetConfig::Span{ avg_span_gap: 16.0, avg_span_size: 2.0 } 
             }
         },
     }

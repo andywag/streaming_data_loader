@@ -187,10 +187,11 @@ fn create_lengths(lines:&mut Vec<Line>) -> Vec<usize> {
     s_length
 }
 /// Create a set of ids for each of the lines
-fn create_ids(lines:&mut Vec<Line>, context:&ContextStore) -> (Vec<u32>, Vec<u32>, Vec<u32>){
+fn create_ids(lines:&mut Vec<Line>, context:&ContextStore) -> (Vec<u32>, Vec<u32>, Vec<u32>, Vec<usize>){
     let mut ids = Vec::<u32>::with_capacity(512);
     let mut positions = Vec::<u32>::with_capacity(512);
     let mut attentions = Vec::<u32>::with_capacity(512);
+    let mut gaps = Vec::<usize>::with_capacity(128);
 
     let mut index = 0;
     for line in lines.as_mut_slice() {
@@ -199,9 +200,10 @@ fn create_ids(lines:&mut Vec<Line>, context:&ContextStore) -> (Vec<u32>, Vec<u32
         let p:Vec<u32> = (0..line.length as u32).collect();
         positions.extend(p);
         attentions.extend(vec![index;line.length]);
+        gaps.push(line.length);
         index += 1;
     }
-    (ids, positions, attentions)
+    (ids, positions, attentions, gaps)
 }
 
 
@@ -241,7 +243,7 @@ impl PythonParserNew {
         parse_lines(&mut lines, &mut body, None, 0, &mut context);
         //log::info!("Body {:?}", body);
         // Create the ids and positions
-        let (ids, pos, attn) = create_ids(&mut lines, &context);
+        let (ids, pos, attn, gaps) = create_ids(&mut lines, &context);
         // Create a Line to Number of Token Index
         let s_length = create_lengths(&mut lines);
         // Create the Attention Indices
@@ -266,7 +268,7 @@ impl PythonParserNew {
         //let positions = PythonParserNew::create_positions(id_position.1, &attn_ids[0]); 
         
         
-        Some(TokenizedData{ ids: ids, positions: pos, attention_mask: attn_ids }) 
+        Some(TokenizedData{ ids: ids, positions: pos, attention_mask: attn_ids, gaps: gaps }) 
     }
 }
  

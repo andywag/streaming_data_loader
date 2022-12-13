@@ -1,7 +1,8 @@
 
+
+
 use clap::{Parser, ValueEnum};
 use loader::{tasks::{cases::BasicCases, python::{python_cases, python_runner}}, config::{TaskType, ModelType}};
-
 
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -50,13 +51,14 @@ async fn main()  {
         TaskType::SingleClass => BasicCases::Single,
         TaskType::MultiLabel => BasicCases::Multi,
         TaskType::Python => BasicCases::Python,
-        TaskType::Context => BasicCases::Python
+        TaskType::Context => BasicCases::PythonContext,
+        TaskType::SpanPython => BasicCases::PythonSpan,
     };
     
     match args.mode {
         Mode::Run => {
             let example = config.get_config(args.test);
-            let result = loader::tasks::run(example, args.task, args.cache).await;
+            let result = loader::tasks::run(example, args.task, args.cache, None).await;
             log::info!("Final Result {}", result);
         },
         Mode::Filter => {

@@ -3,7 +3,6 @@
 
 
 use serde::Serialize;
-use serde::Deserialize;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::mpsc::{Sender};
 use tokio::task::{self, JoinHandle};
@@ -13,11 +12,12 @@ use crate::batcher::BatchConfig;
 use crate::batcher::{self, Batcher};
 use crate::config::ModelType;
 use crate::config::TrainingConfig;
+use crate::datasets::dataset::DataSet;
 use crate::datasets::dataset_config::DataSetConfig;
 use crate::tokenizer::tokenizer_config::TokenizerInternalConfig;
 use crate::tokenizer::tokenizer_wrapper;
 use crate::tokenizer::tokenizer_wrapper::TokenizerWrapper;
-use crate::transport::test_endpoint::{self, EndPoint};
+use crate::transport::test_endpoint::{EndPoint};
 use crate::provider::provider_config::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};
 use crate::provider::{ProviderChannel};
@@ -73,21 +73,21 @@ type DataProviderAsync<P> = Box<dyn Fn(ProviderConfig, Sender<ProviderChannel<P>
 type DataProviderSync<P> = Box<dyn Fn(&ProviderConfig, DataSetConfig) -> ArrowTransfer<P>>;
 
 // TODO : Clean up the direct reading of the Serde Value and use a serde load to a struct
-pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serialize+Send+'static>(
+pub async fn run_main<'de, P:Clone + Send + 'static>(
     config:TrainingConfig,
     base_provider:ProviderType<DataProviderAsync<P>,DataProviderSync<P>>,
-    generator:Box<dyn Fn(ModelType, BatchConfig, DataSetConfig, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
-    endpoint:Box<dyn Fn(TrainingConfig) -> Box<dyn EndPoint<D> + Send>>,
-    cache:Option<String>) -> bool {
+    generator:Box<dyn Fn(ModelType, BatchConfig, DataSetConfig, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=DataSet> + Send>>,
+    _endpoint:Box<dyn Fn(TrainingConfig) -> Box<dyn EndPoint<DataSet> + Send>>,
+    cache:Option<String>
+    ) -> bool {
 
 
     let config_copy = config.clone();
-    let training_config = config.clone();
 
     // Create the Channel from Input to Tokenizer
     let (tx, rx) = tokio::sync::mpsc::channel::<ProviderChannel<P>>(2);
     // Create the Channel from Tokenizer to Output
-    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ProviderChannel<D>>(1);
+    let (tx_trans, rx_trans) = tokio::sync::mpsc::channel::<ProviderChannel<DataSet>>(1);
 
     // Data Loading Configuration
 
@@ -110,6 +110,8 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
     // 1. "test" : Create an internal test endpoint
     // 2. ""     : Create a zmq endpoint which talks to external process
 
+    let join_rx = transport::create_transport(config_copy, rx_trans).await;
+    /* 
     let join_rx = match config.transport.transport{
         transport::TransportEnum::Test => {
             let endpoint = endpoint(config_copy);
@@ -126,7 +128,9 @@ pub async fn run_main<'de, P:Clone + Send + 'static, D:Deserialize<'de>+Serializ
                 result.await
             })
         },
+        
     };
+    */
 
     // Create one of 2 options 
     // 1. "none"   : No Operation with either the test mode 

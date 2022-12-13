@@ -1,11 +1,12 @@
 
+
 use loader::{config::{TrainingConfig, TaskType}, tasks::{cases::BasicCases, python::python_cases}};
 
 #[tokio::main]
 
 async fn test_case(config:TrainingConfig, task:TaskType) {
     loader::logger::create_logger();
-    let result = loader::tasks::run(config, task, Some("../../../storage".to_string())).await;
+    let result = loader::tasks::run(config, task, Some("../../../storage".to_string()),None).await;
     log::info!("Result {}", result);
     assert!(result);
    

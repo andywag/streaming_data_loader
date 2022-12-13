@@ -19,7 +19,8 @@ pub enum BasicCases {
     Multi,
     Single,
     Python,
-    PythonContext
+    PythonContext,
+    PythonSpan,
 }
 
 impl BasicCases {
@@ -35,7 +36,7 @@ impl BasicCases {
             BasicCases::Single => single_cases::get_case(single_cases::Cases::Imdb, test),
             BasicCases::Python => python_cases::get_case(python_cases::Cases::Basic, test),
             BasicCases::PythonContext => python_cases::get_case(python_cases::Cases::Context, test),
-
+            BasicCases::PythonSpan => python_cases::get_case(python_cases::Cases::Span, test),
         }
     }
 }

@@ -30,7 +30,7 @@ impl From<BertHierData> for DataSet {
 }
 
 impl DataSet {
-    pub fn create_data(&mut self) -> DataSet {
+    /*pub fn create_data(&mut self) -> DataSet {
         match self {
             DataSet::Mask(x) => DataSet::Mask(x.new_data()),
             //DataSet::Gpt2(x) => DataSet::Gpt2(x.new_data()),
@@ -41,7 +41,7 @@ impl DataSet {
             //DataSet::Python(x) => DataSet::Python(x.new_data()),
             _ => todo!()
         }
-    }
+    }*/
 
     pub fn put_full_data(&mut self, data:Vec<u32>, _alt_data:Option<Vec<u32>>, label:Option<Label>) -> bool {
         match self {

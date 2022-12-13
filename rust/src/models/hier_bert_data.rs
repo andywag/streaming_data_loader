@@ -24,7 +24,7 @@ impl BertHierData {
     pub fn new(batch_config:BatchConfig, dataset_config:DataSetConfig, _mask:u32) -> Self{
         let context_size = match dataset_config.clone() {
             DataSetConfig::MaskHier { mask_length:_, context_size, front:_ } => context_size,
-            DataSetConfig::SpanHier { avg_span_gap:_, avg_span_size:_, context_size, extra_ids:_ } => context_size,
+            //DataSetConfig::SpanHier { avg_span_gap:_, avg_span_size:_, context_size, extra_ids:_ } => context_size,
             _ => panic!("Data Hierarchichal Task Required"),
         };
         let number_context_layers = context_size;
@@ -143,48 +143,36 @@ impl BertHierData {
         if data.ids.len() < 64 {
             return false;
         }
-        let data_config_clone = self.dataset_config.clone();
-        if let DataSetConfig::SpanHier { avg_span_gap, avg_span_size, context_size, extra_ids } = data_config_clone {
-            self.create_span(data, 
-                avg_span_gap.to_owned(), 
-                avg_span_size.to_owned(), 
-                &extra_ids, 
-                context_size.to_owned());
-        }
-        else {
-            let l = std::cmp::min(self.batch_config.sequence_length, data.ids.len());
-            let ids = &data.ids[0..l];
-            let positions = &data.positions[0..l];
+        //let data_config_clone = self.dataset_config.clone();
+
+        let l = std::cmp::min(self.batch_config.sequence_length, data.ids.len());
+        let ids = &data.ids[0..l];
+        let positions = &data.positions[0..l];
     
-            self.input_ids[self.index][0..l].clone_from_slice(ids);
-            self.position_ids[self.index][0..l as usize].clone_from_slice(positions);
+        self.input_ids[self.index][0..l].clone_from_slice(ids);
+        self.position_ids[self.index][0..l as usize].clone_from_slice(positions);
             
-            match &self.dataset_config {
+        match &self.dataset_config {
     
-                DataSetConfig::MaskHier { mask_length, context_size, front:true } => {
-                    for x in 0..context_size.to_owned() {
-                        let attention = &data.attention_mask[x];
-                        let attention = &attention[0..l];
-                        self.attention_mask[self.index][x][0..l].clone_from_slice(attention);
-                    }
-                    self.mask_batch_front(mask_length.to_owned(), 5);
-                },
-                DataSetConfig::MaskHier { mask_length, context_size, front:false } => {
-                    for x in 0..context_size.to_owned() {
-                        let attention = &data.attention_mask[x];
-                        let attention = &attention[0..l];
-                        self.attention_mask[self.index][x][0..l].clone_from_slice(attention);
-                    }
-                    self.mask_batch(mask_length.to_owned(), 5);
-                },
-                _ => panic!("Only Python Configuration Supported")
-            }
-    
+            DataSetConfig::MaskHier { mask_length, context_size, front:true } => {
+                for x in 0..context_size.to_owned() {
+                    let attention = &data.attention_mask[x];
+                    let attention = &attention[0..l];
+                    self.attention_mask[self.index][x][0..l].clone_from_slice(attention);
+                }
+                self.mask_batch_front(mask_length.to_owned(), 5);
+            },
+            DataSetConfig::MaskHier { mask_length, context_size, front:false } => {
+                for x in 0..context_size.to_owned() {
+                    let attention = &data.attention_mask[x];
+                    let attention = &attention[0..l];
+                    self.attention_mask[self.index][x][0..l].clone_from_slice(attention);
+                }
+                self.mask_batch(mask_length.to_owned(), 5);
+            },
+            _ => panic!("Only Python Configuration Supported")
         }
-
-        
-
-        
+    
         self.index += 1;
         self.done()
     }
