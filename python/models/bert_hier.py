@@ -97,20 +97,6 @@ class BertLocalEncoder(nn.Module):
                 sp = context_layers.index(i)
                 hidden_states += self.l_embed[sp](attention_mask_old[:, sp, :])
                 hidden_states = self.l_norm[sp](hidden_states)
-            #if True:
-            #    if i == 2:
-            #        hidden_states += self.l_embed[0](attention_mask_old[:,0,:])
-            #        hidden_states = self.l_norm[0](hidden_states)
-            #    elif i == 5:
-            #        hidden_states += self.l_embed[1](attention_mask_old[:,1,:])
-            #        hidden_states = self.l_norm[1](hidden_states)
-            #    elif i == 7:
-            #        hidden_states += self.l_embed[2](attention_mask_old[:,2,:])
-            #        hidden_states = self.l_norm[2](hidden_states)
-            #    elif i == 9:
-            #        hidden_states += self.l_embed[3](attention_mask_old[:,3,:])
-            #        hidden_states = self.l_norm[3](hidden_states)
-
 
             #hidden_states = layer_outputs[0]
             if use_cache:

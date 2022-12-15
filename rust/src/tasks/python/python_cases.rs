@@ -32,14 +32,13 @@ pub fn get_case(case:Cases, test:bool) -> TrainingConfig {
     let sequence_length = 512;
     let mask_length = get_mask_length(sequence_length);
     let context_size:usize = 5;//vec![3,3,3,3];
-    let extra_ids:Vec<u32> = (300..400).collect();
 
     let batch_config = BatchConfig{batch_size, sequence_length};
 
     let dataset_config = DataSetConfig::MaskHier { mask_length, context_size, front:false };
     match case {
         Cases::Span => {
-            let dataset_config = DataSetConfig::SpanHier { avg_span_prob:0.15, context_size: 5, extra_ids: extra_ids };
+            let dataset_config = DataSetConfig::SpanHier { avg_span_prob:0.15, context_size: 5 };
             let tokenizer =  TokenizerInternalConfig{ task:TokenizerTask::T5, typ:TokenizerType::Python};
             TrainingConfig { 
                 model_config:crate::config::ModelType::T5,

@@ -4,8 +4,10 @@ use serde::{Serialize, Deserialize};
 use tokio::{sync::mpsc::Receiver, task::{JoinHandle, self}};
 
 use crate::{provider::ProviderChannel};
+use pyo3::prelude::*;
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+
+#[derive(Deserialize, Serialize, Debug, Clone, FromPyObject)]
 
 pub struct BatchConfig {
     pub batch_size:usize,
@@ -65,6 +67,7 @@ pub async fn create_batch<S,T>(mut rx:Receiver<ProviderChannel<S>>,
                 let batch = batcher.create_sync_batch(x);
                 if batch.is_some() {
                     // Batch");
+                    log::info!("Sending Data");
                     let real_batch = batch.unwrap();
                     let _result = tx_transport.send(ProviderChannel::Data(real_batch)).await;
                 }

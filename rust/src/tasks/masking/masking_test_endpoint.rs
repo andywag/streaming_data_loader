@@ -27,7 +27,6 @@ impl EndPoint<DataSet> for MaskingEndpoint {
     fn receive(&mut self, data:DataSet) -> bool {
         // TODO : Fixe the masked testing
         match data {
-            DataSet::Mask(x) => self.check_batch(x),
             DataSet::BertHier(x) => self.check_batch(x),
             DataSet::Bert(x) => self.check_batch(x),
             

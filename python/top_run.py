@@ -76,9 +76,9 @@ def run_model(args):
         model.bert.encoder = BertLocalEncoder(config)
         model.bert.get_extended_attention_mask = models.bert_hier.get_extended_attention_mask
 
-        cp = "../../datasets/checkpoints/checkpoint-9000/pytorch_model.bin"
-        model.load_state_dict(torch.load(cp))
-        #
+        #cp = "../../datasets/checkpoints/checkpoint-9000/pytorch_model.bin"
+        #model.load_state_dict(torch.load(cp))
+
 
 
 
@@ -118,18 +118,29 @@ def run_model(args):
 
     elif args.task == 'span-python':
         config = AutoConfig.from_pretrained(model_name)
-        model = T5ForConditionalGeneration.from_pretrained(model_name, config=config).train()
+        config.vocab_size = 4096
+        #model = T5ForConditionalGeneration(config=config).train()
+        model = models.t5_hier.T5ForConditionalGeneration(config=config).train()
+
         for x in range(6):
+            if x == 0:
+                relative_attention_bias = True
+            else:
+                relative_attention_bias = False
             block = model.encoder.block[x]
-            block.layer[0] = models.t5_hier.T5LayerSelfAttention(config)
+            block.layer[0] = models.t5_hier.T5LayerSelfAttention(config, has_relative_attention_bias=relative_attention_bias)
             dblock = model.decoder.block[x]
-            dblock.layer[0] = models.t5_hier.T5LayerSelfAttention(config)
+            dblock.layer[0] = models.t5_hier.T5LayerSelfAttention(config, has_relative_attention_bias=relative_attention_bias)
             dblock.layer[1] = models.t5_hier.T5LayerCrossAttention(config)
 
         model.encoder.get_head_mask = partial(models.t5_hier.get_head_mask, [2,1,1,1,1], False)
         model.decoder.get_head_mask = partial(models.t5_hier.get_head_mask, [1,1,1,1,2], False)
+
+        cp = "../../datasets/checkpoints_t5/checkpoint-2000/pytorch_model.bin"
+        model.load_state_dict(torch.load(cp))
+
         train_batch_size = 6
-        learning_rate = 2e-5
+        learning_rate = 1e-4
 
     training_args = TrainingArguments(output_dir="local",
                                       lr_scheduler_type="constant",
@@ -138,7 +149,7 @@ def run_model(args):
                                       per_device_train_batch_size=train_batch_size,
                                       logging_steps=8,
                                       num_train_epochs=num_train_epochs,
-                                      save_steps=500,
+                                      save_steps=1000,
                                       gradient_accumulation_steps=gradient_accumulation,
                                       weight_decay=.01
                                       )

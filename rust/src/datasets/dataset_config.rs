@@ -12,7 +12,7 @@ pub enum DataSetConfig {
     Squad,
     SingleClass,
     MaskHier{mask_length:usize, context_size:usize, front:bool},
-    SpanHier{avg_span_prob:f64, context_size:usize, extra_ids:Vec<u32>},
+    SpanHier{avg_span_prob:f64, context_size:usize},
 
 }
 

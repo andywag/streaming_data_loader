@@ -146,9 +146,11 @@ impl Line {
                 },
                 Th::I(x) => {
                     ids.push(x.id);
+                    //ids.push(147)
                 },
                 Th::N(x) => {
                     ids.push(x.id);
+                    //ids.push(147)
                 },
             }
                     }

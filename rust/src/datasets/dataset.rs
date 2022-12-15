@@ -1,11 +1,10 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{tasks::{masking::{masked_data::MaskedData},  squad::squad_data::SquadData}, models::{simple_label::Label, bert_data::BertData, gpt_data::GptData, t5_data::T5Data, hier_bert_data::BertHierData}};
+use crate::{tasks::{squad::squad_data::SquadData}, models::{simple_label::Label, bert_data::BertData, gpt_data::GptData, t5_data::T5Data, hier_bert_data::BertHierData}};
 
 #[derive(Clone, Deserialize, Debug)]
 pub enum DataSet {
-    Mask(MaskedData),
     Gpt2(GptData),
     T5(T5Data),
     Multi,
@@ -28,6 +27,8 @@ impl From<T5Data> for DataSet {
 impl From<BertHierData> for DataSet {
     fn from(x: BertHierData) -> Self {DataSet::BertHier(x)}
 }
+
+
 
 impl DataSet {
     /*pub fn create_data(&mut self) -> DataSet {
@@ -60,9 +61,8 @@ impl DataSet {
         }
     }
     
-    pub fn put_data(&mut self, ids:&[u32]) -> bool {
+    pub fn put_data(&mut self, _ids:&[u32]) -> bool {
         match self {
-            DataSet::Mask(x) => x.put_data(ids),
             //DataSet::Gpt2(x) => x.put_data(ids),
             //DataSet::T5(x) => x.put_data(ids),
             DataSet::Squad(_x) => {true}//x.put_data(ids),
@@ -73,7 +73,6 @@ impl DataSet {
 
     pub fn done(&self) -> bool {
         match self {
-            DataSet::Mask(x) => x.done(),
             DataSet::Gpt2(x) => x.done(),
             DataSet::T5(x) => x.done(),
             DataSet::Squad(x) => x.done(),
@@ -97,7 +96,6 @@ impl Serialize for DataSet {
     where
         S: serde::Serializer {
             match self {
-                DataSet::Mask(x) => x.serialize(serializer),
                 DataSet::Gpt2(x) => x.serialize(serializer),
                 DataSet::T5(x) => x.serialize(serializer),
                 DataSet::Squad(x) => x.serialize(serializer),

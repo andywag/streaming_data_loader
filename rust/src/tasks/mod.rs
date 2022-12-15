@@ -3,7 +3,7 @@ use std::sync::mpsc::SyncSender;
 
 use serde::{Serialize,Deserialize};
 
-use crate::{config::{TrainingConfig, TaskType}, datasets::dataset::DataSet};
+use crate::{config::{TrainingConfig, TaskType}, datasets::dataset::DataSet, provider::ProviderChannel};
 
 
 pub mod masking;
@@ -27,14 +27,14 @@ pub struct DatasetInfo {
 }
 
 
-pub async fn run(config:TrainingConfig, task:TaskType, cache:Option<String>, _destination:Option<SyncSender<DataSet>>) -> bool{
+pub async fn run(config:TrainingConfig, task:TaskType, cache:Option<String>, destination:Option<SyncSender<ProviderChannel<DataSet>>>) -> bool{
     match task {
         TaskType::Squad => single_class::runner::run(config).await,
         TaskType::MultiLabel => single_class::runner::run(config).await,
         TaskType::SingleClass => single_class::runner::run(config).await,
-        TaskType::Mlm => masking::masking_runner::run(config, cache).await,
-        TaskType::Clm => masking::masking_runner::run(config,  cache).await,
-        TaskType::Span => masking::masking_runner::run(config,  cache).await,
+        TaskType::Mlm => masking::masking_runner::run(config, destination, cache).await,
+        TaskType::Clm => masking::masking_runner::run(config,  destination, cache).await,
+        TaskType::Span => masking::masking_runner::run(config,  destination, cache).await,
         TaskType::Python => python::python_runner::run(config, cache).await,
         TaskType::SpanPython => python::python_runner::run(config, cache).await,
 

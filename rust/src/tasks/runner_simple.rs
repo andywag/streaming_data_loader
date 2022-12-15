@@ -2,26 +2,22 @@
 
 
 
+use std::sync::mpsc::SyncSender;
+
 use serde::Serialize;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::mpsc::{Sender};
 use tokio::task::{self, JoinHandle};
 
 
-use crate::batcher::BatchConfig;
 use crate::batcher::{self, Batcher};
-use crate::config::ModelType;
 use crate::config::TrainingConfig;
 use crate::datasets::dataset::DataSet;
 use crate::datasets::dataset_config::DataSetConfig;
-use crate::tokenizer::tokenizer_config::TokenizerInternalConfig;
-use crate::tokenizer::tokenizer_wrapper;
-use crate::tokenizer::tokenizer_wrapper::TokenizerWrapper;
-use crate::transport::test_endpoint::{EndPoint};
+
 use crate::provider::provider_config::ProviderConfig;
 use crate::provider::arrow_transfer::{ArrowTransfer};
 use crate::provider::{ProviderChannel};
-use crate::transport::zmq_receive::NodeConfig;
 use crate::transport::{self};
 
 
@@ -41,19 +37,15 @@ pub async fn create_data_provider<P:Clone + Send + 'static>(provider_config:Prov
     join_provider
 }
 
-pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(
-    tokenizer_config:TokenizerInternalConfig,
-    model_type:ModelType,
-    config_batch:BatchConfig,
-    dataset_config:DataSetConfig,
-    generator:Box<dyn Fn(ModelType, BatchConfig, DataSetConfig, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=D> + Send>>,
+pub async fn create_tokenizer<P:Send + 'static, D:Serialize+Send+'static>(config:TrainingConfig,
+    generator:Box<dyn Fn(TrainingConfig)-> Box<dyn Batcher<S=P,T=D> + Send>>,
     rx:Receiver<ProviderChannel<P>>, 
     tx:Sender<ProviderChannel<D>>) -> JoinHandle<()> {
     // Create the Data Provider
     
     
-    let tokenizer = tokenizer_wrapper::get_tokenizer(tokenizer_config).unwrap();
-    let generator = generator(model_type, config_batch, dataset_config, tokenizer);
+    //let tokenizer = tokenizer_wrapper::get_tokenizer(config.tokenizer).unwrap();
+    let generator = generator(config);
 
     let join_tokenizer = task::spawn(async move {
         let result = batcher::create_batch(rx, tx, generator);
@@ -76,8 +68,8 @@ type DataProviderSync<P> = Box<dyn Fn(&ProviderConfig, DataSetConfig) -> ArrowTr
 pub async fn run_main<'de, P:Clone + Send + 'static>(
     config:TrainingConfig,
     base_provider:ProviderType<DataProviderAsync<P>,DataProviderSync<P>>,
-    generator:Box<dyn Fn(ModelType, BatchConfig, DataSetConfig, TokenizerWrapper)-> Box<dyn Batcher<S=P,T=DataSet> + Send>>,
-    _endpoint:Box<dyn Fn(TrainingConfig) -> Box<dyn EndPoint<DataSet> + Send>>,
+    generator:Box<dyn Fn(TrainingConfig)-> Box<dyn Batcher<S=P,T=DataSet> + Send>>,
+    destination:Option<SyncSender<ProviderChannel<DataSet>>>,
     cache:Option<String>
     ) -> bool {
 
@@ -98,59 +90,18 @@ pub async fn run_main<'de, P:Clone + Send + 'static>(
     };
 
     // Create the batcher
-    let join_tokenizer = create_tokenizer(config.tokenizer,
-        config.model_config,  
-        config.batch, 
-        config.dataset_config, 
+    let join_tokenizer = create_tokenizer(config_copy.clone(),
         generator, 
         rx, 
         tx_trans);
 
-    // Create One of 2 Options 
-    // 1. "test" : Create an internal test endpoint
-    // 2. ""     : Create a zmq endpoint which talks to external process
 
-    let join_rx = transport::create_transport(config_copy, rx_trans).await;
-    /* 
-    let join_rx = match config.transport.transport{
-        transport::TransportEnum::Test => {
-            let endpoint = endpoint(config_copy);
 
-            task::spawn(async move {
-                let result = test_endpoint::receive(rx_trans, endpoint);
-                result.await
-            
-            })   
-        },
-        transport::TransportEnum::Zmq{address} => {
-            task::spawn(async move {
-                let result = transport::zmq_transmit::receive_transport(address, rx_trans, training_config);
-                result.await
-            })
-        },
-        
-    };
-    */
+    // Create the code which will transport the data to the end device
+    let join_rx = transport::create_transport(config_copy, rx_trans, destination).await;
+    // Optionally create the device
+    let join_node = transport::create_transport_node(config.node).await;
 
-    // Create one of 2 options 
-    // 1. "none"   : No Operation with either the test mode 
-    // 2. "python" : External Python Command
-
-    let join_node = match config.node {
-        NodeConfig::Python(config) => { // Python Option
-            task::spawn(async move {
-                let result = transport::zmq_receive::python_node_transport(config);
-                result.await
-            })
-        },
-        NodeConfig::None => { // Bypass Option
-            task::spawn(async move {
-                let result = transport::zmq_receive::dummy_node_tranport();
-                result.await
-            })
-        }
-    };
-    
 
 
     let result = tokio::join!(join_rx, join_tokenizer, join_provider, join_node);

@@ -24,10 +24,12 @@ pub struct T5Data {
 
 impl T5Data {
     pub fn new(batch_config:BatchConfig, dataset_config:DataSetConfig, tokenizer_info:TokenizerInfo) -> Self{
-        let (head_mask, decode_head_mask) = if let DataSetConfig::SpanHier { avg_span_prob:_, context_size, extra_ids:_ } = dataset_config {
+        
+        let (head_mask, decode_head_mask) = if let DataSetConfig::SpanHier { avg_span_prob, context_size } = dataset_config {
+            let max_label_length = (2.1*avg_span_prob*batch_config.sequence_length as f64).round() as usize;
             let (c,b,s) = (context_size, batch_config.batch_size, batch_config.sequence_length);
             let head_mask = vec![vec![vec![255;s];c];b];
-            let decode_head_mask = vec![vec![vec![255;4*s/8];c];b];
+            let decode_head_mask = vec![vec![vec![255;max_label_length];c];b];
             (head_mask, decode_head_mask)
         }
         else {
@@ -39,7 +41,7 @@ impl T5Data {
             attention_mask: vec![vec![1;batch_config.sequence_length];batch_config.batch_size],
             head_mask,
             decode_head_mask,
-            labels:vec![vec![-100;4*batch_config.sequence_length/8]; batch_config.batch_size],
+            labels:vec![vec![-100;batch_config.sequence_length/4]; batch_config.batch_size],
             
             index:0, 
             remaining:None,
@@ -55,7 +57,9 @@ impl T5Data {
 
 
     pub fn write_input(&mut self, data:&TokenizedData, extra:Option<u32>, context_size:usize, ip:usize, op:usize) -> (usize,usize) {
-        
+        if ip >= data.ids.len() || op >= self.batch_config.sequence_length {
+            return (ip,op)
+        }
         self.input_ids[self.index][op] = extra.unwrap_or(data.ids[ip]);  
         for y in 0..context_size {
             self.head_mask[self.index][y][op] = data.attention_mask[y][ip];
@@ -64,7 +68,9 @@ impl T5Data {
     }
 
     pub fn write_label(&mut self, data:&TokenizedData, extra:Option<u32>, context_size:usize, ip:usize, lop:usize) -> (usize, usize) {
-        
+        if ip >= data.ids.len() || lop >= self.labels[0].len() {
+            return (ip,lop)
+        }
         self.labels[self.index][lop] = extra.unwrap_or(data.ids[ip]) as i32;  
         for y in 0..context_size {
             self.decode_head_mask[self.index][context_size-y-1][lop] = data.attention_mask[y][ip];
@@ -80,8 +86,12 @@ impl T5Data {
         // TODO : Fix this condition by limiting data size
         //log::info!("Dataset {:?}", data.ids);
 
+        if data.ids.len() < 64 {
+            return false;
+        }
+
         let data_config_clone = self.dataset_config.clone();
-        if let DataSetConfig::SpanHier { avg_span_prob, context_size, extra_ids:_ } = data_config_clone {
+        if let DataSetConfig::SpanHier { avg_span_prob, context_size} = data_config_clone {
             let mut op = 0; // Index into output data
             let mut ip = 0; // Index into input data
             let mut lip = 0; // Label Pointer
@@ -97,16 +107,7 @@ impl T5Data {
                     if rv < avg_span_prob {
                         span_length += 1;
                     }
-                    //log::info!("RV {} {}", rv, span_length);
                 }
-                //let std = (avg_span_prob*(1.0-avg_span_prob)*(gap as f64)).sqrt();
-                //let mean = avg_span_prob*gap as f64;
-
-                // TODO : Might lead to better performance 
-                //let normal = Normal::new(mean,std).unwrap();
-                //let value = thread_rng().sample(normal).round() as usize;
-                //let rv:f64 = thread_rng().sample(StandardNormal);
-                //let value = (std*rv + mean).round() as usize;
                 
                 // Create the starting point of the label or leave it at the end of the gap
                 let sp = if span_length > 0 {
@@ -116,11 +117,8 @@ impl T5Data {
                 else {
                     gap
                 };
-                //total += span_length;
-                //tttt += gap;
-                //log::info!("PPPP {} : {} : {} {} : {} {}",i , gap, span_length, sp, total, tttt );
                 
-                if op + gap + 4 >= self.batch_config.sequence_length || ip + gap >= self.batch_config.sequence_length {
+                if op + gap + 8 >= self.batch_config.sequence_length || ip + gap >= self.batch_config.sequence_length {
                     break;
                 }
                 for x in 0..gap {
@@ -143,15 +141,18 @@ impl T5Data {
                 }
                 //log::info!("Done {} {} {} {} {}", gap, ip, op, lip, lop);
             }
+            self.write_label(&data, Some(self.tokenizer_info.extra[lip]), context_size, ip, lop);
             //log::info!("Remaining {}", op);
             for x in op..self.batch_config.sequence_length {
                 self.attention_mask[self.index][x] = 0;
             }
             //log::info!("Here {} {} {} {}", ip, op, lip, lop);
+            //log::info!("Done {} {} {} {}", ip, op, lip, lop);
         }
         else {
            log::error!("Requires Span Configuration for this Mode");
         }
+        
         //log::info!("IdsOut {:?}", self.input_ids);
         //log::info!("Label {:?}", self.labels);
         self.index += 1;
@@ -241,7 +242,7 @@ impl Serialize for T5Data {
             state.serialize_field("input_ids", &self.input_ids)?;
             state.serialize_field("attention_mask", &self.attention_mask)?;
             state.serialize_field("labels", &self.labels)?;
-            if let DataSetConfig::SpanHier { avg_span_prob:_, context_size:_, extra_ids:_} = self.dataset_config {
+            if let DataSetConfig::SpanHier { avg_span_prob:_, context_size:_} = self.dataset_config {
                 state.serialize_field("head_mask", &self.head_mask)?;
                 state.serialize_field("decoder_head_mask", &self.decode_head_mask)?;
             }

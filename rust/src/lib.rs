@@ -9,7 +9,9 @@ pub mod tokenizer;
 pub mod logger;
 pub mod config;
 pub mod py_interface;
+pub mod py_conversions;
 
+use py_interface::TrainingRun;
 use pyo3::prelude::*;
 
 
@@ -17,7 +19,7 @@ use pyo3::prelude::*;
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn maturin_build(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(py_interface::test, m)?)?;
+fn rust_loader(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<TrainingRun>()?;
     Ok(())
 }

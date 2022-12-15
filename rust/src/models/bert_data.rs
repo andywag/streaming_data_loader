@@ -22,6 +22,7 @@ pub struct BertData {
     index:usize
 }
 
+
 impl BertData {
     pub fn new(batch_config:BatchConfig, dataset_config:DataSetConfig) -> Self{
         Self {

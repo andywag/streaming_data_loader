@@ -1,5 +1,5 @@
 
-use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, provider_config::{SourceDescription, ProviderConfig}}, tasks::{ runner_simple, multi_label::multi_arrow::MultiArrowGenerator}, tokenizer::tokenizer_wrapper::{TokenizerWrapper}, config::{TrainingConfig, ModelType}, batcher::BatchConfig, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, models::{simple_batcher, simple_transport::SimpleTransport}};
+use crate::{provider::{arrow_transfer::ArrowTransfer, arrow_provider::{create_hugging_description}, provider_config::{SourceDescription, ProviderConfig}}, tasks::{ runner_simple, multi_label::multi_arrow::MultiArrowGenerator}, tokenizer::tokenizer_wrapper::{self}, config::{TrainingConfig}, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, models::{simple_batcher, simple_transport::SimpleTransport}};
 
 use super::{single_arrow::SingleClassArrowGenerator};
 
@@ -37,12 +37,13 @@ fn create_provider(config:&ProviderConfig, data_config:DataSetConfig) -> ArrowTr
 }
 
 // Create the Batcher for Squad
-fn create_generator(model_type:ModelType, batch_config:BatchConfig,  dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=SimpleTransport,T=DataSet> + Send> {
-    
-    let batcher = simple_batcher::SimpleBatcher::new(model_type,
-        dataset_config, 
-        batch_config, 
-        tokenizer);
+fn create_generator(config:TrainingConfig)-> Box<dyn crate::batcher::Batcher<S=SimpleTransport,T=DataSet> + Send> {
+
+    //let tokenizer = tokenizer_wrapper::get_tokenizer(config.tokenizer).unwrap();
+    let batcher = simple_batcher::SimpleBatcher::new(config.model_config,
+        config.dataset_config, 
+        config.batch, 
+        tokenizer_wrapper::get_tokenizer(config.tokenizer).unwrap());
     Box::new(batcher)
     
 }
@@ -54,7 +55,7 @@ pub async fn run(config:TrainingConfig) -> bool{
     let result = runner_simple::run_main(config,
         runner_simple::ProviderType::Async(Box::new(create_provider)), 
         Box::new(create_generator), 
-        Box::new(crate::transport::test_endpoint::default_endpoint),
+        None,
         None);
 
     result.await 

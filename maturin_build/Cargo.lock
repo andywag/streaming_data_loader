@@ -1646,37 +1646,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58093314a45e00c77d5c508f76e77c3396afbbc0d01506e7fae47b018bac2b1d"
 
 [[package]]
-name = "maturin_build"
-version = "0.1.0"
-dependencies = [
- "abomonation",
- "abomonation_derive",
- "anyhow",
- "arrow",
- "async-compression",
- "async-tar",
- "clap 4.0.29",
- "counter",
- "env_logger",
- "futures",
- "log",
- "logos",
- "pyo3",
- "rand",
- "rand_distr",
- "reqwest",
- "serde",
- "serde-pickle",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "tokenizers",
- "tokio 1.23.0",
- "tokio-util",
- "zmq",
-]
-
-[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2344,6 +2313,37 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
+]
+
+[[package]]
+name = "rust_loader"
+version = "0.1.0"
+dependencies = [
+ "abomonation",
+ "abomonation_derive",
+ "anyhow",
+ "arrow",
+ "async-compression",
+ "async-tar",
+ "clap 4.0.29",
+ "counter",
+ "env_logger",
+ "futures",
+ "log",
+ "logos",
+ "pyo3",
+ "rand",
+ "rand_distr",
+ "reqwest",
+ "serde",
+ "serde-pickle",
+ "serde_json",
+ "serde_yaml",
+ "tempfile",
+ "tokenizers",
+ "tokio 1.23.0",
+ "tokio-util",
+ "zmq",
 ]
 
 [[package]]

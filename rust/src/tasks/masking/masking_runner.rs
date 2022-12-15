@@ -1,7 +1,9 @@
 
+use std::sync::mpsc::SyncSender;
+
 use tokio::task::{JoinHandle, self};
 
-use crate::{provider::{ProviderChannel, general_file_provider, pile_datasets, source_filter::SourceFilter, provider_config::{ProviderConfig, SourceDescription}}, tasks::{runner_simple}, datasets::{dataset::DataSet, dataset_config::DataSetConfig}, tokenizer::tokenizer_wrapper::TokenizerWrapper, config::{TrainingConfig, ModelType}, batcher::BatchConfig};
+use crate::{provider::{ProviderChannel, general_file_provider, pile_datasets, source_filter::SourceFilter, provider_config::{ProviderConfig, SourceDescription}}, tasks::{runner_simple}, datasets::{dataset::DataSet}, tokenizer::tokenizer_wrapper::{self}, config::{TrainingConfig}};
 use tokio::sync::mpsc::Sender;
 
 use super::{masking_test_endpoint::MaskingEndpoint};
@@ -50,8 +52,12 @@ pub fn create_provider(provider_config:ProviderConfig, tx:Sender<ProviderChannel
 
 
 
-fn create_generator(model_type:ModelType, batch_config:BatchConfig, dataset_config:DataSetConfig, tokenizer:TokenizerWrapper)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
-    let wrap = GenTokenizer::new(model_type, batch_config, dataset_config,  tokenizer, true);
+fn create_generator(config:TrainingConfig)-> Box<dyn crate::batcher::Batcher<S=String,T=DataSet> + Send> {
+    let wrap = GenTokenizer::new(config.model_config,  
+        config.batch, 
+        config.dataset_config,  
+        tokenizer_wrapper::get_tokenizer(config.tokenizer).unwrap(), 
+        true);
     Box::new(wrap)
 }
 
@@ -67,11 +73,11 @@ pub enum MaskType {
     Span
 }
 
-pub async fn run(config:TrainingConfig, cache:Option<String>) -> bool{
+pub async fn run(config:TrainingConfig, destination:Option<SyncSender<ProviderChannel<DataSet>>>, cache:Option<String>) -> bool{
     runner_simple::run_main(config,
         runner_simple::ProviderType::Sync(Box::new(create_provider)), 
         Box::new(create_generator), 
-        Box::new(create_endpoint),
+        destination,
         cache
     ).await
 
