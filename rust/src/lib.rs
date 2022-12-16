@@ -8,18 +8,21 @@ pub mod batcher;
 pub mod tokenizer;
 pub mod logger;
 pub mod config;
-pub mod py_interface;
-pub mod py_conversions;
 
-use py_interface::TrainingRun;
-use pyo3::prelude::*;
+//pub mod py_interface;
+//pub mod py_conversions;
+//use py_interface::TrainingRun;
+
+//use pyo3::prelude::*;
 
 
 
 
-/// A Python module implemented in Rust.
+// A Python module implemented in Rust.
+/* 
 #[pymodule]
-fn rust_loader(_py: Python, m: &PyModule) -> PyResult<()> {
+#fn rust_loader(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<TrainingRun>()?;
     Ok(())
 }
+*/

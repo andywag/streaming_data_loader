@@ -24,7 +24,7 @@ pub fn get_provider(test:bool) -> ProviderConfig {
             shuffle: None,
             flatten: None,
             length: ProviderLength::Epochs { epochs : 1 },
-            source: SourceDescription::DataList(vec!["https://dumps.wikimedia.org/other/cirrussearch/20221021/enwiki-20221021-cirrussearch-content.json.gz".into()]),
+            source: SourceDescription::Pile { typ: crate::provider::pile_datasets::PileDatasetType::Total },
             filter: None,
         }
     }

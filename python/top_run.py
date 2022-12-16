@@ -1,5 +1,11 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['WANDB_DISABLED'] = 'true'
+os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS']= '1'
+import tensorflow as tf
 
+
+#tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import models.bert_hier
 import models.bert_with_label
 import models.t5_hier
@@ -7,8 +13,11 @@ import models.t5_hier
 from models.bert_hier import BertLocalEncoder
 from rust_config import ExternalConfig
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['WANDB_DISABLED'] = 'true'
+import tokenizers
+
+
+
+
 from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments, GPT2Config
 from transformers import AutoModelForMaskedLM, AutoModelForQuestionAnswering, AutoModelForSequenceClassification
 from transformers import AutoConfig
@@ -43,7 +52,7 @@ def run_model(args):
     config = ExternalConfig(tokenized_dataset.context)
 
     train_batch_size = 32
-    gradient_accumulation = 32
+    gradient_accumulation = 4
     num_train_epochs = 1
     # Get the Common Configuration
     model_name = "bert-base-uncased"
@@ -95,13 +104,13 @@ def run_model(args):
         train_batch_size = 8
         learning_rate = 1e-5
         gradient_accumulation = 32
-    elif args.task == 'single':
+    elif args.task == 'single-class':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "single_label_classification"
         config.num_labels = 2
         gradient_accumulation = 1
         model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased",config=config).train()
-    elif args.task == 'multi':
+    elif args.task == 'multi-label':
         config = AutoConfig.from_pretrained("bert-base-uncased")
         config.problem_type = "multi_label_classification"
         config.num_labels = 9
@@ -164,7 +173,7 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "span", "squad", "single", "multi", "python", "span-python"], default="mlm")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "span", "squad", "single-class", "multi-label", "python", "span-python"], default="mlm")
 parser.add_argument('--all', action='store_true', default=False)
 parser.add_argument('--cache', type=str, default=None)
 

@@ -71,7 +71,7 @@ pub async fn load_data_sets(datasets:Vec<Dataset>,
 
     let mut counter = Counter::new(length);
 
-    log::info!("Sending Dataset Info");
+    //log::info!("Sending Dataset Info");
     let _result = tx.send(ProviderChannel::Info(crate::tasks::DatasetInfo { name: "wiki".to_string(), length: 1000000000 })).await;
 
     loop {

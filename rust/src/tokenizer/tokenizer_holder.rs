@@ -65,6 +65,7 @@ fn get_hugging_tokenizer(location:String) -> Option<Tokenizer> {
     let (tx,rx)= std::sync::mpsc::channel::<Tokenizer>();
     //let location_clone = location.clone();
     thread::spawn(move || {
+        
         let base = Tokenizer::from_pretrained(location, None);
         let _ =tx.send(base.unwrap());
     });

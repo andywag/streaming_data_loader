@@ -236,7 +236,6 @@ impl Serialize for T5Data {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer {
-            log::info!("Sending Data");
 
             let mut state = serializer.serialize_struct("T5Data", 3)?;
             state.serialize_field("input_ids", &self.input_ids)?;
