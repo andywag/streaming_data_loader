@@ -27,7 +27,7 @@ from functools import partial
 """
 
 def run_loader(args):
-    if len(args.cache) == 0:
+    if args.cache is None or len(args.cache) == 0:
         subprocess.run(["cargo", "run", "--release", "--", "--task", args.task], cwd="../rust")
     else:
         print("Running with Cache", args.cache)
@@ -164,9 +164,9 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "span", "squad", "single", "multi", "python", "span-python"], default="span-python")
-parser.add_argument('--all', action='store_true', default=True)
-parser.add_argument('--cache', type=str, default='../../../storage')
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "span", "squad", "single", "multi", "python", "span-python"], default="mlm")
+parser.add_argument('--all', action='store_true', default=False)
+parser.add_argument('--cache', type=str, default=None)
 
 
 
