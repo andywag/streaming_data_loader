@@ -26,7 +26,7 @@ pub async fn receive_transport<T:Serialize>(address:String,
     };
     
 
-    log::info!("Starting Server on Connection :  {}", host_name);
+    log::info!("Starting :  {}", host_name);
     let socket = ctx.socket(zmq::REP).unwrap();
     socket.bind(host_name.as_str()).unwrap();
 
@@ -34,7 +34,6 @@ pub async fn receive_transport<T:Serialize>(address:String,
     let data = rx.recv().await;
 
     let dataset_info = if let ProviderChannel::Info(x) = data.unwrap() {
-        println!("Info {:?}", x);
         Some(x)
     }
     else {

@@ -32,7 +32,7 @@ fn create_reader(location:String) -> StreamReader<File> {
 impl <T:Clone>ArrowTransfer<T> {
     // Load the Arrow File and parse the schema block
     pub fn new(location:String, length:u32) -> Self {
-        println!("Loading Arrow File {}", location);
+        //println!("Loading Arrow File {}", location);
         
         let stream_reader = create_reader(location.clone());
         let schema = stream_reader.schema(); 

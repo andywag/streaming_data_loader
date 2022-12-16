@@ -16,6 +16,10 @@ pub fn create_logger() {
         )
     })
     .filter(None, LevelFilter::Info)
+    //.filter_module("cached-path", LevelFilter::Error)
+    .filter_module("cache", LevelFilter::Error)
+
     .try_init();
 
 }
+

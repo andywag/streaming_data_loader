@@ -4,10 +4,9 @@ use serde::{Serialize, Deserialize};
 use tokio::{sync::mpsc::Receiver, task::{JoinHandle, self}};
 
 use crate::{provider::ProviderChannel};
-use pyo3::prelude::*;
 
 
-#[derive(Deserialize, Serialize, Debug, Clone, FromPyObject)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 
 pub struct BatchConfig {
     pub batch_size:usize,
@@ -47,7 +46,7 @@ pub async fn create_batch<S,T>(mut rx:Receiver<ProviderChannel<S>>,
         // Match the input to check if the stream is complete and send the complete command forward
         match data_option.unwrap() {
             ProviderChannel::Info(x) => {
-                log::info!("Sending Dataset Info");
+                //log::info!("Sending Dataset Info");
                 let _ = tx_transport.send(ProviderChannel::Info(x)).await;
             }
             ProviderChannel::Complete => {

@@ -1,9 +1,8 @@
 
 use serde::{Deserialize, Serialize};
-use pyo3::prelude::*;
 
 
-#[derive(Clone, Debug, Serialize, Deserialize, FromPyObject)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Label {
     Single(u32),
     Multi(Vec<u32>),
