@@ -173,7 +173,7 @@ def run_model(args):
 
 
 parser = argparse.ArgumentParser(description='Run Model with External Data Loader')
-parser.add_argument('--task', type=str, choices=["mlm", "clm", "span", "squad", "single-class", "multi-label", "python", "span-python"], default="mlm")
+parser.add_argument('--task', type=str, choices=["mlm", "clm", "span", "multi-label"], default="mlm")
 parser.add_argument('--all', action='store_true', default=False)
 parser.add_argument('--cache', type=str, default=None)
 
