@@ -20,12 +20,7 @@ These instructions will run BERT pretraining using the Pile dataset and will avo
 The data loader is general but directly supports : 
 
 1. Wikipedia data from https://dumps.wikimedia.org/
-2. Pile data from from https://pile.eleuther.ai/
-    1. Total Dataset
-    2. Components of the Dataset :  
-        * Examples in https://github.com/andywag/streaming_data_loader/blob/master/rust/tests/masking.yaml
-        * Definitions in https://github.com/andywag/streaming_data_loader/blob/master/rust/src/provider/pile_datasets.rs
-3. Data stored in an Arror format
+2. Data stored in an Arror format
     a. Streaming support from HuggingFace Datasets
 
 ## Status
@@ -37,7 +32,7 @@ This project is still a work in progress and in a relatively early stage. Basic 
 There are currently a few example cases which are directly supported and can be run using : 
 
 1. **python3 top_run.py --task <task> --all** from the python folder
-    a. task = ["gpt2", "mlm", "squad", "imdb" (single label classification), "emot" (multi label classification)]
+    a. task = ["mlm" (Masked Language Model), "clm" (GPT), "span" (T5), "multi-label"]
 
 
 ### Masking/Pretraining

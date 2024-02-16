@@ -7,8 +7,8 @@ pub enum MaskingCases {
     T5
 }
 
-//https://dumps.wikimedia.org/other/cirrussearch/current/enwiki-20221021-cirrussearch-content.json.gz
 
+// https://dumps.wikimedia.org/other/cirrussearch/20240212/commonswiki-20240212-cirrussearch-content.json.gz 
 pub fn get_provider(test:bool) -> ProviderConfig {
     if test {
         ProviderConfig {
@@ -24,7 +24,8 @@ pub fn get_provider(test:bool) -> ProviderConfig {
             shuffle: None,
             flatten: None,
             length: ProviderLength::Epochs { epochs : 1 },
-            source: SourceDescription::Pile { typ: crate::provider::pile_datasets::PileDatasetType::Total },
+            //source: SourceDescription::Pile { typ: crate::provider::pile_datasets::PileDatasetType::Total },
+            source: SourceDescription::DataList(vec![Dataset{location:"https://dumps.wikimedia.org/other/cirrussearch/20240212/commonswiki-20240212-cirrussearch-content.json.gz".to_string()}]),
             filter: None,
         }
     }
